@@ -33,6 +33,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // The collections used to be two pages; now they are two sections of one.
+  async redirects() {
+    return [
+      { source: "/men", destination: "/#men", permanent: false },
+      { source: "/women", destination: "/#women", permanent: false },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

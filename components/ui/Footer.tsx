@@ -12,10 +12,10 @@ export function Footer() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex gap-6">
-          <Link href="/men" className="hover:text-ink">
+          <Link href="/#men" className="hover:text-ink">
             Men
           </Link>
-          <Link href="/women" className="hover:text-ink">
+          <Link href="/#women" className="hover:text-ink">
             Women
           </Link>
           <Link href="/cart" className="hover:text-ink">

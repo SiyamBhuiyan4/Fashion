@@ -37,11 +37,11 @@ export function CartView() {
         <div className="mt-8 rounded-2xl border border-line bg-white p-10 text-center">
           <p className="text-ink-soft">Nothing in here yet.</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link href="/men" className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90">
+            <Link href="/#men" className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90">
               Shop men
             </Link>
             <Link
-              href="/women"
+              href="/#women"
               className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-ink"
             >
               Shop women

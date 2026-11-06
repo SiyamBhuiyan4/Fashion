@@ -1,9 +1,11 @@
 # MAISON — 3D virtual try-on (customer demo)
 
 A customer-facing fashion store where every piece can be worn by a 3D model before buying.
-Pick **Men** or **Women**, the screen splits in two: the model on the left, the collection on the
-right. Tap **Wear** and the garment appears on the body; rotate, zoom, change the skin tone, play a
-pose, and send the whole outfit to the cart.
+The home page *is* the fitting room: the model stays on the left while the men's collection runs
+down the right, and the women's collection follows underneath. Nothing has to be clicked to switch
+— scroll into the women's section and the model changes with you. Each model keeps its own outfit,
+so scrolling back up finds the men's look still on. Tap **Wear** and the garment appears on the
+body; rotate, zoom, change the skin tone, play a pose, and send the whole outfit to the cart.
 
 Demo only: no login, no admin, no payment. Checkout says so.
 
@@ -78,8 +80,8 @@ npm run models:optimize     # compress any *.src.glb under public/models
 
 | Route | |
 |---|---|
-| `/` | Landing: hero, Men/Women cards, three-step explainer |
-| `/men`, `/women` | Try-on: 3D model + collection, one shared component |
+| `/` | The shop: sticky 3D model, men's collection, then women's on scroll |
+| `/men`, `/women` | Redirect to `/#men` and `/#women` (the old two-page layout) |
 | `/product/[id]` | Detail: gallery, colours, sizes, stock, "Try on in 3D", add to cart |
 | `/cart` | Cart (localStorage), quantities, subtotal, demo checkout notice |
 | `/api/tg/[name]` | Permanent link to a file in the Telegram channel |

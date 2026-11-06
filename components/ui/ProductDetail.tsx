@@ -26,7 +26,7 @@ export function ProductDetail({ product }: { product: Product }) {
     window.setTimeout(() => setAdded(false), 2000);
   };
 
-  const tryOnHref = `/${product.gender}?wear=${encodeURIComponent(product.id)}&color=${encodeURIComponent(color.name)}`;
+  const tryOnHref = `/?wear=${encodeURIComponent(product.id)}&color=${encodeURIComponent(color.name)}#${product.gender}`;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-2 lg:gap-12 lg:py-12">
@@ -72,7 +72,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
       <div className="lg:py-4">
         <nav className="eyebrow" aria-label="Breadcrumb">
-          <Link href={`/${product.gender}`} className="hover:text-ink">
+          <Link href={`/#${product.gender}`} className="hover:text-ink">
             {product.gender === "men" ? "Men" : "Women"}
           </Link>
           <span className="mx-2">/</span>

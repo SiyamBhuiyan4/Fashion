@@ -39,7 +39,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <section className="mx-auto max-w-6xl border-t border-line px-4 py-10 sm:px-6">
           <div className="flex items-baseline justify-between">
             <h2 className="display text-xl">Wear it with</h2>
-            <Link href={`/${product.gender}`} className="text-sm text-ink-soft hover:text-ink">
+            <Link href={`/#${product.gender}`} className="text-sm text-ink-soft hover:text-ink">
               See the fitting room →
             </Link>
           </div>

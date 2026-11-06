@@ -10,11 +10,11 @@ export default function NotFound() {
           It may have sold out, or the link may be wrong. The collections are still here.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Link href="/men" className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90">
+          <Link href="/#men" className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90">
             Shop men
           </Link>
           <Link
-            href="/women"
+            href="/#women"
             className="rounded-full border border-line bg-white px-5 py-2.5 text-sm hover:border-ink"
           >
             Shop women

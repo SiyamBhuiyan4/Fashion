@@ -63,7 +63,7 @@ export function CartDrawer() {
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <p className="text-ink-soft">Your cart is empty.</p>
             <Link
-              href="/women"
+              href="/#women"
               onClick={close}
               className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone transition-opacity hover:opacity-90"
             >

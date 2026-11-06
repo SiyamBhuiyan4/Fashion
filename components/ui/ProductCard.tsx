@@ -13,7 +13,10 @@ export function ProductCard({ product, compact = false }: { product: Product; co
   const toggle = useOutfitStore((state) => state.toggle);
   const setColor = useOutfitStore((state) => state.setColor);
 
-  const wornEntry = Object.values(worn).find((item) => item?.productId === product.id);
+  // The outfit is kept per model, so a card only looks at its own product's wardrobe.
+  const wornEntry = Object.values(worn[product.gender]).find(
+    (item) => item?.productId === product.id,
+  );
   const isWorn = Boolean(wornEntry);
   const color = resolveColor(product, wornEntry?.colorName);
   const available = isInStock(product);

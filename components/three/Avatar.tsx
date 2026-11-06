@@ -49,17 +49,18 @@ export function Avatar({ gender }: { gender: Gender }) {
   }, [figure, gender, skinHex, skinColor]);
 
   const items = useMemo(() => {
+    const wardrobe = worn[gender];
     const seen = new Set<string>();
     const list: WornItem[] = [];
     for (const slot of ["bottom", "top", "shoes", "outerwear"] as const) {
-      const item = worn[slot];
+      const item = wardrobe[slot];
       if (item && !seen.has(item.productId)) {
         seen.add(item.productId);
         list.push(item);
       }
     }
     return list;
-  }, [worn]);
+  }, [worn, gender]);
 
   const key = outfitKey(items);
 

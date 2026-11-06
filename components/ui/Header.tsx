@@ -6,14 +6,18 @@ import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/useHydrated";
 import { useCartStore } from "@/store/cartStore";
+import { useOutfitStore } from "@/store/outfitStore";
 
+// Both collections live on one page; these only jump, nothing needs clicking.
 const links = [
-  { href: "/men", label: "Men" },
-  { href: "/women", label: "Women" },
+  { href: "/#men", label: "Men" },
+  { href: "/#women", label: "Women" },
 ];
 
 export function Header() {
   const pathname = usePathname();
+  // Highlights whichever collection the scroll is currently on.
+  const activeGender = useOutfitStore((state) => state.activeGender);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const items = useCartStore((state) => state.items);
   // The cart is restored from localStorage after hydration, so the count is only shown once
@@ -30,7 +34,7 @@ export function Header() {
 
         <nav aria-label="Collections" className="flex items-center gap-1 text-sm">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = pathname === "/" && activeGender === link.href.replace("/#", "");
             return (
               <Link
                 key={link.href}
