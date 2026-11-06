@@ -1,8 +1,6 @@
 import type { Product } from "@/lib/schemas";
 
-const sizesApparel = ["XS", "S", "M", "L", "XL"];
-const sizesShoesMen = ["40", "41", "42", "43", "44"];
-const sizesShoesWomen = ["36", "37", "38", "39", "40"];
+
 
 export const products: Product[] = [
   {
