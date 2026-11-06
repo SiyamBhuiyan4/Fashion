@@ -5,7 +5,7 @@ export const site = {
   name: "MAISON",
   tagline: "See it move before you buy it.",
   description:
-    "Every piece filmed on a real person, so you see how it moves, falls and fits before you buy.",
+    "Real photos of every colour, and pieces filmed on real people, so you see how they move and fit before you buy.",
   currency: "BDT",
   currencySymbol: "৳",
   locale: "en-BD",
