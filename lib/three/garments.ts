@@ -139,9 +139,9 @@ function necklineY(figure: Figure, spec: GarmentSpec): number {
       return shoulder - 0.07;
     case "polo":
     case "shirt":
-      return shoulder - 0.045;
+      return shoulder - 0.012;
     default:
-      return shoulder - 0.055;
+      return shoulder - 0.022;
   }
 }
 

@@ -31,6 +31,12 @@ const STEPS = [
   { n: "03", title: "Buy", body: "Send the whole look to your cart in one go." },
 ];
 
+/** What each model wears when the page first opens, so nobody meets them in their base layer. */
+const DEFAULT_OUTFIT: Record<Gender, string[]> = {
+  men: ["m-tee-essential", "m-slim-jeans", "m-court-sneaker"],
+  women: ["w-ribbed-tank", "w-wide-jeans", "w-leather-flat"],
+};
+
 const GENDERS: Array<{ gender: Gender; label: string; blurb: string }> = [
   { gender: "men", label: "Men", blurb: "Tailoring, denim and everyday knits." },
   { gender: "women", label: "Women", blurb: "Silk, wool and clean lines." },
@@ -56,6 +62,19 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
   const get = useCatalogStore((state) => state.get);
 
   const sections = useRef<Partial<Record<Gender, HTMLElement | null>>>({});
+
+  // Dress both models once, on the first visit of the session. Anything the shopper has already
+  // put on is left alone.
+  const dressed = useRef(false);
+  useEffect(() => {
+    if (dressed.current) return;
+    dressed.current = true;
+    const state = useOutfitStore.getState();
+    for (const gender of ["men", "women"] as const) {
+      if (Object.keys(state.worn[gender]).length > 0) continue;
+      for (const id of DEFAULT_OUTFIT[gender]) state.wear(id);
+    }
+  }, []);
 
   /**
    * The model follows the scroll: whichever collection fills the middle of the screen is the one
