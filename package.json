@@ -1,0 +1,43 @@
+{
+  "name": "maison-3d-try-on",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Customer-facing demo of a fashion store with a real-time 3D virtual try-on.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "models:optimize": "node scripts/optimize-models.mjs",
+    "db:seed": "node scripts/seed-db.ts",
+    "db:dump": "node scripts/db-dump.ts"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "three": "0.187.0",
+    "zod": "4.6.7",
+    "zustand": "5.0.16"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "4.5.1",
+    "@tailwindcss/postcss": "4.3.4",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.187.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.5",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "sharp": "0.34.5",
+    "tailwindcss": "4.3.4",
+    "typescript": "6.0.3"
+  }
+}
