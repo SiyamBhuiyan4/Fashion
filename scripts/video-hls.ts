@@ -155,8 +155,10 @@ async function cut(
   },
   seconds: number,
   /** Cut exactly at these times (seconds), so every quality level has the same piece boundaries. */
-  keyframes?: number[],
+  keyframesIn?: number[],
 ): Promise<Segment[]> {
+  // No cut points (the top level is a single piece) means: cut normally.
+  const keyframes = keyframesIn && keyframesIn.length > 0 ? keyframesIn : undefined;
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const fps = Math.min(info.fps, 60);
