@@ -105,6 +105,8 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                 <Link
                   key={slot.product.id}
                   href={`/product/${slot.product.id}`}
+                  // A blue butterfly rests on this card's top-right corner (butterflies.ts).
+                  data-butterfly-perch={i}
                   className={
                     i === 0
                       ? "group absolute left-0 top-0 w-[52%] -rotate-2 animate-fade-up shadow-2xl shadow-ink/20 [animation-delay:450ms]"

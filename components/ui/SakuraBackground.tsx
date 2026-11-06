@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createButterflies, drawButterflies, updateButterflies } from "@/components/ui/butterflies";
 
 /**
  * The site's living background: a real cherry-blossom photograph (Pexels, free licence; 2K)
@@ -141,12 +142,18 @@ export function SakuraBackground() {
     const shed: Shed[] = [];
     const MAX_SHED = 70;
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    // Two butterflies on the hero cards (computers only).
+    const butterflies = finePointer && !still ? createButterflies() : [];
+    const pointer = { x: 0, y: 0, movedAt: 0 };
     let lastX = -1;
     let lastY = -1;
     let carry = 0;
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerType !== "mouse") return;
       const { clientX: x, clientY: y } = event;
+      pointer.x = x;
+      pointer.y = y;
+      pointer.movedAt = performance.now();
       if (lastX < 0) {
         lastX = x;
         lastY = y;
@@ -218,10 +225,15 @@ export function SakuraBackground() {
 
       // Petals shed from the cursor (front layer): a little lift, then gravity and the wind.
       // The layer is only cleared while it has something on it, so it costs nothing at rest.
-      if (shed.length > 0 || trailDirty) {
+      if (shed.length > 0 || trailDirty || butterflies.length > 0) {
         fx.setTransform(dpr, 0, 0, dpr, 0, 0);
         fx.clearRect(0, 0, width, height);
         trailDirty = shed.length > 0;
+      }
+      if (butterflies.length > 0) {
+        const now = performance.now();
+        updateButterflies(butterflies, dt, now, seconds, pointer);
+        drawButterflies(fx, butterflies, dpr, now);
       }
       for (let i = shed.length - 1; i >= 0; i--) {
         const petal = shed[i]!;
