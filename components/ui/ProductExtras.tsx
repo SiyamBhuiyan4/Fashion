@@ -106,7 +106,8 @@ export function SizeAdvisor({
       me?.user ? recommendSize(product, me.user.profile, me.sizeHistory ?? [], fitLean) : null,
     [me, product, fitLean],
   );
-  if (!me) return null;
+  // One-size pieces (a saree, a hijab) need no size advice.
+  if (!me || product.sizes.length < 2) return null;
   if (!me.user) {
     return (
       <p className="mt-3 text-xs text-ink-faint">
