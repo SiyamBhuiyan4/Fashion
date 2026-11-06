@@ -1,5 +1,9 @@
 import type { Product } from "@/lib/schemas";
 
+/**
+ * The catalogue seed. Photos are free-licence images from Pexels (pexels.com/license: free for
+ * commercial use, no attribution required), one per colourway, under public/images/products.
+ */
 export const products: Product[] = [
   {
     id: "m-tee-essential",
@@ -13,22 +17,22 @@ export const products: Product[] = [
       {
         name: "Chalk",
         hex: "#efeae1",
-        image: "/images/products/m-tee-essential.webp",
+        image: "/images/products/m-tee-essential--chalk.webp",
       },
       {
         name: "Black",
         hex: "#1b1b1d",
-        image: "/images/products/m-tee-essential.webp",
+        image: "/images/products/m-tee-essential--black.webp",
       },
       {
         name: "Olive",
         hex: "#5a6150",
-        image: "/images/products/m-tee-essential.webp",
+        image: "/images/products/m-tee-essential--olive.webp",
       },
       {
         name: "Clay",
         hex: "#b4705a",
-        image: "/images/products/m-tee-essential.webp",
+        image: "/images/products/m-tee-essential--clay.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -46,7 +50,12 @@ export const products: Product[] = [
       fit: "regular",
     },
     tags: ["everyday"],
-    images: ["/images/products/m-tee-essential.webp"],
+    images: [
+      "/images/products/m-tee-essential--chalk.webp",
+      "/images/products/m-tee-essential--black.webp",
+      "/images/products/m-tee-essential--olive.webp",
+      "/images/products/m-tee-essential--clay.webp",
+    ],
   },
   {
     id: "m-oxford-shirt",
@@ -60,17 +69,17 @@ export const products: Product[] = [
       {
         name: "White",
         hex: "#f6f4f0",
-        image: "/images/products/m-oxford-shirt.webp",
+        image: "/images/products/m-oxford-shirt--white.webp",
       },
       {
         name: "Sky",
         hex: "#9db7cf",
-        image: "/images/products/m-oxford-shirt.webp",
+        image: "/images/products/m-oxford-shirt--sky.webp",
       },
       {
         name: "Sand",
         hex: "#cbb89c",
-        image: "/images/products/m-oxford-shirt.webp",
+        image: "/images/products/m-oxford-shirt--sand.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -88,7 +97,11 @@ export const products: Product[] = [
       fit: "regular",
       collar: true,
     },
-    images: ["/images/products/m-oxford-shirt.webp"],
+    images: [
+      "/images/products/m-oxford-shirt--white.webp",
+      "/images/products/m-oxford-shirt--sky.webp",
+      "/images/products/m-oxford-shirt--sand.webp",
+    ],
   },
   {
     id: "m-polo-pique",
@@ -102,17 +115,17 @@ export const products: Product[] = [
       {
         name: "Navy",
         hex: "#273349",
-        image: "/images/products/m-polo-pique.webp",
+        image: "/images/products/m-polo-pique--navy.webp",
       },
       {
         name: "Stone",
         hex: "#cfc6b8",
-        image: "/images/products/m-polo-pique.webp",
+        image: "/images/products/m-polo-pique--stone.webp",
       },
       {
         name: "Burgundy",
         hex: "#6c2b33",
-        image: "/images/products/m-polo-pique.webp",
+        image: "/images/products/m-polo-pique--burgundy.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -130,7 +143,11 @@ export const products: Product[] = [
       fit: "slim",
       collar: true,
     },
-    images: ["/images/products/m-polo-pique.webp"],
+    images: [
+      "/images/products/m-polo-pique--navy.webp",
+      "/images/products/m-polo-pique--stone.webp",
+      "/images/products/m-polo-pique--burgundy.webp",
+    ],
   },
   {
     id: "m-merino-sweater",
@@ -144,17 +161,17 @@ export const products: Product[] = [
       {
         name: "Charcoal",
         hex: "#3b3d42",
-        image: "/images/products/m-merino-sweater.webp",
+        image: "/images/products/m-merino-sweater--charcoal.webp",
       },
       {
         name: "Oat",
         hex: "#d6c9b0",
-        image: "/images/products/m-merino-sweater.webp",
+        image: "/images/products/m-merino-sweater--oat.webp",
       },
       {
         name: "Forest",
         hex: "#36473c",
-        image: "/images/products/m-merino-sweater.webp",
+        image: "/images/products/m-merino-sweater--forest.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -172,7 +189,11 @@ export const products: Product[] = [
       fit: "regular",
     },
     tags: ["low stock"],
-    images: ["/images/products/m-merino-sweater.webp"],
+    images: [
+      "/images/products/m-merino-sweater--charcoal.webp",
+      "/images/products/m-merino-sweater--oat.webp",
+      "/images/products/m-merino-sweater--forest.webp",
+    ],
   },
   {
     id: "m-slim-jeans",
@@ -186,17 +207,17 @@ export const products: Product[] = [
       {
         name: "Indigo",
         hex: "#2f4057",
-        image: "/images/products/m-slim-jeans.webp",
+        image: "/images/products/m-slim-jeans--indigo.webp",
       },
       {
         name: "Washed Black",
         hex: "#2a2a2c",
-        image: "/images/products/m-slim-jeans.webp",
+        image: "/images/products/m-slim-jeans--washed-black.webp",
       },
       {
         name: "Stone Wash",
         hex: "#7b93a8",
-        image: "/images/products/m-slim-jeans.webp",
+        image: "/images/products/m-slim-jeans--stone-wash.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -213,7 +234,11 @@ export const products: Product[] = [
       fit: "slim",
       length: 1,
     },
-    images: ["/images/products/m-slim-jeans.webp"],
+    images: [
+      "/images/products/m-slim-jeans--indigo.webp",
+      "/images/products/m-slim-jeans--washed-black.webp",
+      "/images/products/m-slim-jeans--stone-wash.webp",
+    ],
   },
   {
     id: "m-pleated-trouser",
@@ -227,17 +252,17 @@ export const products: Product[] = [
       {
         name: "Graphite",
         hex: "#45474c",
-        image: "/images/products/m-pleated-trouser.webp",
+        image: "/images/products/m-pleated-trouser--graphite.webp",
       },
       {
         name: "Taupe",
         hex: "#9a8c78",
-        image: "/images/products/m-pleated-trouser.webp",
+        image: "/images/products/m-pleated-trouser--taupe.webp",
       },
       {
         name: "Ink",
         hex: "#232838",
-        image: "/images/products/m-pleated-trouser.webp",
+        image: "/images/products/m-pleated-trouser--ink.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -254,7 +279,11 @@ export const products: Product[] = [
       fit: "wide",
       length: 1,
     },
-    images: ["/images/products/m-pleated-trouser.webp"],
+    images: [
+      "/images/products/m-pleated-trouser--graphite.webp",
+      "/images/products/m-pleated-trouser--taupe.webp",
+      "/images/products/m-pleated-trouser--ink.webp",
+    ],
   },
   {
     id: "m-cargo-short",
@@ -268,17 +297,17 @@ export const products: Product[] = [
       {
         name: "Khaki",
         hex: "#a79469",
-        image: "/images/products/m-cargo-short.webp",
+        image: "/images/products/m-cargo-short--khaki.webp",
       },
       {
         name: "Black",
         hex: "#24242a",
-        image: "/images/products/m-cargo-short.webp",
+        image: "/images/products/m-cargo-short--black.webp",
       },
       {
         name: "Moss",
         hex: "#5d6347",
-        image: "/images/products/m-cargo-short.webp",
+        image: "/images/products/m-cargo-short--moss.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -295,7 +324,11 @@ export const products: Product[] = [
       fit: "relaxed",
       length: 0.45,
     },
-    images: ["/images/products/m-cargo-short.webp"],
+    images: [
+      "/images/products/m-cargo-short--khaki.webp",
+      "/images/products/m-cargo-short--black.webp",
+      "/images/products/m-cargo-short--moss.webp",
+    ],
   },
   {
     id: "m-denim-jacket",
@@ -309,12 +342,12 @@ export const products: Product[] = [
       {
         name: "Mid Indigo",
         hex: "#3b5273",
-        image: "/images/products/m-denim-jacket.webp",
+        image: "/images/products/m-denim-jacket--mid-indigo.webp",
       },
       {
         name: "Ecru",
         hex: "#ded5c4",
-        image: "/images/products/m-denim-jacket.webp",
+        image: "/images/products/m-denim-jacket--ecru.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -333,7 +366,10 @@ export const products: Product[] = [
       collar: true,
       length: 0.55,
     },
-    images: ["/images/products/m-denim-jacket.webp"],
+    images: [
+      "/images/products/m-denim-jacket--mid-indigo.webp",
+      "/images/products/m-denim-jacket--ecru.webp",
+    ],
   },
   {
     id: "m-wool-blazer",
@@ -347,12 +383,12 @@ export const products: Product[] = [
       {
         name: "Grey Melange",
         hex: "#6c6f76",
-        image: "/images/products/m-wool-blazer.webp",
+        image: "/images/products/m-wool-blazer--grey-melange.webp",
       },
       {
         name: "Navy",
         hex: "#2b3550",
-        image: "/images/products/m-wool-blazer.webp",
+        image: "/images/products/m-wool-blazer--navy.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -372,7 +408,10 @@ export const products: Product[] = [
       length: 0.62,
     },
     tags: ["low stock"],
-    images: ["/images/products/m-wool-blazer.webp"],
+    images: [
+      "/images/products/m-wool-blazer--grey-melange.webp",
+      "/images/products/m-wool-blazer--navy.webp",
+    ],
   },
   {
     id: "m-hooded-parka",
@@ -386,17 +425,17 @@ export const products: Product[] = [
       {
         name: "Slate",
         hex: "#4a5560",
-        image: "/images/products/m-hooded-parka.webp",
+        image: "/images/products/m-hooded-parka--slate.webp",
       },
       {
         name: "Sand",
         hex: "#bda887",
-        image: "/images/products/m-hooded-parka.webp",
+        image: "/images/products/m-hooded-parka--sand.webp",
       },
       {
         name: "Black",
         hex: "#1f2124",
-        image: "/images/products/m-hooded-parka.webp",
+        image: "/images/products/m-hooded-parka--black.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -415,7 +454,11 @@ export const products: Product[] = [
       collar: true,
       length: 0.8,
     },
-    images: ["/images/products/m-hooded-parka.webp"],
+    images: [
+      "/images/products/m-hooded-parka--slate.webp",
+      "/images/products/m-hooded-parka--sand.webp",
+      "/images/products/m-hooded-parka--black.webp",
+    ],
   },
   {
     id: "m-court-sneaker",
@@ -429,12 +472,12 @@ export const products: Product[] = [
       {
         name: "White",
         hex: "#eeebe4",
-        image: "/images/products/m-court-sneaker.webp",
+        image: "/images/products/m-court-sneaker--white.webp",
       },
       {
         name: "Black",
         hex: "#20201f",
-        image: "/images/products/m-court-sneaker.webp",
+        image: "/images/products/m-court-sneaker--black.webp",
       },
     ],
     sizes: ["40", "41", "42", "43", "44"],
@@ -450,7 +493,10 @@ export const products: Product[] = [
       fabric: "leather",
       fit: "regular",
     },
-    images: ["/images/products/m-court-sneaker.webp"],
+    images: [
+      "/images/products/m-court-sneaker--white.webp",
+      "/images/products/m-court-sneaker--black.webp",
+    ],
   },
   {
     id: "m-chelsea-boot",
@@ -464,12 +510,12 @@ export const products: Product[] = [
       {
         name: "Tobacco",
         hex: "#7c4e2d",
-        image: "/images/products/m-chelsea-boot.webp",
+        image: "/images/products/m-chelsea-boot--tobacco.webp",
       },
       {
         name: "Charcoal",
         hex: "#3a3a3d",
-        image: "/images/products/m-chelsea-boot.webp",
+        image: "/images/products/m-chelsea-boot--charcoal.webp",
       },
     ],
     sizes: ["40", "41", "42", "43", "44"],
@@ -485,7 +531,10 @@ export const products: Product[] = [
       fabric: "suede",
       fit: "regular",
     },
-    images: ["/images/products/m-chelsea-boot.webp"],
+    images: [
+      "/images/products/m-chelsea-boot--tobacco.webp",
+      "/images/products/m-chelsea-boot--charcoal.webp",
+    ],
   },
   {
     id: "w-silk-blouse",
@@ -499,22 +548,22 @@ export const products: Product[] = [
       {
         name: "Ivory",
         hex: "#f0e8dc",
-        image: "/images/products/w-silk-blouse.webp",
+        image: "/images/products/w-silk-blouse--ivory.webp",
       },
       {
         name: "Black",
         hex: "#1d1c1f",
-        image: "/images/products/w-silk-blouse.webp",
+        image: "/images/products/w-silk-blouse--black.webp",
       },
       {
         name: "Rosewood",
         hex: "#9c5f63",
-        image: "/images/products/w-silk-blouse.webp",
+        image: "/images/products/w-silk-blouse--rosewood.webp",
       },
       {
         name: "Sage",
         hex: "#8f9d86",
-        image: "/images/products/w-silk-blouse.webp",
+        image: "/images/products/w-silk-blouse--sage.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -532,7 +581,12 @@ export const products: Product[] = [
       fit: "regular",
       collar: true,
     },
-    images: ["/images/products/w-silk-blouse.webp"],
+    images: [
+      "/images/products/w-silk-blouse--ivory.webp",
+      "/images/products/w-silk-blouse--black.webp",
+      "/images/products/w-silk-blouse--rosewood.webp",
+      "/images/products/w-silk-blouse--sage.webp",
+    ],
   },
   {
     id: "w-ribbed-tank",
@@ -546,17 +600,17 @@ export const products: Product[] = [
       {
         name: "White",
         hex: "#f2efe9",
-        image: "/images/products/w-ribbed-tank.webp",
+        image: "/images/products/w-ribbed-tank--white.webp",
       },
       {
         name: "Espresso",
         hex: "#43332b",
-        image: "/images/products/w-ribbed-tank.webp",
+        image: "/images/products/w-ribbed-tank--espresso.webp",
       },
       {
         name: "Butter",
         hex: "#e8d79b",
-        image: "/images/products/w-ribbed-tank.webp",
+        image: "/images/products/w-ribbed-tank--butter.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -574,7 +628,11 @@ export const products: Product[] = [
       fit: "slim",
     },
     tags: ["everyday"],
-    images: ["/images/products/w-ribbed-tank.webp"],
+    images: [
+      "/images/products/w-ribbed-tank--white.webp",
+      "/images/products/w-ribbed-tank--espresso.webp",
+      "/images/products/w-ribbed-tank--butter.webp",
+    ],
   },
   {
     id: "w-slip-dress",
@@ -588,17 +646,17 @@ export const products: Product[] = [
       {
         name: "Champagne",
         hex: "#dcc9a8",
-        image: "/images/products/w-slip-dress.webp",
+        image: "/images/products/w-slip-dress--champagne.webp",
       },
       {
         name: "Midnight",
         hex: "#232a3d",
-        image: "/images/products/w-slip-dress.webp",
+        image: "/images/products/w-slip-dress--midnight.webp",
       },
       {
         name: "Plum",
         hex: "#5d3448",
-        image: "/images/products/w-slip-dress.webp",
+        image: "/images/products/w-slip-dress--plum.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -617,7 +675,11 @@ export const products: Product[] = [
       length: 0.78,
     },
     tags: ["dress"],
-    images: ["/images/products/w-slip-dress.webp"],
+    images: [
+      "/images/products/w-slip-dress--champagne.webp",
+      "/images/products/w-slip-dress--midnight.webp",
+      "/images/products/w-slip-dress--plum.webp",
+    ],
   },
   {
     id: "w-cashmere-crew",
@@ -631,17 +693,17 @@ export const products: Product[] = [
       {
         name: "Camel",
         hex: "#c39a6b",
-        image: "/images/products/w-cashmere-crew.webp",
+        image: "/images/products/w-cashmere-crew--camel.webp",
       },
       {
         name: "Dove",
         hex: "#c7c4bd",
-        image: "/images/products/w-cashmere-crew.webp",
+        image: "/images/products/w-cashmere-crew--dove.webp",
       },
       {
         name: "Navy",
         hex: "#2a3350",
-        image: "/images/products/w-cashmere-crew.webp",
+        image: "/images/products/w-cashmere-crew--navy.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -659,7 +721,11 @@ export const products: Product[] = [
       fit: "relaxed",
     },
     tags: ["low stock"],
-    images: ["/images/products/w-cashmere-crew.webp"],
+    images: [
+      "/images/products/w-cashmere-crew--camel.webp",
+      "/images/products/w-cashmere-crew--dove.webp",
+      "/images/products/w-cashmere-crew--navy.webp",
+    ],
   },
   {
     id: "w-wide-jeans",
@@ -673,17 +739,17 @@ export const products: Product[] = [
       {
         name: "Light Indigo",
         hex: "#6b88a6",
-        image: "/images/products/w-wide-jeans.webp",
+        image: "/images/products/w-wide-jeans--light-indigo.webp",
       },
       {
         name: "Deep Indigo",
         hex: "#2d3c54",
-        image: "/images/products/w-wide-jeans.webp",
+        image: "/images/products/w-wide-jeans--deep-indigo.webp",
       },
       {
         name: "Ecru",
         hex: "#ddd3c1",
-        image: "/images/products/w-wide-jeans.webp",
+        image: "/images/products/w-wide-jeans--ecru.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -700,7 +766,11 @@ export const products: Product[] = [
       fit: "wide",
       length: 1,
     },
-    images: ["/images/products/w-wide-jeans.webp"],
+    images: [
+      "/images/products/w-wide-jeans--light-indigo.webp",
+      "/images/products/w-wide-jeans--deep-indigo.webp",
+      "/images/products/w-wide-jeans--ecru.webp",
+    ],
   },
   {
     id: "w-midi-skirt",
@@ -714,17 +784,17 @@ export const products: Product[] = [
       {
         name: "Olive",
         hex: "#6d7353",
-        image: "/images/products/w-midi-skirt.webp",
+        image: "/images/products/w-midi-skirt--olive.webp",
       },
       {
         name: "Black",
         hex: "#1f1e21",
-        image: "/images/products/w-midi-skirt.webp",
+        image: "/images/products/w-midi-skirt--black.webp",
       },
       {
         name: "Terracotta",
         hex: "#a8603f",
-        image: "/images/products/w-midi-skirt.webp",
+        image: "/images/products/w-midi-skirt--terracotta.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -741,7 +811,11 @@ export const products: Product[] = [
       fit: "regular",
       length: 0.72,
     },
-    images: ["/images/products/w-midi-skirt.webp"],
+    images: [
+      "/images/products/w-midi-skirt--olive.webp",
+      "/images/products/w-midi-skirt--black.webp",
+      "/images/products/w-midi-skirt--terracotta.webp",
+    ],
   },
   {
     id: "w-tailored-trouser",
@@ -755,17 +829,17 @@ export const products: Product[] = [
       {
         name: "Charcoal",
         hex: "#3f4248",
-        image: "/images/products/w-tailored-trouser.webp",
+        image: "/images/products/w-tailored-trouser--charcoal.webp",
       },
       {
         name: "Cream",
         hex: "#e3d9c6",
-        image: "/images/products/w-tailored-trouser.webp",
+        image: "/images/products/w-tailored-trouser--cream.webp",
       },
       {
         name: "Chocolate",
         hex: "#4b352a",
-        image: "/images/products/w-tailored-trouser.webp",
+        image: "/images/products/w-tailored-trouser--chocolate.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -782,7 +856,11 @@ export const products: Product[] = [
       fit: "regular",
       length: 1,
     },
-    images: ["/images/products/w-tailored-trouser.webp"],
+    images: [
+      "/images/products/w-tailored-trouser--charcoal.webp",
+      "/images/products/w-tailored-trouser--cream.webp",
+      "/images/products/w-tailored-trouser--chocolate.webp",
+    ],
   },
   {
     id: "w-trench-coat",
@@ -796,12 +874,12 @@ export const products: Product[] = [
       {
         name: "Honey",
         hex: "#c0a173",
-        image: "/images/products/w-trench-coat.webp",
+        image: "/images/products/w-trench-coat--honey.webp",
       },
       {
         name: "Black",
         hex: "#212024",
-        image: "/images/products/w-trench-coat.webp",
+        image: "/images/products/w-trench-coat--black.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -820,7 +898,10 @@ export const products: Product[] = [
       collar: true,
       length: 0.85,
     },
-    images: ["/images/products/w-trench-coat.webp"],
+    images: [
+      "/images/products/w-trench-coat--honey.webp",
+      "/images/products/w-trench-coat--black.webp",
+    ],
   },
   {
     id: "w-cropped-blazer",
@@ -834,17 +915,17 @@ export const products: Product[] = [
       {
         name: "Ink",
         hex: "#262c3e",
-        image: "/images/products/w-cropped-blazer.webp",
+        image: "/images/products/w-cropped-blazer--ink.webp",
       },
       {
         name: "Bone",
         hex: "#ded4c2",
-        image: "/images/products/w-cropped-blazer.webp",
+        image: "/images/products/w-cropped-blazer--bone.webp",
       },
       {
         name: "Scarlet",
         hex: "#8e2f33",
-        image: "/images/products/w-cropped-blazer.webp",
+        image: "/images/products/w-cropped-blazer--scarlet.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -863,7 +944,11 @@ export const products: Product[] = [
       collar: true,
       length: 0.5,
     },
-    images: ["/images/products/w-cropped-blazer.webp"],
+    images: [
+      "/images/products/w-cropped-blazer--ink.webp",
+      "/images/products/w-cropped-blazer--bone.webp",
+      "/images/products/w-cropped-blazer--scarlet.webp",
+    ],
   },
   {
     id: "w-zip-hoodie",
@@ -877,17 +962,17 @@ export const products: Product[] = [
       {
         name: "Heather Grey",
         hex: "#a3a3a1",
-        image: "/images/products/w-zip-hoodie.webp",
+        image: "/images/products/w-zip-hoodie--heather-grey.webp",
       },
       {
         name: "Faded Rose",
         hex: "#c08f90",
-        image: "/images/products/w-zip-hoodie.webp",
+        image: "/images/products/w-zip-hoodie--faded-rose.webp",
       },
       {
         name: "Black",
         hex: "#232325",
-        image: "/images/products/w-zip-hoodie.webp",
+        image: "/images/products/w-zip-hoodie--black.webp",
       },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -906,7 +991,11 @@ export const products: Product[] = [
       collar: false,
       length: 0.52,
     },
-    images: ["/images/products/w-zip-hoodie.webp"],
+    images: [
+      "/images/products/w-zip-hoodie--heather-grey.webp",
+      "/images/products/w-zip-hoodie--faded-rose.webp",
+      "/images/products/w-zip-hoodie--black.webp",
+    ],
   },
   {
     id: "w-leather-flat",
@@ -919,17 +1008,17 @@ export const products: Product[] = [
       {
         name: "Black",
         hex: "#1f1e20",
-        image: "/images/products/w-leather-flat.webp",
+        image: "/images/products/w-leather-flat--black.webp",
       },
       {
         name: "Bone",
         hex: "#ddd2bf",
-        image: "/images/products/w-leather-flat.webp",
+        image: "/images/products/w-leather-flat--bone.webp",
       },
       {
         name: "Oxblood",
         hex: "#6a2b2f",
-        image: "/images/products/w-leather-flat.webp",
+        image: "/images/products/w-leather-flat--oxblood.webp",
       },
     ],
     sizes: ["36", "37", "38", "39", "40"],
@@ -945,7 +1034,11 @@ export const products: Product[] = [
       fabric: "leather",
       fit: "regular",
     },
-    images: ["/images/products/w-leather-flat.webp"],
+    images: [
+      "/images/products/w-leather-flat--black.webp",
+      "/images/products/w-leather-flat--bone.webp",
+      "/images/products/w-leather-flat--oxblood.webp",
+    ],
   },
   {
     id: "w-block-heel",
@@ -959,12 +1052,12 @@ export const products: Product[] = [
       {
         name: "Tan",
         hex: "#a97b50",
-        image: "/images/products/w-block-heel.webp",
+        image: "/images/products/w-block-heel--tan.webp",
       },
       {
         name: "Black",
         hex: "#222124",
-        image: "/images/products/w-block-heel.webp",
+        image: "/images/products/w-block-heel--black.webp",
       },
     ],
     sizes: ["36", "37", "38", "39", "40"],
@@ -980,7 +1073,10 @@ export const products: Product[] = [
       fabric: "leather",
       fit: "regular",
     },
-    images: ["/images/products/w-block-heel.webp"],
+    images: [
+      "/images/products/w-block-heel--tan.webp",
+      "/images/products/w-block-heel--black.webp",
+    ],
   },
   {
     id: "w-runner-sneaker",
@@ -994,12 +1090,12 @@ export const products: Product[] = [
       {
         name: "Off White",
         hex: "#e9e4d9",
-        image: "/images/products/w-runner-sneaker.webp",
+        image: "/images/products/w-runner-sneaker--off-white.webp",
       },
       {
         name: "Sage",
         hex: "#93a089",
-        image: "/images/products/w-runner-sneaker.webp",
+        image: "/images/products/w-runner-sneaker--sage.webp",
       },
     ],
     sizes: ["36", "37", "38", "39", "40"],
@@ -1015,6 +1111,9 @@ export const products: Product[] = [
       fabric: "suede",
       fit: "regular",
     },
-    images: ["/images/products/w-runner-sneaker.webp"],
+    images: [
+      "/images/products/w-runner-sneaker--off-white.webp",
+      "/images/products/w-runner-sneaker--sage.webp",
+    ],
   },
 ];

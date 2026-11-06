@@ -5,7 +5,8 @@
  *   npm run db:seed -- --force re-render and re-upload every image
  *   npm run db:seed -- --dry   render locally to scripts/.preview, upload nothing
  *
- * For every colourway it renders the flat-lay illustration (scripts/product-art.ts), uploads it
+ * For every colourway it takes the product photo from public/images/products (or, when a
+ * colourway has none, renders the flat-lay illustration from scripts/product-art.ts), uploads it
  * to the Telegram channel as a document and stores the permanent /api/tg/<file_id>.webp link on
  * the product. Artwork already in the channel is reused: the `media` table remembers a hash of
  * the bytes per colourway, so a second run uploads nothing.
@@ -13,7 +14,7 @@
  * This is the only writer. The website itself only ever reads the database.
  */
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -63,6 +64,13 @@ const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
 const dryRun = args.has("--dry");
 
+/** Bytes of a photo shipped under public/images/products, if the colourway points at one. */
+function localPhoto(image: string | undefined): Buffer | null {
+  if (!image?.startsWith("/images/products/")) return null;
+  const file = join(root, "public", image);
+  return existsSync(file) ? readFileSync(file) : null;
+}
+
 async function renderArt(product: Product, colorIndex: number): Promise<Buffer> {
   const color = product.colors[colorIndex]!;
   const svg = productArtSvg(product, color);
@@ -105,8 +113,12 @@ async function main(): Promise<void> {
   for (const product of catalog) {
     const colors = [];
     for (const [index, color] of product.colors.entries()) {
-      const key = `art:v${ART_VERSION}:${product.id}:${color.name}`;
-      const bytes = await renderArt(product, index);
+      // A real photo in public/images/products wins; otherwise the flat-lay artwork is drawn.
+      const photo = localPhoto(color.image);
+      const key = photo
+        ? `photo:${product.id}:${color.name}`
+        : `art:v${ART_VERSION}:${product.id}:${color.name}`;
+      const bytes = photo ?? (await renderArt(product, index));
       const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 32);
       const known = nextMedia.get(key);
       if (!force && known?.hash === hash) {
@@ -121,7 +133,11 @@ async function main(): Promise<void> {
       console.log(`  uploaded ${filename} -> ${url}`);
       colors.push({ ...color, image: url });
     }
-    products.push({ ...product, colors: colors as Product["colors"] });
+    products.push({
+      ...product,
+      colors: colors as Product["colors"],
+      images: colors.map((color) => color.image).filter((url): url is string => Boolean(url)),
+    });
   }
 
   // Validate once more: this is exactly what the website will read back.
