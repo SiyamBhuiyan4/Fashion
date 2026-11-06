@@ -15,6 +15,8 @@
 import * as THREE from "three";
 import type { Gender } from "@/lib/types";
 import { ringTubeGeometry, subdivideProfile, type Ring } from "@/lib/three/geometry";
+import { toonMaterial, withOutline } from "@/lib/three/toon";
+import { faceTexture } from "@/lib/three/face";
 
 export type JointName =
   | "root"
@@ -89,8 +91,8 @@ const MALE: BodyMeasurements = {
   shoulderY: 1.45,
   neckY: 1.5,
   headY: 1.62,
-  legX: 0.09,
-  shoulderX: 0.176,
+  legX: 0.078,
+  shoulderX: 0.166,
   upperArmLength: 0.3,
   forearmLength: 0.26,
   handLength: 0.11,
@@ -109,8 +111,8 @@ const FEMALE: BodyMeasurements = {
   shoulderY: 1.36,
   neckY: 1.41,
   headY: 1.52,
-  legX: 0.085,
-  shoulderX: 0.144,
+  legX: 0.072,
+  shoulderX: 0.134,
   upperArmLength: 0.28,
   forearmLength: 0.24,
   handLength: 0.1,
@@ -152,7 +154,7 @@ export interface Figure {
   /** Heights of the spine joint and the chest joint in world space, for garment placement. */
   spineY: number;
   chestLocalY: number;
-  skinMaterial: THREE.MeshStandardMaterial;
+  skinMaterial: THREE.MeshToonMaterial;
   setSkinColor: (hex: string) => void;
 }
 
@@ -301,11 +303,14 @@ function mesh(
   geometry: THREE.BufferGeometry,
   material: THREE.Material,
   name: string,
+  outline = 0.0035,
 ): THREE.Mesh {
   const object = new THREE.Mesh(geometry, material);
   object.name = name;
   object.castShadow = true;
   object.receiveShadow = true;
+  // The drawn line around every shape is what makes the cel shading read as anime.
+  if (outline > 0) withOutline(object, outline);
   return object;
 }
 
@@ -321,30 +326,33 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   const m = measurementsFor(gender);
   const female = gender === "women";
 
-  const skinMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(skinHex),
-    roughness: 0.82,
-    metalness: 0,
-  });
-  const hairMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color("#2a2018"),
-    roughness: 0.65,
-    metalness: 0.05,
-  });
-  const underwearMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(female ? "#d8c3bb" : "#2f3238"),
-    roughness: 0.9,
-    metalness: 0,
-  });
+  // Cel shading: flat colour in two or three bands, as in the character sheets.
+  const skinMaterial = toonMaterial(skinHex, { steps: 3, emissiveMix: 0.07 });
+  const hairMaterial = toonMaterial("#1b1822", { steps: 2, emissiveMix: 0.22 });
+  const underwearMaterial = toonMaterial(female ? "#d9c6bd" : "#2f3238", { steps: 2 });
+
+  /**
+   * Anime proportions: a large head on a slender body. The measured profiles above are close to
+   * life, so the body is taken in here rather than every number being rewritten twice.
+   */
+  const slim = (rings: Ring[], factor: number): Ring[] =>
+    rings.map((ring) => ({
+      ...ring,
+      rx: ring.rx * factor,
+      rz: ring.rz * factor,
+      dz: (ring.dz ?? 0) * factor,
+    }));
+  const bodyFactor = female ? 0.84 : 0.87;
+  const limbFactor = female ? 0.88 : 0.9;
 
   const profiles: BodyProfiles = {
-    torso: torsoProfile(m),
-    pelvis: pelvisProfile(m),
-    upperLeg: upperLegProfile(m),
-    lowerLeg: lowerLegProfile(m),
-    upperArm: upperArmProfile(m),
-    forearm: forearmProfile(m),
-    neck: neckProfile(m),
+    torso: slim(torsoProfile(m), bodyFactor),
+    pelvis: slim(pelvisProfile(m), bodyFactor),
+    upperLeg: slim(upperLegProfile(m), limbFactor),
+    lowerLeg: slim(lowerLegProfile(m), limbFactor),
+    upperArm: slim(upperArmProfile(m), limbFactor),
+    forearm: slim(forearmProfile(m), limbFactor),
+    neck: slim(neckProfile(m), 0.94),
   };
 
   const parts: Partial<Record<PartName, THREE.Mesh>> = {};
@@ -461,69 +469,175 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   joints.head = head;
   neck.add(head);
 
-  const headRadius = female ? 0.09 : 0.095;
-  const headGeometry = new THREE.SphereGeometry(headRadius, 28, 22);
-  headGeometry.scale(0.84, 1.2, 0.98);
-  headGeometry.translate(0, 0.01, 0.004);
-  parts.head = mesh(headGeometry, skinMaterial, "head");
+  // An anime head: larger than life (about a seventh of the body) and slightly tapered to
+  // the chin.
+  const headRadius = female ? 0.108 : 0.112;
+  const headGeometry = new THREE.SphereGeometry(headRadius, 30, 24);
+  headGeometry.scale(0.82, 1.1, 0.92);
+  headGeometry.translate(0, 0.012, 0.004);
+  // Narrow the jaw: everything below the cheekbones is pulled in towards the chin.
+  const headPosition = headGeometry.getAttribute("position");
+  for (let i = 0; i < headPosition.count; i++) {
+    const y = headPosition.getY(i);
+    const chin = THREE.MathUtils.clamp((-y + 0.01) / (headRadius * 1.1), 0, 1);
+    const pinch = 1 - chin * chin * 0.42;
+    headPosition.setX(i, headPosition.getX(i) * pinch);
+    headPosition.setZ(i, headPosition.getZ(i) * (1 - chin * chin * 0.22));
+  }
+  headGeometry.computeVertexNormals();
+  parts.head = mesh(headGeometry, skinMaterial, "head", 0.004);
   head.add(parts.head);
 
-  // Hair: a smooth cap over the skull, plus length down the back for the female avatar.
-  const hairGeometry = new THREE.SphereGeometry(
-    headRadius * 1.05,
-    30,
-    22,
+  // The face is painted onto a patch that hugs the front of the skull.
+  const face = faceTexture(gender);
+  const faceGeometry = new THREE.SphereGeometry(
+    headRadius * 1.003,
+    40,
+    40,
+    Math.PI / 2 - 0.52,
+    1.04,
+    Math.PI * 0.3,
+    Math.PI * 0.44,
+  );
+  faceGeometry.scale(0.82, 1.1, 0.92);
+  faceGeometry.translate(0, 0.012, 0.004);
+  const faceMesh = new THREE.Mesh(
+    faceGeometry,
+    new THREE.MeshBasicMaterial({ map: face, transparent: true, depthWrite: false }),
+  );
+  faceMesh.name = "face";
+  faceMesh.renderOrder = 2;
+  head.add(faceMesh);
+
+  // ---------------------------------------------------------------- hair
+  // Cap over the skull.
+  const capGeometry = new THREE.SphereGeometry(
+    headRadius * 1.07,
+    32,
+    24,
     0,
     Math.PI * 2,
     0,
-    Math.PI * 0.42,
+    Math.PI * 0.47,
   );
-  hairGeometry.scale(0.86, 1.2, 1.0);
-  hairGeometry.translate(0, 0.012, -0.008);
-  parts.hair = mesh(hairGeometry, hairMaterial, "hair");
+  capGeometry.scale(0.87, 1.12, 0.98);
+  capGeometry.translate(0, 0.012, -0.004);
+  parts.hair = mesh(capGeometry, hairMaterial, "hair", 0.004);
   head.add(parts.hair);
 
-  // The back of the head, so the cap does not stop in mid-air.
+  // Back of the head down to the nape.
   const napeRings = toRings([
-    [-0.055, headRadius * 0.72, headRadius * 0.74, -0.01],
-    [0.01, headRadius * 0.92, headRadius * 0.96, -0.008],
-    [0.06, headRadius * 0.88, headRadius * 0.95, -0.006],
+    [-0.075, headRadius * 0.6, headRadius * 0.66, -0.012],
+    [-0.02, headRadius * 0.84, headRadius * 0.9, -0.01],
+    [0.035, headRadius * 0.9, headRadius * 0.95, -0.008],
   ]);
   head.add(
     mesh(
-      ringTubeGeometry(napeRings, { segments: 26, arcStart: 0.42, arcLength: 0.66, capStart: false, capEnd: false }),
+      ringTubeGeometry(napeRings, {
+        segments: 28,
+        arcStart: 0.38,
+        arcLength: 0.74,
+        capStart: false,
+        capEnd: false,
+      }),
       hairMaterial,
       "hairNape",
+      0.003,
     ),
   );
 
+  /** One pointed lock of hair, hanging from the hairline. */
+  const strand = (
+    length: number,
+    width: number,
+    position: [number, number, number],
+    rotation: [number, number, number],
+  ): THREE.Mesh => {
+    const geometry = new THREE.ConeGeometry(width, length, 5, 1);
+    geometry.scale(1, 1, 0.55);
+    geometry.translate(0, -length / 2, 0);
+    const piece = mesh(geometry, hairMaterial, "hairStrand", 0.0028);
+    piece.position.set(...position);
+    piece.rotation.set(...rotation);
+    return piece;
+  };
+
+  const front = headRadius * 0.74;
   if (female) {
-    // Falls behind the shoulders: an arc around the back of the head only.
+    // A long fringe parted off-centre, side locks to the collarbone and length down the back.
+    const fringe: Array<[number, number, number, number, number]> = [
+      [0.1, 0.028, -0.07, 0.092, 0.055],
+      [0.115, 0.03, -0.028, 0.098, 0.075],
+      [0.11, 0.028, 0.026, 0.098, 0.074],
+      [0.095, 0.026, 0.068, 0.09, 0.052],
+    ];
+    for (const [length, width, x, y, z] of fringe) {
+      head.add(strand(length, width, [x, y, z], [0.46, 0, -x * 2.2]));
+    }
+    for (const side of [-1, 1]) {
+      head.add(
+        strand(0.26, 0.042, [side * (headRadius * 0.78), 0.02, 0.012], [0.06, 0, side * 0.12]),
+      );
+      head.add(
+        strand(0.17, 0.034, [side * (headRadius * 0.86), 0.03, -0.02], [-0.04, 0, side * 0.2]),
+      );
+    }
     const fall = toRings([
-      [-0.26, 0.072, 0.05, -0.052],
-      [-0.12, 0.084, 0.06, -0.044],
-      [-0.02, 0.09, 0.072, -0.028],
-      [0.05, 0.088, 0.082, -0.012],
+      [-0.34, 0.082, 0.056, -0.055],
+      [-0.2, 0.098, 0.07, -0.05],
+      [-0.06, 0.108, 0.086, -0.032],
+      [0.04, 0.104, 0.096, -0.014],
     ]);
     head.add(
       mesh(
-        ringTubeGeometry(fall, { segments: 26, arcStart: 0.5, arcLength: 0.5, capStart: false, capEnd: false }),
+        ringTubeGeometry(fall, {
+          segments: 28,
+          arcStart: 0.46,
+          arcLength: 0.58,
+          capStart: false,
+          capEnd: false,
+        }),
         hairMaterial,
         "hairLength",
+        0.003,
       ),
     );
+  } else {
+    // Short, tousled: a shorter fringe plus spikes lifting off the crown.
+    const fringe: Array<[number, number, number, number, number]> = [
+      [0.062, 0.028, -0.068, 0.104, 0.05],
+      [0.075, 0.03, -0.026, 0.108, 0.07],
+      [0.07, 0.028, 0.024, 0.108, 0.069],
+      [0.06, 0.026, 0.066, 0.102, 0.048],
+    ];
+    for (const [length, width, x, y, z] of fringe) {
+      head.add(strand(length, width, [x, y, z], [0.72, 0, -x * 3]));
+    }
+    // Tufts lying back across the crown, lifted just enough to read as tousled.
+    const tufts: Array<[number, number, number, number, number, number]> = [
+      [0.07, 0.03, -0.072, 0.088, 0.032, -0.95],
+      [0.082, 0.032, -0.028, 0.095, 0.046, -1.05],
+      [0.078, 0.03, 0.032, 0.094, 0.044, -1.0],
+      [0.068, 0.028, 0.074, 0.086, 0.028, -0.9],
+      [0.072, 0.03, -0.048, 0.092, -0.048, -2.2],
+      [0.07, 0.03, 0.048, 0.09, -0.05, -2.15],
+    ];
+    for (const [length, width, x, y, z, tilt] of tufts) {
+      head.add(strand(length, width, [x, y, z], [tilt, 0, -x * 3]));
+    }
   }
+  void front;
 
   // ------------------------------------------------------------------------ arms
   for (const side of ["L", "R"] as const) {
     const sign = side === "L" ? 1 : -1;
     const arm = group(`arm${side}`, [sign * m.shoulderX, m.shoulderY - m.chestY - 0.012, 0]);
     // Arms hang slightly away from the body.
-    arm.rotation.z = sign * 0.035;
+    arm.rotation.z = sign * 0.075;
     joints[`arm${side}` as JointName] = arm;
     chest.add(arm);
 
-    const shoulderGeometry = new THREE.SphereGeometry(female ? 0.06 : 0.068, 20, 16);
+    const shoulderGeometry = new THREE.SphereGeometry(female ? 0.05 : 0.058, 20, 16);
     shoulderGeometry.scale(1.15, 0.82, 1);
     shoulderGeometry.translate(-sign * 0.03, -0.014, 0);
     const shoulder = mesh(shoulderGeometry, skinMaterial, `shoulder${side}`);
@@ -570,6 +684,9 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
     spineY: m.waistY,
     chestLocalY,
     skinMaterial,
-    setSkinColor: (hex: string) => skinMaterial.color.set(hex),
+    setSkinColor: (hex: string) => {
+      skinMaterial.color.set(hex);
+      skinMaterial.emissive.set(hex).multiplyScalar(0.07);
+    },
   };
 }

@@ -19,6 +19,7 @@ import {
   type Ring,
 } from "@/lib/three/geometry";
 import type { Figure, JointName, PartName } from "@/lib/three/figure";
+import { toonMaterial, withOutline } from "@/lib/three/toon";
 
 export interface GarmentBuild {
   /** Objects to add to the named joints. */
@@ -34,58 +35,23 @@ type Fit = NonNullable<GarmentSpec["fit"]>;
 const EASE: Record<Fit, number> = { slim: 0.005, regular: 0.009, relaxed: 0.015, wide: 0.022 };
 
 function materialFor(fabric: Fabric, hex: string): THREE.Material {
-  const color = new THREE.Color(hex);
-  const common = { color, side: THREE.DoubleSide as THREE.Side };
+  // Cel shading, like the avatars. Fabric only changes how hard the shadow band is and how much
+  // light the cloth keeps in shadow — a satin reads brighter and flatter than a wool.
   switch (fabric) {
     case "silk":
-      return new THREE.MeshPhysicalMaterial({
-        ...common,
-        roughness: 0.28,
-        metalness: 0.02,
-        sheen: 0.8,
-        sheenRoughness: 0.35,
-        sheenColor: new THREE.Color(hex).lerp(new THREE.Color("#ffffff"), 0.5),
-        clearcoat: 0.25,
-        clearcoatRoughness: 0.4,
-      });
+      return toonMaterial(hex, { steps: 4, emissiveMix: 0.3, side: THREE.DoubleSide });
     case "leather":
-      return new THREE.MeshPhysicalMaterial({
-        ...common,
-        roughness: 0.42,
-        metalness: 0.05,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.35,
-      });
-    case "suede":
-      return new THREE.MeshPhysicalMaterial({
-        ...common,
-        roughness: 0.95,
-        metalness: 0,
-        sheen: 0.5,
-        sheenRoughness: 0.9,
-      });
-    case "denim":
-      return new THREE.MeshStandardMaterial({ ...common, roughness: 0.86, metalness: 0.02 });
+      return toonMaterial(hex, { steps: 4, emissiveMix: 0.18, side: THREE.DoubleSide });
+    case "nylon":
+      return toonMaterial(hex, { steps: 3, emissiveMix: 0.24, side: THREE.DoubleSide });
     case "wool":
     case "knit":
-      return new THREE.MeshPhysicalMaterial({
-        ...common,
-        roughness: 0.95,
-        metalness: 0,
-        sheen: 0.45,
-        sheenRoughness: 0.8,
-        sheenColor: new THREE.Color(hex).lerp(new THREE.Color("#ffffff"), 0.25),
-      });
-    case "nylon":
-      return new THREE.MeshPhysicalMaterial({
-        ...common,
-        roughness: 0.45,
-        metalness: 0.08,
-        clearcoat: 0.4,
-        clearcoatRoughness: 0.5,
-      });
+    case "suede":
+      return toonMaterial(hex, { steps: 2, emissiveMix: 0.14, side: THREE.DoubleSide });
+    case "denim":
+      return toonMaterial(hex, { steps: 3, emissiveMix: 0.12, side: THREE.DoubleSide });
     default:
-      return new THREE.MeshStandardMaterial({ ...common, roughness: 0.9, metalness: 0 });
+      return toonMaterial(hex, { steps: 3, emissiveMix: 0.16, side: THREE.DoubleSide });
   }
 }
 
@@ -158,6 +124,7 @@ function buildMesh(
   mesh.name = name;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  withOutline(mesh, 0.0035);
   return mesh;
 }
 
@@ -172,9 +139,9 @@ function necklineY(figure: Figure, spec: GarmentSpec): number {
       return shoulder - 0.07;
     case "polo":
     case "shirt":
-      return shoulder - 0.012;
+      return shoulder - 0.045;
     default:
-      return shoulder - 0.03;
+      return shoulder - 0.055;
   }
 }
 
@@ -212,16 +179,18 @@ function buildSleeves(
   if (sleeve === "none") return { attachments, hidden };
 
   // A cap over each shoulder, so the sleeve joins the body instead of floating beside it.
-  const shoulderRadius = (figure.measurements.gender === "women" ? 0.055 : 0.062) + ease;
+  const shoulderRadius = (figure.measurements.gender === "women" ? 0.047 : 0.054) + ease;
   for (const side of ["L", "R"] as const) {
     const sign = side === "L" ? 1 : -1;
     const cap = new THREE.Mesh(
       new THREE.SphereGeometry(shoulderRadius, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62),
       material,
     );
-    cap.scale.set(1.14, 0.92, 1);
-    cap.position.set(-sign * 0.026, 0.002, 0);
+    // Reaches in over the shoulder seam, so no skin shows between body and sleeve.
+    cap.scale.set(1.75, 1.05, 1.1);
+    cap.position.set(-sign * 0.052, 0.004, 0);
     cap.name = `shoulderCap${side}`;
+    withOutline(cap, 0.0035);
     attachments.push({ joint: `arm${side}` as JointName, object: cap });
   }
 
@@ -230,18 +199,14 @@ function buildSleeves(
 
   if (sleeve === "short") {
     const cut = -upperLength * (spec.kind === "polo" ? 0.52 : 0.44);
-    attachments.push({
-      joint: "armL",
-      object: buildMesh(withHem(sliceProfile(upper, cut, 0.02), 1.08), material, "sleeveL", {
-        segments: 20,
-      }),
-    });
-    attachments.push({
-      joint: "armR",
-      object: buildMesh(withHem(sliceProfile(upper, cut, 0.02), 1.08), material, "sleeveR", {
-        segments: 20,
-      }),
-    });
+    for (const side of ["L", "R"] as const) {
+      attachments.push({
+        joint: `arm${side}` as JointName,
+        object: buildMesh(withHem(sliceProfile(upper, cut, 0.05), 1.08), material, `sleeve${side}`, {
+          segments: 20,
+        }),
+      });
+    }
     return { attachments, hidden };
   }
 
@@ -250,7 +215,7 @@ function buildSleeves(
   for (const side of ["L", "R"] as const) {
     attachments.push({
       joint: `arm${side}` as JointName,
-      object: buildMesh(sliceProfile(upper, -upperLength - 0.005, 0.02), material, `sleeveUpper${side}`, {
+      object: buildMesh(sliceProfile(upper, -upperLength - 0.005, 0.05), material, `sleeveUpper${side}`, {
         segments: 20,
       }),
     });
@@ -277,13 +242,14 @@ function buildCollar(
   if (!spec.collar) return null;
   const neck = figure.profiles.neck;
   const base = neck[0]!;
+  // Low and close: a tall collar would swallow the chin on these anime proportions.
   const rings: Ring[] = [
-    { ...base, rx: base.rx * 0.94, rz: base.rz * 0.94, y: -0.005 },
-    { ...base, rx: base.rx * 1.02, rz: base.rz * 1.04, y: 0.028 },
-    { ...base, rx: base.rx * 1.14, rz: base.rz * 1.2, y: 0.05 },
+    { ...base, rx: base.rx * 0.96, rz: base.rz * 0.96, y: -0.012 },
+    { ...base, rx: base.rx * 1.04, rz: base.rz * 1.06, y: 0.012 },
+    { ...base, rx: base.rx * 1.16, rz: base.rz * 1.22, y: 0.03 },
   ];
   const collar = buildMesh(rings, material, "collar", { segments: 24 });
-  collar.position.y = -0.01;
+  collar.position.y = -0.018;
   return collar;
 }
 
@@ -451,6 +417,7 @@ function buildTop(figure: Figure, spec: GarmentSpec, material: THREE.Material): 
       strap.rotation.z = sign * 0.25;
       strap.rotation.x = -0.1;
       strap.name = `strap${side}`;
+      withOutline(strap, 0.003);
       attachments.push({ joint: "chest", object: strap });
     }
   }
@@ -501,6 +468,7 @@ function buildOuterwear(figure: Figure, spec: GarmentSpec, material: THREE.Mater
     hood.rotation.x = 0.45;
     hood.position.set(0, 0.0, -0.075);
     hood.name = "hood";
+    withOutline(hood, 0.0035);
     attachments.push({ joint: "neck", object: hood });
   } else if (spec.collar) {
     const collar = buildCollar(figure, spec, material);
@@ -516,6 +484,7 @@ function buildOuterwear(figure: Figure, spec: GarmentSpec, material: THREE.Mater
       lapel.rotation.z = sign * 0.3;
       lapel.rotation.x = -0.14;
       lapel.name = `lapel${side}`;
+      withOutline(lapel, 0.003);
       attachments.push({ joint: "chest", object: lapel });
     }
   }
@@ -551,9 +520,9 @@ function buildShoes(figure: Figure, spec: GarmentSpec, material: THREE.Material)
     shoe.add(buildMesh(upperRings, material, "shoeUpper", { segments: 22, caps: true }));
 
     // Sole.
-    const soleMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(spec.kind === "sneakers" ? "#f2efe8" : "#2b2622"),
-      roughness: 0.8,
+    const soleMaterial = toonMaterial(spec.kind === "sneakers" ? "#f2efe8" : "#2b2622", {
+      steps: 2,
+      side: THREE.DoubleSide,
     });
     const soleRings: Ring[] = [
       { y: -m.ankleY, rx: 0.051, rz: m.footLength * 0.5, dz: m.footLength * 0.15, box: 0.65 },
@@ -638,8 +607,11 @@ export function retintGarment(build: GarmentBuild, hex: string): void {
   for (const { object } of build.attachments) {
     object.traverse((child) => {
       const mesh = child as THREE.Mesh;
-      const material = mesh.material as THREE.MeshStandardMaterial | undefined;
-      if (material && mesh.name !== "sole" && material.color) material.color.set(hex);
+      const material = mesh.material as THREE.MeshToonMaterial | undefined;
+      if (!material || !material.color) return;
+      if (mesh.name === "sole" || mesh.name.endsWith("Outline")) return;
+      material.color.set(hex);
+      if (material.emissive) material.emissive.set(hex).multiplyScalar(0.18);
     });
   }
 }

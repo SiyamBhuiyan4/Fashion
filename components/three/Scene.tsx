@@ -7,6 +7,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import type { Gender } from "@/lib/types";
 import { Avatar } from "@/components/three/Avatar";
+import { Backdrop } from "@/components/three/Backdrop";
 import { Lights } from "@/components/three/Lights";
 import { useOutfitStore } from "@/store/outfitStore";
 import { measurementsFor } from "@/lib/three/figure";
@@ -16,13 +17,13 @@ function CameraRig({ gender }: { gender: Gender }) {
   const autoRotate = useOutfitStore((state) => state.autoRotate);
   const resetToken = useOutfitStore((state) => state.viewResetToken);
   const measurements = measurementsFor(gender);
-  const target = new THREE.Vector3(0, measurements.height * 0.48, 0);
+  const target = new THREE.Vector3(0, measurements.height * 0.5, 0);
 
   useEffect(() => {
     const instance = controls.current;
     if (!instance) return;
     instance.target.copy(target);
-    instance.object.position.set(0, measurements.height * 0.56, 3.45);
+    instance.object.position.set(0, measurements.height * 0.54, 3.9);
     instance.update();
     // `target` is derived from the gender and never changes between renders of one page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,7 +40,7 @@ function CameraRig({ gender }: { gender: Gender }) {
       enableDamping
       dampingFactor={0.08}
       minDistance={1.1}
-      maxDistance={4.6}
+      maxDistance={5.2}
       minPolarAngle={Math.PI * 0.08}
       maxPolarAngle={Math.PI * 0.92}
     />
@@ -56,33 +57,29 @@ export function Scene({ gender }: { gender: Gender }) {
         shadows={false}
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: "high-performance", alpha: true }}
-        camera={{ fov: 32, position: [0, measurements.height * 0.56, 3.45], near: 0.1, far: 50 }}
+        camera={{ fov: 32, position: [0, measurements.height * 0.54, 3.9], near: 0.1, far: 50 }}
         onCreated={({ gl }) => {
-          gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.05;
+          // Flat, illustrative colour: tone mapping would soften exactly the banding that
+          // makes cel shading read as drawn.
+          gl.toneMapping = THREE.NoToneMapping;
           setReady(true);
         }}
       >
-        <color attach="background" args={["#efeae1"]} />
-        <fog attach="fog" args={["#efeae1", 6, 14]} />
+        <color attach="background" args={["#f0e7df"]} />
         <Lights />
+        <Backdrop />
         <Suspense fallback={null}>
           <Avatar gender={gender} />
         </Suspense>
         <ContactShadows
-          position={[0, 0.001, 0]}
-          opacity={0.42}
+          position={[0, 0.002, 0]}
+          opacity={0.3}
           scale={3}
-          blur={2.4}
+          blur={2.8}
           far={1.2}
           resolution={512}
-          color="#2a241d"
+          color="#5b4435"
         />
-        {/* A plinth, so the avatar is standing on something. */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-          <circleGeometry args={[1.25, 48]} />
-          <meshStandardMaterial color="#e3dcd1" roughness={0.95} />
-        </mesh>
         <CameraRig gender={gender} />
         <AdaptiveDpr pixelated />
         <AdaptiveEvents />
