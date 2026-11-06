@@ -51,15 +51,19 @@ are remembered in `videos/.uploaded.json`.
 ## Data and media live on Telegram
 
 The whole database is one AES-256-GCM encrypted JSON document posted to a Telegram channel. The
-pointer to the newest snapshot sits in the channel description:
+pointer to the newest snapshot sits in the **bot's own description** (`setMyDescription`, up to 512
+characters):
 
 ```
 [fashion-db] v=<version> m=<message_id> f=<file_id>
 ```
 
-Writes take a lock on the same line (`[fashion-db-lock] …`). This channel is shared with another
-app, which keeps its own `[smartdine-db]` pointer there: each app strips only its own lines and
-writes everything else back untouched. **Never pin or unpin anything in that channel.**
+Writes take a lock on the same description (`[fashion-db-lock] …`). The channel is shared with the
+restaurant app, which keeps its own `[smartdine-db]` pointer and lock in the **channel**
+description. That description is limited to 255 characters, and with both apps' pointers in it
+neither had room for its lock, so the fashion pointer moved to the bot description, which the
+restaurant app never touches. An old fashion line left in the channel description is still read,
+and removed on the next write. **Never pin or unpin anything in that channel.**
 
 Product artwork is rendered from the garment spec (`scripts/product-art.ts`), uploaded to the same
 channel and referenced by a permanent same-origin link, `/api/tg/<file_id>.webp`, which streams the

@@ -3,15 +3,18 @@
  *
  * Ported from the restaurant app (client/telegram-db/store.js) and sharing its bot and
  * channel. The whole database is one JSON document ({ version, updated_at, tables }),
- * encrypted and posted to the channel. The channel's pinned message belongs to another app,
- * so the pointer to the newest snapshot lives in the channel description, on its own line:
+ * encrypted and posted to the channel. The pointer to the newest snapshot lives in the BOT's
+ * own description (getMyDescription / setMyDescription, up to 512 characters), on its own line:
  *   [fashion-db] v=<version> m=<message_id> f=<file_id>
  *
- * The restaurant app keeps its own `[smartdine-db]` line in the same description. Each app
- * strips only its own lines and writes everything else back untouched, so the two pointers
- * live side by side. NEVER pin or unpin anything in this channel.
+ * It used to live in the channel description, next to the restaurant app's `[smartdine-db]`
+ * line, but the channel description is limited to 255 characters: with both pointers there,
+ * neither app had room left for its write lock, so both apps' writes failed. The restaurant app
+ * never touches the bot description, so the fashion pointer now lives there; an old pointer in
+ * the channel description is still read (once) and removed on the next write, which gives the
+ * restaurant its room back. NEVER pin or unpin anything in this channel.
  *
- * Writes take a lock, also in the description:
+ * Writes take a lock, also in the bot description:
  *   [fashion-db-lock] <writer id> <expires at, ms>
  * A writer sets the line, waits, then reads it back; only the writer that still sees its own
  * id proceeds. Locks expire on their own, so a crashed writer cannot block the database.
@@ -155,14 +158,12 @@ function decrypt(key: Buffer, text: string): unknown {
   return JSON.parse(plain.toString("utf8"));
 }
 
-async function readDescription({ token, chatId, tag }: Config): Promise<Description> {
-  const chat = await tg<{ description?: string }>(token, "getChat", { chat_id: chatId });
-  const description = chat.description ?? "";
+function parseDescription(description: string, tag: string): Description {
   const re = tagPatterns(tag);
   const pointerMatch = description.match(re.pointer);
   const lockMatch = description.match(re.lock);
   return {
-    // Everything that is not ours — including the restaurant app's pointer — is kept verbatim.
+    // Everything that is not ours is kept verbatim.
     base: description
       .replace(re.pointer, "")
       .replace(re.lock, "")
@@ -179,6 +180,34 @@ async function readDescription({ token, chatId, tag }: Config): Promise<Descript
   };
 }
 
+/** The pointer and lock, from the bot's own description. */
+async function readDescription({ token, tag }: Config): Promise<Description> {
+  const bot = await tg<{ description?: string }>(token, "getMyDescription", {});
+  return parseDescription(bot.description ?? "", tag);
+}
+
+/** A pointer still left in the channel description by the old layout, if any. */
+async function readLegacyPointer({ token, chatId, tag }: Config): Promise<Pointer | null> {
+  const chat = await tg<{ description?: string }>(token, "getChat", { chat_id: chatId });
+  return parseDescription(chat.description ?? "", tag).pointer;
+}
+
+/**
+ * Removes the old fashion lines from the channel description, leaving everything else (the
+ * restaurant's pointer and the channel's own text) exactly as it was.
+ */
+async function clearLegacyLines({ token, chatId, tag }: Config): Promise<void> {
+  const chat = await tg<{ description?: string }>(token, "getChat", { chat_id: chatId });
+  const current = chat.description ?? "";
+  const parsed = parseDescription(current, tag);
+  if (!parsed.pointer && !parsed.lock) return;
+  try {
+    await tg(token, "setChatDescription", { chat_id: chatId, description: parsed.base });
+  } catch (error) {
+    if (!/not modified/i.test((error as TelegramError).description ?? "")) throw error;
+  }
+}
+
 async function writeDescription(cfg: Config, next: Description): Promise<void> {
   const lines = [next.base];
   if (next.pointer) {
@@ -188,11 +217,11 @@ async function writeDescription(cfg: Config, next: Description): Promise<void> {
   }
   if (next.lock) lines.push(`[${cfg.tag}-lock] ${next.lock.id} ${next.lock.expiresAt}`);
   const description = lines.filter(Boolean).join("\n");
-  if (description.length > 255) {
-    throw new TelegramDbError("Channel description would exceed Telegram's 255-character limit");
+  if (description.length > 512) {
+    throw new TelegramDbError("Bot description would exceed Telegram's 512-character limit");
   }
   try {
-    await tg(cfg.token, "setChatDescription", { chat_id: cfg.chatId, description });
+    await tg(cfg.token, "setMyDescription", { description });
   } catch (error) {
     if (!/not modified/i.test((error as TelegramError).description ?? "")) throw error;
   }
@@ -230,7 +259,7 @@ const emptySnapshot = (): Snapshot => ({
 /** Reads the newest snapshot. Returns version 0 when nothing has been saved yet. */
 export async function loadSnapshot(): Promise<{ snapshot: Snapshot; version: number }> {
   const cfg = config();
-  const { pointer } = await readDescription(cfg);
+  const pointer = (await readDescription(cfg)).pointer ?? (await readLegacyPointer(cfg));
   if (!pointer) return { snapshot: emptySnapshot(), version: 0 };
   return { snapshot: await download(cfg, pointer.fileId), version: pointer.version };
 }
@@ -268,10 +297,10 @@ export function withWriteLock(
     const { id, description } = await acquireLock(cfg);
     let released = false;
     try {
-      const version = description.pointer?.version ?? 0;
-      const snapshot = description.pointer
-        ? await download(cfg, description.pointer.fileId)
-        : emptySnapshot();
+      // Until the first write in the new layout, the newest pointer is still in the channel.
+      const previous = description.pointer ?? (await readLegacyPointer(cfg));
+      const version = previous?.version ?? 0;
+      const snapshot = previous ? await download(cfg, previous.fileId) : emptySnapshot();
       if (!(await change(snapshot, version))) return version;
 
       const next = version + 1;
@@ -302,10 +331,14 @@ export function withWriteLock(
       });
       released = true;
       cache.set(sent.document.file_id, structuredClone(body));
-      if (description.pointer?.messageId) {
+      // The pointer now lives on the bot: give the channel description its room back.
+      await clearLegacyLines(cfg).catch((error: unknown) => {
+        console.warn("[telegram-db] could not tidy the channel description:", error);
+      });
+      if (previous?.messageId) {
         void tg(cfg.token, "deleteMessage", {
           chat_id: cfg.chatId,
-          message_id: description.pointer.messageId,
+          message_id: previous.messageId,
         }).catch(() => undefined);
       }
       return next;
