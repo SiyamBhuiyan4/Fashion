@@ -288,6 +288,8 @@ export function SakuraBackground() {
         {/* A light wash on the left keeps the headline legible over the blossom. */}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,247,245,0.9)_0%,rgba(251,247,245,0.62)_38%,rgba(251,247,245,0.12)_72%,rgba(251,247,245,0)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-bone/70 to-transparent" />
+        {/* Phones: the headline sits low and full-width, so it gets its own wash from below. */}
+        <div className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-bone/92 via-bone/65 to-transparent sm:hidden" />
       </div>
       {/* The petals fall in front of the page (under the header and the bag), so they drift
         across everything; they never take a click. */}

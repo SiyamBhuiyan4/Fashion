@@ -22,12 +22,17 @@ export const metadata: Metadata = {
   title: { default: `${site.name} — ${site.tagline}`, template: `%s · ${site.name}` },
   description: site.description,
   robots: { index: false, follow: false },
+  // Installed to an iPhone home screen, it opens full-screen with the page behind the status bar.
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   themeColor: "#f5f3ef",
   width: "device-width",
   initialScale: 1,
+  // Lay out under the notch and home bar; components pad with env(safe-area-inset-*).
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

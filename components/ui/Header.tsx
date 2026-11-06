@@ -50,19 +50,48 @@ export function Header() {
   }, []);
 
   const clear = home && !scrolled;
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Any navigation closes the menu.
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setMenuOpen(false);
+  }
 
   return (
     <>
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-40 transition-[background-color,color,box-shadow,backdrop-filter] duration-500 ease-out-soft",
+          "fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)] transition-[background-color,color,box-shadow,backdrop-filter] duration-500 ease-out-soft",
           clear
             ? "bg-transparent text-ink"
             : "bg-bone/80 text-ink shadow-[0_1px_0_var(--color-line)] backdrop-blur-xl",
         )}
       >
         <div className="mx-auto grid h-16 max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
-          <nav aria-label="Collections" className="flex items-center gap-5 text-[0.8125rem]">
+          {/* Phones: a menu button opens the full-screen menu below. */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={menuOpen}
+            className="-ml-2 grid h-11 w-11 place-items-center sm:hidden"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M4 8h16M4 16h16" strokeLinecap="round" />
+            </svg>
+          </button>
+          <nav
+            aria-label="Collections"
+            className="hidden items-center gap-5 text-[0.8125rem] sm:flex"
+          >
             {links.map((link) => {
               const active = home && !clear && link.section === activeGender;
               return (
@@ -90,7 +119,7 @@ export function Header() {
             <button
               type="button"
               onClick={openDrawer}
-              className="group relative flex items-center gap-2 py-2 text-[0.8125rem] tracking-wide"
+              className="group relative -mr-2 flex h-11 items-center gap-2 px-2 text-[0.8125rem] tracking-wide sm:mr-0 sm:px-0"
             >
               <span className="link-line hidden sm:inline">Bag</span>
               <svg
@@ -118,8 +147,101 @@ export function Header() {
           </div>
         </div>
       </header>
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       {/* Pages other than home start below the bar; the home hero runs under it. */}
-      {home ? null : <div aria-hidden className="h-16" />}
+      {home ? null : <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-top))]" />}
     </>
+  );
+}
+
+/** Full-screen phone menu: big serif links that slide in, closed by any choice or Escape. */
+function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const openDrawer = useCartStore((state) => state.openDrawer);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  const items = [
+    { href: "/#women", label: "Women", note: "Silk, wool and clean lines" },
+    { href: "/#men", label: "Men", note: "Tailoring, denim, knits" },
+    { href: "/#in-motion", label: "In motion", note: "Filmed on real people" },
+  ];
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu"
+      aria-hidden={!open}
+      className={cn(
+        "fixed inset-0 z-50 flex flex-col bg-bone/97 backdrop-blur-xl transition-[opacity,visibility] duration-500 ease-out-soft sm:hidden",
+        open ? "visible opacity-100" : "invisible opacity-0",
+      )}
+    >
+      <div className="flex h-16 items-center justify-between px-4 pt-[env(safe-area-inset-top)]">
+        <span className="display text-2xl tracking-[0.32em]">{site.name}</span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="-mr-2 grid h-11 w-11 place-items-center"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+      <nav aria-label="Menu" className="flex flex-1 flex-col justify-center gap-2 px-6">
+        {items.map((item, i) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onClose}
+            tabIndex={open ? 0 : -1}
+            className={cn(
+              "group border-b border-line py-5 transition-[opacity,transform] duration-700 ease-out-soft",
+              open ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
+            )}
+            style={{ transitionDelay: open ? `${120 + i * 80}ms` : "0ms" }}
+          >
+            <span className="display block text-5xl">{item.label}</span>
+            <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-ink-faint">
+              {item.note}
+            </span>
+          </Link>
+        ))}
+      </nav>
+      <div className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <button
+          type="button"
+          tabIndex={open ? 0 : -1}
+          onClick={() => {
+            onClose();
+            openDrawer();
+          }}
+          className="flex h-14 w-full items-center justify-between bg-ink px-5 text-sm font-medium text-bone"
+        >
+          <span>Open bag</span>
+          <span aria-hidden>→</span>
+        </button>
+      </div>
+    </div>
   );
 }
