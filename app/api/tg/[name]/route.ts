@@ -24,7 +24,8 @@ const TYPES: Record<string, string> = {
   mp4: "video/mp4",
   webm: "video/webm",
   mov: "video/quicktime",
-  glb: "model/gltf-binary",
+  // HLS video pieces (see app/api/video).
+  ts: "video/mp2t",
 };
 
 const PATH_TTL_MS = 50 * 60 * 1000;

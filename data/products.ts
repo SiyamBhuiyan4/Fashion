@@ -1,7 +1,5 @@
 import type { Product } from "@/lib/schemas";
 
-
-
 export const products: Product[] = [
   {
     id: "m-tee-essential",

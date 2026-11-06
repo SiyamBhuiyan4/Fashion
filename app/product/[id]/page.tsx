@@ -40,7 +40,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <div className="flex items-baseline justify-between">
             <h2 className="display text-xl">Wear it with</h2>
             <Link href={`/#${product.gender}`} className="text-sm text-ink-soft hover:text-ink">
-              See the fitting room →
+              See the collection →
             </Link>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

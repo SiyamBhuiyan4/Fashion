@@ -6,10 +6,6 @@ export type Gender = z.infer<typeof genderSchema>;
 export const categorySchema = z.enum(["tops", "bottoms", "outerwear", "shoes"]);
 export type Category = z.infer<typeof categorySchema>;
 
-/** Outfit slots on the avatar. A dress occupies both "top" and "bottom". */
-export const slotSchema = z.enum(["top", "bottom", "outerwear", "shoes"]);
-export type Slot = z.infer<typeof slotSchema>;
-
 export const productIdSchema = z
   .string()
   .min(3)
@@ -71,10 +67,7 @@ export const fabricSchema = z.enum([
 ]);
 export type Fabric = z.infer<typeof fabricSchema>;
 
-/**
- * Parameters for the procedural 3D garment. `modelUrl` is reserved for swapping in a
- * real compressed GLB later (see scripts/optimize-models.mjs) without touching the UI.
- */
+/** What the garment is, used to draw its flat-lay artwork (scripts/product-art.ts). */
 export const garmentSpecSchema = z.object({
   kind: garmentKindSchema,
   fabric: fabricSchema,
@@ -84,10 +77,6 @@ export const garmentSpecSchema = z.object({
   fit: z.enum(["slim", "regular", "relaxed", "wide"]).default("regular"),
   collar: z.boolean().optional(),
   accentHex: hexColorSchema.optional(),
-  modelUrl: z
-    .string()
-    .regex(/^\/models\/garments\/(men|women)\/[a-z0-9-]+\.glb$/)
-    .optional(),
 });
 export type GarmentSpec = z.infer<typeof garmentSpecSchema>;
 
@@ -99,6 +88,55 @@ export const mediaUrlSchema = z.union([
   z.string().regex(/^\/api\/tg\/[A-Za-z0-9_-]{10,200}\.(webp|jpg|jpeg|png|avif)$/),
   z.string().regex(/^\/images\/products\/[a-z0-9-]+\.webp$/),
 ]);
+
+const telegramFileIdSchema = z.string().regex(/^[A-Za-z0-9_-]{10,200}$/);
+
+/**
+ * A product video as the page sees it. `url` is an HLS playlist built by /api/video from the
+ * "videos" table; the pieces themselves are files in the Telegram channel.
+ */
+export const productVideoSchema = z.object({
+  url: z.string().regex(/^\/api\/video\/[a-z0-9-]{3,64}\/master\.m3u8$/),
+  poster: z
+    .string()
+    .regex(/^\/api\/tg\/[A-Za-z0-9_-]{10,200}\.jpg$/)
+    .optional(),
+  width: z.number().int().positive().max(8192),
+  height: z.number().int().positive().max(8192),
+  duration: z
+    .number()
+    .positive()
+    .max(3 * 3600),
+});
+export type ProductVideo = z.infer<typeof productVideoSchema>;
+
+/** One quality level of a video: its pieces, in order. Every piece is under 20 MB. */
+export const videoRenditionSchema = z.object({
+  name: z.string().regex(/^[a-z0-9]{2,12}$/),
+  width: z.number().int().positive().max(8192),
+  height: z.number().int().positive().max(8192),
+  bandwidth: z.number().int().positive().max(500_000_000),
+  codecs: z.string().regex(/^[a-z0-9.,]{4,60}$/),
+  segments: z
+    .array(z.object({ d: z.number().positive().max(60), f: telegramFileIdSchema }))
+    .min(1)
+    .max(20_000),
+});
+export type VideoRendition = z.infer<typeof videoRenditionSchema>;
+
+/** Row of the "videos" table: one video per product, written by scripts/upload-videos.ts. */
+export const videoRowSchema = z.object({
+  productId: productIdSchema,
+  poster: productVideoSchema.shape.poster,
+  width: productVideoSchema.shape.width,
+  height: productVideoSchema.shape.height,
+  duration: productVideoSchema.shape.duration,
+  renditions: z.array(videoRenditionSchema).min(1).max(6),
+  hash: z.string().max(64),
+  bytes: z.number().int().positive(),
+  updatedAt: z.string().max(40),
+});
+export type VideoRow = z.infer<typeof videoRowSchema>;
 
 export const productColorSchema = z.object({
   name: colorNameSchema,
@@ -122,6 +160,8 @@ export const productSchema = z
     /** Units in stock per size. */
     stock: z.record(sizeSchema, z.number().int().min(0)),
     garment: garmentSpecSchema,
+    /** Product video, merged in from the "videos" table (lib/products.server.ts). */
+    video: productVideoSchema.optional(),
     /** Optional real product photos under /images/products (webp). */
     images: z.array(mediaUrlSchema).max(8).optional(),
     tags: z.array(z.string().max(24)).max(6).optional(),
@@ -154,12 +194,6 @@ export const catalogSchema = z.array(productSchema).superRefine((list, ctx) => {
   }
 });
 
-/** Search params accepted by /men and /women (e.g. from "Try on in 3D"). */
-export const tryOnParamsSchema = z.object({
-  wear: productIdSchema.optional(),
-  color: colorNameSchema.optional(),
-});
-
 /** Cart persisted in localStorage — never trusted, always re-validated. */
 export const cartItemSchema = z.object({
   productId: productIdSchema,
@@ -169,8 +203,3 @@ export const cartItemSchema = z.object({
 });
 export type CartItem = z.infer<typeof cartItemSchema>;
 export const cartStateSchema = z.object({ items: z.array(cartItemSchema).max(100) });
-
-export const skinToneIdSchema = z.string().regex(/^[a-z-]{2,20}$/);
-export const prefsStateSchema = z.object({
-  skinTone: z.object({ men: skinToneIdSchema, women: skinToneIdSchema }),
-});

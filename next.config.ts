@@ -10,6 +10,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
   "font-src 'self'",
   `connect-src 'self' blob: data:${isDev ? " ws:" : ""}`,
   "worker-src 'self' blob:",
@@ -41,13 +42,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    return [
-      { source: "/:path*", headers: securityHeaders },
-      {
-        source: "/models/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-    ];
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
 };
 

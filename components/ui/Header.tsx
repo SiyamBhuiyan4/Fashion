@@ -6,7 +6,7 @@ import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/useHydrated";
 import { useCartStore } from "@/store/cartStore";
-import { useOutfitStore } from "@/store/outfitStore";
+import { useSectionStore } from "@/store/sectionStore";
 
 // Both collections live on one page; these only jump, nothing needs clicking.
 const links = [
@@ -17,7 +17,7 @@ const links = [
 export function Header() {
   const pathname = usePathname();
   // Highlights whichever collection the scroll is currently on.
-  const activeGender = useOutfitStore((state) => state.activeGender);
+  const activeGender = useSectionStore((state) => state.active);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const items = useCartStore((state) => state.items);
   // The cart is restored from localStorage after hydration, so the count is only shown once

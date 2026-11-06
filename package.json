@@ -1,8 +1,8 @@
 {
-  "name": "maison-3d-try-on",
+  "name": "maison-store",
   "version": "0.1.0",
   "private": true,
-  "description": "Customer-facing demo of a fashion store with a real-time 3D virtual try-on.",
+  "description": "Customer-facing demo of a fashion store with product videos.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,31 +11,29 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "models:optimize": "node scripts/optimize-models.mjs",
-    "models:export": "npx tsx scripts/export-avatars.ts",
     "db:seed": "node scripts/seed-db.ts",
-    "db:dump": "node scripts/db-dump.ts"
+    "db:dump": "node scripts/db-dump.ts",
+    "videos:upload": "node scripts/upload-videos.ts",
+    "video:hls": "node scripts/video-hls.ts"
   },
   "dependencies": {
-    "@react-three/drei": "10.7.9",
-    "@react-three/fiber": "9.8.2",
+    "hls.js": "1.7.2",
     "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "three": "0.187.0",
     "zod": "4.6.7",
     "zustand": "5.0.16"
   },
   "devDependencies": {
-    "@gltf-transform/cli": "4.5.1",
     "@tailwindcss/postcss": "4.3.4",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@types/three": "0.187.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.5",
     "eslint-config-prettier": "10.1.8",
+    "ffmpeg-static": "5.3.0",
+    "ffprobe-static": "3.1.0",
     "prettier": "3.9.10",
     "sharp": "0.34.5",
     "tailwindcss": "4.3.4",

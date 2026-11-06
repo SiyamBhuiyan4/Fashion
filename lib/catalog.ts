@@ -8,7 +8,6 @@ import {
   type Category,
   type Gender,
   type Product,
-  type Slot,
 } from "@/lib/schemas";
 
 export type Catalog = readonly Product[];
@@ -40,7 +39,7 @@ export interface CollectionGroup {
   items: Product[];
 }
 
-/** The catalog grouped by category in tab order, for the try-on page. */
+/** The catalog grouped by category in tab order, for the shop page. */
 export function groupByCategory(catalog: Catalog, gender: Gender): CollectionGroup[] {
   return categorySchema.options.map((category) => ({
     category,
@@ -58,21 +57,6 @@ export function relatedProducts(catalog: Catalog, product: Product, limit = 4): 
       return sameCategory !== 0 ? sameCategory : a.price - b.price;
     })
     .slice(0, limit);
-}
-
-/** Which avatar slots a product covers. A dress fills top and bottom at once. */
-export function slotsForProduct(product: Product): Slot[] {
-  if (product.garment.kind === "dress") return ["top", "bottom"];
-  switch (product.category) {
-    case "tops":
-      return ["top"];
-    case "bottoms":
-      return ["bottom"];
-    case "outerwear":
-      return ["outerwear"];
-    case "shoes":
-      return ["shoes"];
-  }
 }
 
 export function isInStock(product: Product, size?: string): boolean {

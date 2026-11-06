@@ -1,11 +1,9 @@
-# MAISON — 3D virtual try-on (customer demo)
+# MAISON — fashion store with product videos (customer demo)
 
-A customer-facing fashion store where every piece can be worn by a 3D model before buying.
-The home page _is_ the fitting room: the model stays on the left while the men's collection runs
-down the right, and the women's collection follows underneath. Nothing has to be clicked to switch
-— scroll into the women's section and the model changes with you. Each model keeps its own outfit,
-so scrolling back up finds the men's look still on. Tap **Wear** and the garment appears on the
-body; rotate, zoom, change the skin tone, play a pose, and send the whole outfit to the cart.
+A customer-facing fashion store. Both collections live on one page: men's first, women's as you
+keep scrolling. Products that have a video show a **Video** badge; on a computer, hovering the card
+plays it muted in place of the photo, and the product page opens with the video (photos per
+colourway underneath it). Pick colour and size, add to cart.
 
 Demo only: no login, no admin, no payment. Checkout says so.
 
@@ -14,25 +12,41 @@ Demo only: no login, no admin, no payment. Checkout says so.
 |            |                                                                           |
 | ---------- | ------------------------------------------------------------------------- |
 | Framework  | Next.js 16 (App Router) · React 19 · TypeScript strict                    |
-| 3D         | three.js · React Three Fiber · drei                                       |
-| State      | Zustand (outfit, cart, preferences, catalogue)                            |
+| State      | Zustand (cart, catalogue, active section)                                 |
 | Styling    | Tailwind CSS v4                                                           |
 | Validation | zod — product data, URL parameters, and everything read back from storage |
 | Data       | Telegram channel (encrypted JSON snapshot)                                |
 | Media      | Telegram channel, served through `/api/tg/<file_id>.<ext>`                |
+| Video      | HLS via hls.js; cut with ffmpeg (`ffmpeg-static`) in the upload script    |
 
-## The 3D is built in code
+## Product videos
 
-There are no `.glb` files. `lib/three/figure.ts` builds each avatar as a joint tree (hips → spine →
-chest → neck → head, plus arms and legs) with one mesh per body part, exactly as a rigged model
-would be split, and `lib/three/garments.ts` builds every garment by growing those same body
-profiles outwards and parenting the result to the same joints — so sleeves follow elbows and
-trouser legs follow knees without skinning or cloth simulation. Poses (Idle, Walk, Turn) are
-animated in `lib/three/poses.ts`.
+1. Put each video in `videos/` (git-ignored), named after the product id:
+   `videos/m-tee-essential.mp4`, `videos/w-slip-dress.mov` … (`.mp4 .mov .m4v .webm .mkv`).
+   `npm run db:dump` lists the ids.
+2. `npm run videos:upload` — or `-- --dry` to cut them into `scripts/.preview` without uploading,
+   `-- --force` to redo unchanged files, `-- --remove <id>` to take a video off the site.
 
-To move to real models later, swap `lib/three/figure.ts` for a loader that exposes the same joints
-and profiles, drop the `.glb` files under `public/models/`, and run `npm run models:optimize`
-(gltf-transform: meshopt + webp).
+Telegram only lets a bot **download** files up to 20 MB, and the site streams every file through
+the bot. So videos are not shrunk to fit — they are **cut into pieces** (HLS, the format YouTube and
+Netflix use) by `scripts/video-hls.ts`, every piece under 19 MB, and the player joins them back:
+
+- **No length limit, best quality capped at 1080p** (more only makes the site slow). H.264 sources
+  up to 1080p are cut _without re-encoding_ (every pixel kept); other codecs (iPhone HEVC, which
+  Chrome cannot play) and 2K/4K sources are encoded once at CRF 18 (visually lossless), at the
+  original size or down to 1080p.
+- **Extra smaller levels** (720p / 480p, never above the top one) are added for slow
+  connections. The player starts at the best level and only steps down when the connection cannot
+  keep up. All levels are cut at the same moments, so switching is seamless.
+- Pieces are 6 s long. If a piece of a very high bitrate source comes out over the limit, it is cut
+  again with proportionally shorter pieces; if the source's own keyframes are too far apart for
+  that, it is encoded at CRF 18 with a keyframe at every cut instead.
+
+Playlists are built on the fly by `/api/video/<id>/master.m3u8` (and `/<level>.m3u8`) from the
+`videos` table; each piece is `/api/tg/<file_id>.ts`. Safari/iOS play HLS natively, other browsers
+use hls.js (`components/ui/VideoPlayer.tsx`, loaded only when a video plays). Videos are kept in
+their own `videos` table, so `npm run db:seed` never removes them. Uploads resume: finished pieces
+are remembered in `videos/.uploaded.json`.
 
 ## Data and media live on Telegram
 
@@ -49,8 +63,9 @@ writes everything else back untouched. **Never pin or unpin anything in that cha
 
 Product artwork is rendered from the garment spec (`scripts/product-art.ts`), uploaded to the same
 channel and referenced by a permanent same-origin link, `/api/tg/<file_id>.webp`, which streams the
-file from Telegram and is cached by the CDN. The website only ever **reads** the database; the only
-writer is `npm run db:seed`.
+file from Telegram and is cached by the CDN (byte ranges are passed through, so videos can seek).
+The website only ever **reads** the database; the only writers are `npm run db:seed` (products and
+artwork) and `npm run videos:upload` (videos).
 
 ## Environment
 
@@ -73,18 +88,19 @@ npm run typecheck      # tsc --noEmit
 npm run db:seed        # render artwork, upload it, write the catalogue to Telegram
 npm run db:seed -- --dry    # render previews locally, upload nothing
 npm run db:dump        # show what the database holds
-npm run models:optimize     # compress any *.src.glb under public/models
+npm run videos:upload  # cut every video in videos/ into pieces and put it on the site
+npm run video:hls -- in.mov out-dir   # cut one file locally, upload nothing
 ```
 
 ## Routes
 
-| Route            |                                                                     |
-| ---------------- | ------------------------------------------------------------------- |
-| `/`              | The shop: sticky 3D model, men's collection, then women's on scroll |
-| `/men`, `/women` | Redirect to `/#men` and `/#women` (the old two-page layout)         |
-| `/product/[id]`  | Detail: gallery, colours, sizes, stock, "Try on in 3D", add to cart |
-| `/cart`          | Cart (localStorage), quantities, subtotal, demo checkout notice     |
-| `/api/tg/[name]` | Permanent link to a file in the Telegram channel                    |
+| Route            |                                                                 |
+| ---------------- | --------------------------------------------------------------- |
+| `/`              | The shop: men's collection, then women's on scroll              |
+| `/men`, `/women` | Redirect to `/#men` and `/#women` (the old two-page layout)     |
+| `/product/[id]`  | Detail: video, photos, colours, sizes, stock, add to cart       |
+| `/cart`          | Cart (localStorage), quantities, subtotal, demo checkout notice |
+| `/api/tg/[name]` | Permanent link to a file in the Telegram channel                |
 
 ## Security notes
 

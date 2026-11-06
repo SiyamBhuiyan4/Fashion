@@ -7,11 +7,19 @@ import type { Product } from "@/lib/types";
 import { defaultSize, isInStock, stockLabel } from "@/lib/catalog";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
 
 export function ProductDetail({ product }: { product: Product }) {
   const [colorName, setColorName] = useState(product.colors[0]!.name);
   const [size, setSize] = useState(() => defaultSize(product));
   const [added, setAdded] = useState(false);
+  const video = product.video;
+  // The video opens the gallery; picking a colour switches to that colour's photo.
+  const [showVideo, setShowVideo] = useState(Boolean(video));
+  const pickColor = (name: string) => {
+    setColorName(name);
+    setShowVideo(false);
+  };
   const add = useCartStore((state) => state.add);
   const openDrawer = useCartStore((state) => state.openDrawer);
 
@@ -26,14 +34,21 @@ export function ProductDetail({ product }: { product: Product }) {
     window.setTimeout(() => setAdded(false), 2000);
   };
 
-  const tryOnHref = `/?wear=${encodeURIComponent(product.id)}&color=${encodeURIComponent(color.name)}#${product.gender}`;
-
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-2 lg:gap-12 lg:py-12">
-      {/* Gallery: one image per colourway, served from the Telegram channel. */}
+      {/* Gallery: the video first (when there is one), then one photo per colourway. Both are
+          served from the Telegram channel. */}
       <div className="flex flex-col gap-3">
         <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-line bg-white">
-          {color.image ? (
+          {showVideo && video ? (
+            <VideoPlayer
+              key={video.url}
+              src={video.url}
+              poster={video.poster}
+              controls
+              className="h-full w-full bg-ink object-contain"
+            />
+          ) : color.image ? (
             <Image
               src={color.image}
               alt={`${product.name} in ${color.name}`}
@@ -48,16 +63,49 @@ export function ProductDetail({ product }: { product: Product }) {
           )}
         </div>
         <div className="flex gap-2">
+          {video ? (
+            <button
+              type="button"
+              onClick={() => setShowVideo(true)}
+              aria-label="Play video"
+              aria-pressed={showVideo}
+              className={cn(
+                "relative grid h-20 w-16 place-items-center overflow-hidden rounded-lg border bg-ink transition-colors",
+                showVideo ? "border-ink" : "border-line hover:border-ink-faint",
+              )}
+            >
+              {video.poster ? (
+                <Image
+                  src={video.poster}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="64px"
+                  className="object-cover opacity-70"
+                />
+              ) : null}
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                className="relative h-6 w-6 text-bone"
+                fill="currentColor"
+              >
+                <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+              </svg>
+            </button>
+          ) : null}
           {product.colors.map((option) => (
             <button
               key={option.name}
               type="button"
-              onClick={() => setColorName(option.name)}
+              onClick={() => pickColor(option.name)}
               aria-label={option.name}
-              aria-pressed={option.name === color.name}
+              aria-pressed={!showVideo && option.name === color.name}
               className={cn(
                 "relative h-20 w-16 overflow-hidden rounded-lg border transition-colors",
-                option.name === color.name ? "border-ink" : "border-line hover:border-ink-faint",
+                !showVideo && option.name === color.name
+                  ? "border-ink"
+                  : "border-line hover:border-ink-faint",
               )}
             >
               {option.image ? (
@@ -105,7 +153,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 title={option.name}
                 aria-label={option.name}
                 aria-pressed={option.name === color.name}
-                onClick={() => setColorName(option.name)}
+                onClick={() => pickColor(option.name)}
                 className={cn(
                   "h-8 w-8 rounded-full border-2 transition-transform",
                   option.name === color.name
@@ -157,12 +205,6 @@ export function ProductDetail({ product }: { product: Product }) {
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href={tryOnHref}
-            className="flex-1 rounded-full border border-ink bg-white px-6 py-3 text-center text-sm font-medium transition-colors hover:bg-ink hover:text-bone"
-          >
-            Try on in 3D
-          </Link>
           <button
             type="button"
             onClick={addToCart}

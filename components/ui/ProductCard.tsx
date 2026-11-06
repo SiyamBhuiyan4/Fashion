@@ -2,36 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { isInStock, resolveColor } from "@/lib/catalog";
+import { isInStock } from "@/lib/catalog";
 import { Price } from "@/components/ui/Price";
-import { useOutfitStore } from "@/store/outfitStore";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
 
-export function ProductCard({ product, compact = false }: { product: Product; compact?: boolean }) {
-  const worn = useOutfitStore((state) => state.worn);
-  const toggle = useOutfitStore((state) => state.toggle);
-  const setColor = useOutfitStore((state) => state.setColor);
-
-  // The outfit is kept per model, so a card only looks at its own product's wardrobe.
-  const wornEntry = Object.values(worn[product.gender]).find(
-    (item) => item?.productId === product.id,
-  );
-  const isWorn = Boolean(wornEntry);
-  const color = resolveColor(product, wornEntry?.colorName);
+/**
+ * A product in the grid. On a computer, hovering a card that has a video plays it muted in
+ * place of the photo; the video is only fetched once the pointer is over the card, so the grid
+ * never downloads videos nobody looks at. On phones the card links to the product page, where
+ * the video plays at the top.
+ */
+export function ProductCard({ product }: { product: Product }) {
+  const [colorName, setColorName] = useState(product.colors[0]!.name);
+  const [previewing, setPreviewing] = useState(false);
+  const color = product.colors.find((option) => option.name === colorName) ?? product.colors[0]!;
   const available = isInStock(product);
+  const video = product.video;
 
   return (
-    <article
-      className={cn(
-        "group flex flex-col overflow-hidden rounded-xl border bg-white transition-shadow",
-        isWorn ? "border-accent shadow-md" : "border-line hover:shadow-md",
-        compact ? "w-44 shrink-0 md:w-auto md:shrink" : "",
-      )}
-    >
+    <article className="group flex flex-col overflow-hidden rounded-xl border border-line bg-white transition-shadow hover:shadow-md">
       <Link
         href={`/product/${product.id}`}
         className="relative block aspect-[4/5] overflow-hidden bg-bone-dark"
+        onPointerEnter={(event) => {
+          if (video && event.pointerType === "mouse") setPreviewing(true);
+        }}
+        onPointerLeave={() => setPreviewing(false)}
       >
         {color.image ? (
           <Image
@@ -39,17 +38,36 @@ export function ProductCard({ product, compact = false }: { product: Product; co
             alt={`${product.name} in ${color.name}`}
             fill
             unoptimized
-            sizes={compact ? "176px" : "(max-width: 1024px) 45vw, 22vw"}
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <span className="grid h-full place-items-center text-xs text-ink-faint">No image</span>
         )}
-        {isWorn ? (
-          <span className="absolute left-2 top-2 rounded-full bg-accent px-2.5 py-1 text-[0.625rem] font-medium uppercase tracking-wider text-white">
-            Wearing
+
+        {video && previewing ? (
+          <VideoPlayer
+            src={video.url}
+            poster={video.poster}
+            preview
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+
+        {video ? (
+          <span
+            className={cn(
+              "absolute left-2 top-2 flex items-center gap-1 rounded-full bg-ink/75 px-2 py-1 text-[0.625rem] font-medium uppercase tracking-wider text-bone transition-opacity",
+              previewing && "opacity-0",
+            )}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden className="h-3 w-3" fill="currentColor">
+              <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+            </svg>
+            Video
           </span>
         ) : null}
+
         {!available ? (
           <span className="absolute right-2 top-2 rounded-full bg-ink/80 px-2.5 py-1 text-[0.625rem] uppercase tracking-wider text-bone">
             Sold out
@@ -65,7 +83,7 @@ export function ProductCard({ product, compact = false }: { product: Product; co
           <Price amount={product.price} className="shrink-0 text-sm text-ink-soft" />
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="mt-auto flex items-center gap-1.5">
           {product.colors.map((option) => {
             const active = option.name === color.name;
             return (
@@ -75,10 +93,7 @@ export function ProductCard({ product, compact = false }: { product: Product; co
                 title={option.name}
                 aria-label={`${option.name}${active ? " (selected)" : ""}`}
                 aria-pressed={active}
-                onClick={() => {
-                  if (isWorn) setColor(product.id, option.name);
-                  else toggle(product.id, option.name);
-                }}
+                onClick={() => setColorName(option.name)}
                 className={cn(
                   "h-4 w-4 rounded-full border transition-transform",
                   active ? "scale-110 border-ink" : "border-line hover:scale-110",
@@ -88,19 +103,6 @@ export function ProductCard({ product, compact = false }: { product: Product; co
             );
           })}
         </div>
-
-        <button
-          type="button"
-          onClick={() => toggle(product.id, color.name)}
-          className={cn(
-            "mt-auto rounded-full px-4 py-2 text-sm font-medium transition-colors",
-            isWorn
-              ? "border border-accent text-accent hover:bg-accent hover:text-white"
-              : "bg-ink text-bone hover:opacity-90",
-          )}
-        >
-          {isWorn ? "Remove" : "Wear"}
-        </button>
       </div>
     </article>
   );

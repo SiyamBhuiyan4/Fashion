@@ -3,9 +3,9 @@
  */
 export const site = {
   name: "MAISON",
-  tagline: "Try it on before you buy it.",
+  tagline: "See it move before you buy it.",
   description:
-    "See every piece on a 3D model before you buy. Rotate, zoom, change skin tone and build your outfit in real time.",
+    "Every piece filmed on a real person, so you see how it moves, falls and fits before you buy.",
   currency: "BDT",
   currencySymbol: "৳",
   locale: "en-BD",

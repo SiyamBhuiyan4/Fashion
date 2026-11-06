@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Fetched once per request from the Telegram-backed database and handed to the client, so the
-  // cart and the try-on page can resolve products without another round trip.
+  // cart and the shop can resolve products without another round trip.
   const catalog = await getCatalog();
 
   return (

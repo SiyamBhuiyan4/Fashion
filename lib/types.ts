@@ -6,13 +6,5 @@ export type {
   Gender,
   Product,
   ProductColor,
-  Slot,
+  ProductVideo,
 } from "@/lib/schemas";
-
-export type Pose = "idle" | "walk" | "turn";
-
-export const poseLabels: Record<Pose, string> = {
-  idle: "Idle",
-  walk: "Walk",
-  turn: "Turn",
-};
