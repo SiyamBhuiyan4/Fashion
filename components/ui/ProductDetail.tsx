@@ -8,6 +8,13 @@ import { categoryLabels, defaultSize, isInStock, stockLabel } from "@/lib/catalo
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import {
+  DeliveryEstimate,
+  SizeAdvisor,
+  StockAlerts,
+  useLiveStock,
+  useReviews,
+} from "@/components/ui/ProductExtras";
 
 const CARE: Record<Fabric, string> = {
   cotton: "100% cotton. Machine wash cold with like colours, tumble dry low, warm iron.",
@@ -33,8 +40,21 @@ export function ProductDetail({ product }: { product: Product }) {
   const openDrawer = useCartStore((state) => state.openDrawer);
 
   const color = product.colors.find((option) => option.name === colorName) ?? product.colors[0]!;
-  const stock = stockLabel(product);
-  const sizeInStock = isInStock(product, size);
+  // Live stock (orders and checkout holds included); the catalogue's numbers until it loads.
+  const live = useLiveStock(product.id);
+  const inStock = (option: string) =>
+    live ? (live.sizes[option]?.total ?? 0) > 0 : isInStock(product, option);
+  const liveTotal = live ? Object.values(live.sizes).reduce((n, s) => n + s.total, 0) : null;
+  const stock =
+    liveTotal === null
+      ? stockLabel(product)
+      : liveTotal === 0
+        ? { text: "Sold out", tone: "out" as const }
+        : liveTotal <= 5
+          ? { text: `Only ${liveTotal} left`, tone: "low" as const }
+          : { text: "In stock", tone: "in" as const };
+  const sizeInStock = inStock(size);
+  const fitLean = useReviews(product.id, "")?.fit.lean ?? 0;
   const video = product.video;
 
   // The video first, then one photo per colourway, in a fixed order so the arrows and the
@@ -343,13 +363,14 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
             <div className="mt-3 grid grid-cols-5 gap-1.5">
               {product.sizes.map((option) => {
-                const available = isInStock(product, option);
+                const available = inStock(option);
                 const active = size === option;
                 return (
                   <button
                     key={option}
                     type="button"
-                    disabled={!available}
+                    // Sold-out sizes stay selectable, to sign up for the back-in-stock alert.
+                    title={available ? undefined : "Sold out — tap to be notified"}
                     onClick={() => setSize(option)}
                     aria-pressed={active}
                     className={cn(
@@ -357,8 +378,8 @@ export function ProductDetail({ product }: { product: Product }) {
                       active
                         ? "border-ink bg-ink text-bone"
                         : "border-line bg-paper hover:border-ink",
-                      !available &&
-                        "cursor-not-allowed text-ink-faint line-through hover:border-line",
+                      !available && !active && "text-ink-faint line-through",
+                      !available && active && "bg-ink/60 line-through",
                     )}
                   >
                     {option}
@@ -366,6 +387,8 @@ export function ProductDetail({ product }: { product: Product }) {
                 );
               })}
             </div>
+            <SizeAdvisor product={product} fitLean={fitLean} onPick={setSize} current={size} />
+            <StockAlerts product={product} size={size} soldOut={!sizeInStock} />
           </div>
 
           <button
@@ -381,6 +404,8 @@ export function ProductDetail({ product }: { product: Product }) {
               {added ? "✓" : "→"}
             </span>
           </button>
+
+          <DeliveryEstimate live={live} size={size} />
 
           <div className="mt-8 border-t border-line">
             {sections.map((section) => {

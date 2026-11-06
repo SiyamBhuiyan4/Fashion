@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/useHydrated";
 import { useCartStore } from "@/store/cartStore";
 import { useSectionStore } from "@/store/sectionStore";
+import { useSessionStore } from "@/store/sessionStore";
+import { SearchOverlay } from "@/components/ui/SearchOverlay";
 
 const links = [
   { href: "/#women", label: "Women", section: "women" },
@@ -50,7 +52,16 @@ export function Header() {
   }, []);
 
   const clear = home && !scrolled;
+  const me = useSessionStore((state) => state.me);
+  const refreshSession = useSessionStore((state) => state.refresh);
+  useEffect(() => {
+    void refreshSession();
+  }, [refreshSession]);
+  const signedIn = Boolean(me?.user);
+  const unread = me?.unread ?? 0;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
   // Any navigation closes the menu.
   const [menuPath, setMenuPath] = useState(pathname);
   if (menuPath !== pathname) {
@@ -115,7 +126,47 @@ export function Header() {
             {site.name}
           </Link>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-4 sm:gap-6">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="flex h-11 items-center gap-2 text-[0.8125rem] tracking-wide"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                className="h-5 w-5 sm:h-4 sm:w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="M16 16l4.5 4.5" strokeLinecap="round" />
+              </svg>
+              <span className="link-line hidden lg:inline">Search</span>
+            </button>
+            <Link
+              href={signedIn ? "/account" : "/login"}
+              aria-label={signedIn ? `Your account${unread ? `, ${unread} new` : ""}` : "Sign in"}
+              className="relative flex h-11 items-center text-[0.8125rem] tracking-wide"
+            >
+              <span className="link-line hidden sm:inline">{signedIn ? "Account" : "Sign in"}</span>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                className="h-5 w-5 sm:hidden"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <circle cx="12" cy="8.5" r="3.5" />
+                <path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" />
+              </svg>
+              {unread > 0 ? (
+                <span className="absolute -right-2 top-2.5 h-2 w-2 rounded-full bg-accent sm:-right-2.5" />
+              ) : null}
+            </Link>
             <button
               type="button"
               onClick={openDrawer}
@@ -148,6 +199,7 @@ export function Header() {
         </div>
       </header>
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={closeSearch} />
       {/* Pages other than home start below the bar; the home hero runs under it. */}
       {home ? null : <div aria-hidden className="h-[calc(4rem+env(safe-area-inset-top))]" />}
     </>
@@ -175,6 +227,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     { href: "/#women", label: "Women", note: "Silk, wool and clean lines" },
     { href: "/#men", label: "Men", note: "Tailoring, denim, knits" },
     { href: "/#in-motion", label: "In motion", note: "Filmed on real people" },
+    { href: "/account", label: "Account", note: "Orders, wallet, alerts" },
   ];
 
   return (

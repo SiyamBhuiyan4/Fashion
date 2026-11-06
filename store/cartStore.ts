@@ -20,6 +20,8 @@ interface CartState {
 
 const MAX_LINES = 100;
 const MAX_QTY = 10;
+/** The bag is kept in this browser for a week after it was last changed, then cleared. */
+export const CART_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Drops any line that is not a real product/size/color before it reaches the UI. */
 function sanitize(items: CartItem[]): CartItem[] {
@@ -100,12 +102,18 @@ export const useCartStore = create<CartState>()(
       // Rehydrated by <CatalogProvider> once the catalogue is in place; see merge() below.
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }),
+      // Every save stamps the time, so the week counts from the last change to the bag.
+      partialize: (state) => ({ items: state.items, savedAt: Date.now() }),
       // localStorage is attacker-writable, so validate the whole shape then re-check
-      // every line against the live catalog.
+      // every line against the live catalog. A bag older than a week starts empty.
       merge: (persisted, current) => {
         const parsed = cartStateSchema.safeParse(persisted);
-        return { ...current, items: parsed.success ? sanitize(parsed.data.items) : [] };
+        const savedAt = (persisted as { savedAt?: unknown } | null)?.savedAt;
+        const fresh = typeof savedAt === "number" && Date.now() - savedAt < CART_TTL_MS;
+        return {
+          ...current,
+          items: parsed.success && fresh ? sanitize(parsed.data.items) : [],
+        };
       },
     },
   ),

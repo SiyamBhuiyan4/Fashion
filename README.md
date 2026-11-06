@@ -48,6 +48,34 @@ use hls.js (`components/ui/VideoPlayer.tsx`, loaded only when a video plays). Vi
 their own `videos` table, so `npm run db:seed` never removes them. Uploads resume: finished pieces
 are remembered in `videos/.uploaded.json`.
 
+## Customer features
+
+Everything customer-facing runs on the same Telegram database (tables `users`, `inventory`,
+`reservations`, `orders`, `cases`, `reviews`, `waitlist`, `notifications`, `wallet`). Every change
+goes through `transact()` in `lib/server/db.ts`, under the database's write lock — one writer at a
+time, so two shoppers can never take the same last unit. A save takes ~2–5 s (Telegram round
+trips), so this suits a demo or a small shop, not heavy traffic.
+
+| Feature                                                                                                                                       | Where                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Email + password accounts (scrypt hashes, signed httpOnly session cookie)                                                                     | `lib/server/auth.ts`, `/login`, `/signup`, `/account` |
+| Bag kept in the browser for 7 days after the last change; ordering needs an account                                                           | `store/cartStore.ts`                                  |
+| Checkout stock hold: the bag is reserved for 15 min; expired holds are released on the next save (no cron)                                    | `lib/server/checkout.ts` `reserve`                    |
+| Three warehouses (Dhaka, Chattogram, Sylhet): nearest one with stock ships; fee and date per district                                         | `lib/warehouses.ts`                                   |
+| Best-offer engine: tries every valid combination (welcome 10%, buy-2/3, shoe edit, free delivery ≥ ৳5,000)                                    | `lib/promotions.ts`                                   |
+| Payment: Cash on Delivery, and a bKash / Nagad demo gateway. A failure keeps the hold 30 min, sends a retry link, and allows switching to COD | `/pay/[id]`, `settlePayment`, `switchMethod`          |
+| Wallet ledger: refunds land here and are used first at checkout                                                                               | `wallet` table                                        |
+| Live stock on product pages (holds included)                                                                                                  | `/api/stock/[id]`                                     |
+| Back-in-stock (FIFO) and price-drop alerts                                                                                                    | `/api/waitlist`, `Db.processWaitlist`                 |
+| Size recommendation from measurements, kept/returned pieces and reviews' fit                                                                  | `lib/sizing.ts`                                       |
+| Verified-buyer reviews with fit votes and height filter                                                                                       | `/api/reviews`, `lib/server/aftercare.ts`             |
+| Automatic return / exchange approval (delivered, ≤ 7 days, returnable); exchanges lock the new size at once                                   | `lib/server/aftercare.ts`                             |
+| Search with typos, Banglish synonyms and stock-aware ranking                                                                                  | `lib/search.ts`                                       |
+| Tracking: courier webhook `/api/courier/webhook` (with `COURIER_WEBHOOK_SECRET`), or a demo courier that moves every 2 min                    | `lib/tracking.ts`                                     |
+| Notifications on the site, and by email once `RESEND_API_KEY` is set                                                                          | `lib/server/email.ts`                                 |
+
+There is no admin panel: stock, prices and products still come from `npm run db:seed`.
+
 ## Data and media live on Telegram
 
 The whole database is one AES-256-GCM encrypted JSON document posted to a Telegram channel. The

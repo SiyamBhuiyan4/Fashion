@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import { useHydrated } from "@/lib/useHydrated";
+import { BagOffer } from "@/components/ui/BagOffer";
 
 export function CartView() {
   const items = useCartStore((state) => state.items);
@@ -14,7 +14,6 @@ export function CartView() {
   const setQuantity = useCartStore((state) => state.setQuantity);
   const clear = useCartStore((state) => state.clear);
   const get = useCatalogStore((state) => state.get);
-  const [notice, setNotice] = useState(false);
 
   // The cart only exists in this browser, so it is read after hydration.
   const mounted = useHydrated();
@@ -22,10 +21,6 @@ export function CartView() {
   const lines = mounted
     ? items.map((item, index) => ({ item, index, product: get(item.productId) }))
     : [];
-  const subtotal = lines.reduce(
-    (sum, line) => sum + (line.product ? line.product.price * line.item.quantity : 0),
-    0,
-  );
 
   return (
     <div className="mx-auto min-h-[70dvh] max-w-5xl bg-bone/90 px-4 py-10 sm:px-6">
@@ -123,33 +118,21 @@ export function CartView() {
             })}
           </ul>
 
-          <aside className="h-fit rounded-2xl border border-line bg-white p-5">
+          <aside className="h-fit border border-line bg-paper p-5 lg:sticky lg:top-24">
             <h2 className="display text-lg">Summary</h2>
-            <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-ink-soft">Subtotal</dt>
-                <dd>{formatPrice(subtotal)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-soft">Delivery</dt>
-                <dd className="text-ink-faint">Calculated at checkout</dd>
-              </div>
-            </dl>
-            <button
-              type="button"
-              onClick={() => setNotice(true)}
-              className="mt-5 w-full rounded-full bg-ink py-3 text-sm text-bone transition-opacity hover:opacity-90"
+            <div className="mt-4">
+              <BagOffer />
+            </div>
+            <Link
+              href="/checkout"
+              className="mt-5 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
             >
-              Checkout
-            </button>
-            {notice ? (
-              <p
-                role="status"
-                className="mt-3 rounded-lg bg-bone-dark px-3 py-2 text-center text-xs text-ink-soft"
-              >
-                Demo only — checkout is not available.
-              </p>
-            ) : null}
+              <span>Checkout</span>
+              <span aria-hidden>→</span>
+            </Link>
+            <p className="mt-2 text-center text-xs text-ink-faint">
+              Your bag is saved on this device for 7 days.
+            </p>
             <button
               type="button"
               onClick={clear}

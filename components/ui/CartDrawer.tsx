@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
-import { formatPrice } from "@/lib/utils";
 import { Price } from "@/components/ui/Price";
+import { BagOffer } from "@/components/ui/BagOffer";
 
 export function CartDrawer() {
   const open = useCartStore((state) => state.drawerOpen);
@@ -44,11 +44,6 @@ export function CartDrawer() {
   }, [open, close]);
 
   if (!mounted) return null;
-
-  const subtotal = items.reduce((sum, item) => {
-    const product = get(item.productId);
-    return product ? sum + product.price * item.quantity : sum;
-  }, 0);
 
   return (
     <div
@@ -166,19 +161,23 @@ export function CartDrawer() {
         )}
 
         <div className="border-t border-line px-5 py-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-ink-soft">Subtotal</span>
-            <span className="text-base font-medium" suppressHydrationWarning>
-              {formatPrice(subtotal)}
-            </span>
-          </div>
+          <BagOffer />
+          {items.length > 0 ? (
+            <Link
+              href="/checkout"
+              onClick={close}
+              className="mt-4 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
+            >
+              <span>Checkout</span>
+              <span aria-hidden>→</span>
+            </Link>
+          ) : null}
           <Link
             href="/cart"
             onClick={close}
-            className="mt-4 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
+            className="mt-2 flex h-11 items-center justify-center border border-line text-sm transition-colors hover:border-ink"
           >
-            <span>View bag</span>
-            <span aria-hidden>→</span>
+            View bag
           </Link>
         </div>
       </aside>

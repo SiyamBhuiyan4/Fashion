@@ -5,6 +5,7 @@ import { getCatalog, getProduct, getProductIds } from "@/lib/products.server";
 import { similarProducts } from "@/lib/catalog";
 import { ProductDetail } from "@/components/ui/ProductDetail";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { ProductReviews } from "@/components/ui/ProductExtras";
 
 export const revalidate = 300;
 /** Any id that is not in the catalogue falls through to the 404 page. */
@@ -36,6 +37,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     // A light veil over the blossom background; the info panel has its own paper.
     <div className="bg-bone/45">
       <ProductDetail product={product} />
+      <ProductReviews productId={product.id} />
       {related.length > 0 ? (
         <section className="mx-auto max-w-[90rem] border-t border-line px-4 py-14 sm:px-8 sm:py-20">
           <div className="flex items-end justify-between gap-4">
