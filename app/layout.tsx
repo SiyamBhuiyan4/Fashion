@@ -6,6 +6,7 @@ import { CatalogProvider } from "@/components/ui/CatalogProvider";
 import { Header } from "@/components/ui/Header";
 import { Footer } from "@/components/ui/Footer";
 import { CartDrawer } from "@/components/ui/CartDrawer";
+import { SakuraBackground } from "@/components/ui/SakuraBackground";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${inter.variable} ${serif.variable}`}>
       <body className="flex min-h-dvh flex-col">
+        <SakuraBackground />
         <CatalogProvider catalog={catalog}>
           <a
             href="#main"

@@ -57,7 +57,7 @@ export function Header() {
         className={cn(
           "fixed inset-x-0 top-0 z-40 transition-[background-color,color,box-shadow,backdrop-filter] duration-500 ease-out-soft",
           clear
-            ? "bg-transparent text-white"
+            ? "bg-transparent text-ink"
             : "bg-bone/80 text-ink shadow-[0_1px_0_var(--color-line)] backdrop-blur-xl",
         )}
       >
@@ -108,11 +108,7 @@ export function Header() {
                 aria-label={`${count} item${count === 1 ? "" : "s"} in bag`}
                 className={cn(
                   "grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[0.6875rem] font-medium tabular-nums transition-colors",
-                  count > 0
-                    ? "bg-accent text-white"
-                    : clear
-                      ? "bg-white/20 text-white"
-                      : "bg-ink/8 text-ink-soft",
+                  count > 0 ? "bg-accent text-white" : "bg-ink/8 text-ink-soft",
                   bump && "animate-bump",
                 )}
               >

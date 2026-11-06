@@ -69,8 +69,12 @@
     scroll-behavior: smooth;
   }
 
+  /* A soft blossom-dawn wash behind the cherry tree (components/ui/SakuraBackground.tsx). */
+  html {
+    background: linear-gradient(180deg, #fbf1f1 0%, #f7f2ee 45%, #f5f3ef 100%) fixed;
+  }
+
   body {
-    background-color: var(--color-bone);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

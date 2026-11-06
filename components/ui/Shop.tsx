@@ -66,64 +66,88 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
   return (
     <div>
       {/* ------------------------------------------------------------------ hero */}
-      <section className="relative h-[92svh] min-h-[34rem] w-full overflow-hidden bg-ink text-white">
-        {heroVideo?.video ? (
-          <VideoPlayer
-            src={heroVideo.video.url}
-            poster={heroVideo.video.poster}
-            className="absolute inset-0 h-full w-full object-cover opacity-90"
-          />
-        ) : (
-          <div className="absolute inset-0 grid grid-cols-2">
+      {/* The cherry tree and its petals (SakuraBackground) play behind this section. */}
+      <section className="relative min-h-[100svh] w-full overflow-hidden">
+        <div className="relative mx-auto grid min-h-[100svh] max-w-[90rem] items-end gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-10">
+          <div>
+            <p className="eyebrow animate-fade-up [animation-delay:200ms]">
+              {site.name} · Spring blossom edit
+            </p>
+            <h1 className="display mt-5 animate-fade-up text-[clamp(3.2rem,8.4vw,8rem)] [animation-delay:320ms]">
+              Quiet clothes,
+              <br />
+              <em className="italic text-accent">loud</em> details.
+            </h1>
+            <p className="mt-6 max-w-md animate-fade-up text-[0.9375rem] leading-relaxed text-ink-soft [animation-delay:420ms]">
+              Soft tailoring, washed denim and silk that moves like petals in the wind. Every piece
+              shown in its real colour{withVideo.length > 0 ? ", many on video" : ""}.
+            </p>
+            <div className="mt-9 flex animate-fade-up flex-wrap gap-3 [animation-delay:520ms]">
+              <Link
+                href="#women"
+                className="rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-bone transition-transform duration-300 ease-out-soft hover:scale-[1.03]"
+              >
+                Shop women
+              </Link>
+              <Link
+                href="#men"
+                className="rounded-full border border-ink/25 bg-white/50 px-7 py-3.5 text-sm font-medium backdrop-blur transition-colors duration-300 hover:bg-ink hover:text-bone"
+              >
+                Shop men
+              </Link>
+            </div>
+          </div>
+
+          {/* Two framed pieces float in front of the blossom (computers only). */}
+          <div className="relative mr-[10%] hidden h-[31rem] lg:block">
             {[heroLeft, heroRight].map((slot, i) =>
               slot ? (
-                <div key={slot.product.id} className="relative overflow-hidden">
-                  <Image
-                    src={slot.image}
-                    alt=""
-                    fill
-                    priority
-                    unoptimized
-                    sizes="50vw"
-                    className="animate-[fade-up_1.4s_var(--ease-out-soft)_both] object-cover"
-                    style={{ animationDelay: `${i * 150}ms` }}
-                  />
-                </div>
+                <Link
+                  key={slot.product.id}
+                  href={`/product/${slot.product.id}`}
+                  className={
+                    i === 0
+                      ? "group absolute left-0 top-0 w-[52%] -rotate-2 animate-fade-up shadow-2xl shadow-ink/20 [animation-delay:450ms]"
+                      : "group absolute bottom-0 right-0 w-[46%] rotate-3 animate-fade-up shadow-2xl shadow-ink/20 [animation-delay:650ms]"
+                  }
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden bg-bone-dark">
+                    {heroVideo?.video && i === 0 ? (
+                      <VideoPlayer
+                        src={heroVideo.video.url}
+                        poster={heroVideo.video.poster}
+                        preview
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={slot.image}
+                        alt={slot.product.name}
+                        fill
+                        priority
+                        unoptimized
+                        sizes="24vw"
+                        className="object-cover transition-transform duration-[1400ms] ease-out-soft group-hover:scale-105"
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between bg-paper px-3 py-2.5 text-xs">
+                    <span>{i === 0 && heroVideo ? heroVideo.name : slot.product.name}</span>
+                    <Price
+                      amount={i === 0 && heroVideo ? heroVideo.price : slot.product.price}
+                      className="tabular-nums text-ink-faint"
+                    />
+                  </div>
+                </Link>
               ) : null,
             )}
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/30" />
-
-        <div className="relative mx-auto flex h-full max-w-[90rem] flex-col justify-end px-4 pb-14 sm:px-8 sm:pb-20">
-          <p className="eyebrow animate-fade-up text-white/75 [animation-delay:200ms]">
-            {site.name} · Autumn / Winter 26
-          </p>
-          <h1 className="display mt-4 max-w-4xl animate-fade-up text-[clamp(3rem,9vw,8.5rem)] [animation-delay:320ms]">
-            Quiet clothes,
-            <br />
-            <em className="italic text-white/90">loud</em> details.
-          </h1>
-          <div className="mt-8 flex animate-fade-up flex-wrap gap-3 [animation-delay:480ms]">
-            <Link
-              href="#women"
-              className="rounded-full bg-white px-7 py-3.5 text-sm font-medium text-ink transition-transform duration-300 ease-out-soft hover:scale-[1.03]"
-            >
-              Shop women
-            </Link>
-            <Link
-              href="#men"
-              className="rounded-full border border-white/60 px-7 py-3.5 text-sm font-medium text-white backdrop-blur-sm transition-colors duration-300 hover:bg-white hover:text-ink"
-            >
-              Shop men
-            </Link>
           </div>
         </div>
 
         <a
           href="#ticker"
           aria-label="Scroll down"
-          className="absolute bottom-6 right-6 hidden h-12 w-12 place-items-center rounded-full border border-white/40 text-white/80 transition-colors hover:bg-white hover:text-ink sm:grid"
+          className="absolute bottom-6 left-1/2 hidden h-12 w-12 -translate-x-1/2 place-items-center rounded-full border border-ink/20 bg-white/40 backdrop-blur transition-colors hover:bg-ink hover:text-bone sm:grid"
         >
           <svg
             viewBox="0 0 24 24"
@@ -138,7 +162,10 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
       </section>
 
       {/* ---------------------------------------------------------------- ticker */}
-      <div id="ticker" className="overflow-hidden border-b border-line bg-paper py-3.5">
+      <div
+        id="ticker"
+        className="overflow-hidden border-y border-line bg-paper/70 py-3.5 backdrop-blur-md"
+      >
         <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-ink-soft">
           {[...TICKER, ...TICKER].map((item, i) => (
             <span key={i} className="flex items-center gap-12">
@@ -201,7 +228,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
       {withVideo.length > 0 ? (
         <section
           id="in-motion"
-          className="scroll-mt-16 border-y border-line bg-paper py-14 sm:py-20"
+          className="scroll-mt-16 border-y border-line bg-paper/60 py-14 backdrop-blur-sm sm:py-20"
         >
           <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
             <Reveal>
