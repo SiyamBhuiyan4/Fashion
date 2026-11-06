@@ -92,13 +92,18 @@ function petalPath(ctx: CanvasRenderingContext2D, s: number) {
 }
 
 export function SakuraBackground() {
+  // Two layers: the ambient petals fall BEHIND the page, so they never drift over buttons or
+  // text; only the cursor trail is drawn in front.
   const ref = useRef<HTMLCanvasElement>(null);
+  const trailRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas) return;
+    const trailCanvas = trailRef.current;
+    if (!canvas || !trailCanvas) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const fx = trailCanvas.getContext("2d");
+    if (!ctx || !fx) return;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let width = 0;
@@ -110,8 +115,10 @@ export function SakuraBackground() {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      for (const layer of [canvas, trailCanvas]) {
+        layer.width = Math.round(width * dpr);
+        layer.height = Math.round(height * dpr);
+      }
       // Fewer petals on small screens: same look, less work.
       petals = makePetals(width < 640 ? 52 : width < 1200 ? 85 : 115);
     };
@@ -171,6 +178,7 @@ export function SakuraBackground() {
     };
 
     let previous = 0;
+    let trailDirty = false;
     const render = (seconds: number) => {
       const dt = Math.min(0.05, Math.max(0, seconds - previous));
       previous = seconds;
@@ -206,7 +214,15 @@ export function SakuraBackground() {
         ctx.stroke();
       }
 
-      // Petals shed from the cursor: a little lift, then gravity and the same wind.
+      ctx.globalAlpha = 1;
+
+      // Petals shed from the cursor (front layer): a little lift, then gravity and the wind.
+      // The layer is only cleared while it has something on it, so it costs nothing at rest.
+      if (shed.length > 0 || trailDirty) {
+        fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fx.clearRect(0, 0, width, height);
+        trailDirty = shed.length > 0;
+      }
       for (let i = shed.length - 1; i >= 0; i--) {
         const petal = shed[i]!;
         petal.age += dt;
@@ -222,19 +238,19 @@ export function SakuraBackground() {
         petal.flip += 6 * dt;
         const fadeIn = Math.min(1, petal.age / 0.12);
         const fadeOut = 1 - Math.max(0, (petal.age - petal.life * 0.55) / (petal.life * 0.45));
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.translate(petal.x, petal.y);
-        ctx.rotate(petal.rot);
-        ctx.scale(0.3 + 0.7 * Math.abs(Math.cos(petal.flip)), 1);
-        ctx.globalAlpha = 0.95 * fadeIn * fadeOut;
-        ctx.fillStyle = petal.color;
-        petalPath(ctx, petal.size);
-        ctx.fill();
-        ctx.lineWidth = 0.8;
-        ctx.strokeStyle = "rgba(214, 94, 132, 0.45)";
-        ctx.stroke();
+        fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fx.translate(petal.x, petal.y);
+        fx.rotate(petal.rot);
+        fx.scale(0.3 + 0.7 * Math.abs(Math.cos(petal.flip)), 1);
+        fx.globalAlpha = 0.95 * fadeIn * fadeOut;
+        fx.fillStyle = petal.color;
+        petalPath(fx, petal.size);
+        fx.fill();
+        fx.lineWidth = 0.8;
+        fx.strokeStyle = "rgba(214, 94, 132, 0.45)";
+        fx.stroke();
       }
-      ctx.globalAlpha = 1;
+      fx.globalAlpha = 1;
     };
 
     resize();
@@ -290,11 +306,13 @@ export function SakuraBackground() {
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-bone/70 to-transparent" />
         {/* Phones: the headline sits low and full-width, so it gets its own wash from below. */}
         <div className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-bone/92 via-bone/65 to-transparent sm:hidden" />
+        {/* Ambient petals: behind the content, so they never cover a button or a price. */}
+        <canvas ref={ref} className="absolute inset-0 h-full w-full" />
       </div>
-      {/* The petals fall in front of the page (under the header and the bag), so they drift
-        across everything; they never take a click. */}
+      {/* Cursor trail only (computers): in front of the page, under the header and the bag,
+          and it never takes a click. */}
       <canvas
-        ref={ref}
+        ref={trailRef}
         aria-hidden
         className="pointer-events-none fixed inset-0 z-30 h-full w-full"
       />
