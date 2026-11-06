@@ -261,7 +261,7 @@ function buildBottoms(
   const attachments: GarmentBuild["attachments"] = [];
   // The hips are fully enclosed by anything worn on the lower body, so the body mesh is
   // hidden rather than left to poke through a close-fitting seat.
-  const hidden: PartName[] = ["underwearBottom", "pelvis"];
+  const hidden: PartName[] = ["underwearBottom", "pelvis", "baseLegL", "baseLegR"];
   const ease = EASE[spec.fit ?? "regular"];
   const m = figure.measurements;
   const column = bodyColumn(figure);
@@ -388,7 +388,7 @@ function buildTop(figure: Figure, spec: GarmentSpec, material: THREE.Material): 
       },
     ];
     rings = [...skirt, ...bodice];
-    hidden.push("underwearBottom", "underwearTop", "pelvis");
+    hidden.push("underwearBottom", "underwearTop", "pelvis", "baseLegL", "baseLegR");
   } else {
     rings = withHem(offsetProfile(sliceProfile(column, hemY, neckY), ease, 1.0), 1.03);
     if (neckY > figure.measurements.chestY - figure.measurements.waistY) hidden.push("underwearTop");

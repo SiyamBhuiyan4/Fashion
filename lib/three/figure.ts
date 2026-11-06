@@ -58,7 +58,9 @@ export type PartName =
   | "footL"
   | "footR"
   | "underwearTop"
-  | "underwearBottom";
+  | "underwearBottom"
+  | "baseLegL"
+  | "baseLegR";
 
 export interface BodyMeasurements {
   gender: Gender;
@@ -329,7 +331,7 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   // Cel shading: flat colour in two or three bands, as in the character sheets.
   const skinMaterial = toonMaterial(skinHex, { steps: 3, emissiveMix: 0.07 });
   const hairMaterial = toonMaterial("#1b1822", { steps: 2, emissiveMix: 0.22 });
-  const underwearMaterial = toonMaterial(female ? "#d9c6bd" : "#2f3238", { steps: 2 });
+  const underwearMaterial = toonMaterial(female ? "#cdbdb4" : "#44474f", { steps: 2 });
 
   /**
    * Anime proportions: a large head on a slender body. The measured profiles above are close to
@@ -371,20 +373,17 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   parts.pelvis = mesh(ringTubeGeometry(profiles.pelvis, { segments: 32 }), skinMaterial, "pelvis");
   hips.add(parts.pelvis);
 
-  // Base underwear, so garments always sit on a dressed body.
-  const briefsRings = profiles.pelvis
-    .filter((ring) => ring.y > -0.13 && ring.y < 0.02)
-    .map((ring, index, all) => {
-      // Tapers towards the leg openings, so it reads as underwear rather than a tube.
-      const t = index / Math.max(1, all.length - 1);
-      const taper = 0.9 + 0.12 * t;
-      return { ...ring, rx: ring.rx * taper + 0.003, rz: ring.rz * taper + 0.003 };
-    });
-  if (briefsRings.length >= 2) {
+  // A modest base layer, so the avatar is decent from every angle before anything is worn and
+  // under an open jacket: fitted shorts over the hips and the top of the thighs.
+  const shortsRings = profiles.pelvis
+    .filter((ring) => ring.y > -0.17 && ring.y < 0.02)
+    .map((ring) => ({ ...ring, rx: ring.rx * 1.05 + 0.007, rz: ring.rz * 1.05 + 0.008 }));
+  if (shortsRings.length >= 2) {
     parts.underwearBottom = mesh(
-      ringTubeGeometry(briefsRings, { segments: 32 }),
+      ringTubeGeometry(shortsRings, { segments: 32 }),
       underwearMaterial,
       "underwearBottom",
+      0.003,
     );
     hips.add(parts.underwearBottom);
   }
@@ -402,6 +401,21 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
     );
     parts[`upperLeg${side}` as PartName] = upperLeg;
     leg.add(upperLeg);
+
+    // The shorts continue a little way down each thigh.
+    const baseLegRings = profiles.upperLeg
+      .filter((ring) => ring.y > -(m.hipY - 0.02 - m.kneeY) * 0.42 && ring.y < 0.03)
+      .map((ring) => ({ ...ring, rx: ring.rx * 1.06 + 0.006, rz: ring.rz * 1.06 + 0.006 }));
+    if (baseLegRings.length >= 2) {
+      const baseLeg = mesh(
+        ringTubeGeometry(baseLegRings, { segments: 22, capStart: false }),
+        underwearMaterial,
+        `baseLeg${side}`,
+        0.003,
+      );
+      parts[`baseLeg${side}` as PartName] = baseLeg;
+      leg.add(baseLeg);
+    }
 
     const knee = group(`knee${side}`, [0, -(m.hipY - 0.02 - m.kneeY), 0]);
     joints[`knee${side}` as JointName] = knee;
@@ -438,19 +452,19 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   parts.torso = mesh(ringTubeGeometry(profiles.torso, { segments: 32 }), skinMaterial, "torso");
   spine.add(parts.torso);
 
-  if (female) {
-    // Bra band, so the avatar is never shown bare.
-    const band = profiles.torso
-      .filter((ring) => ring.y > m.chestY - m.waistY - 0.06 && ring.y < m.chestY - m.waistY + 0.06)
-      .map((ring) => ({ ...ring, rx: ring.rx * 1.02 + 0.003, rz: ring.rz * 1.02 + 0.003 }));
-    if (band.length >= 2) {
-      parts.underwearTop = mesh(
-        ringTubeGeometry(band, { segments: 32 }),
-        underwearMaterial,
-        "underwearTop",
-      );
-      spine.add(parts.underwearTop);
-    }
+  // A fitted vest on both models: nothing revealing from any angle, and it reads as an
+  // undershirt beneath an open jacket.
+  const vestRings = profiles.torso
+    .filter((ring) => ring.y > -0.14 && ring.y < m.shoulderY - m.waistY - 0.018)
+    .map((ring) => ({ ...ring, rx: ring.rx * 1.04 + 0.006, rz: ring.rz * 1.04 + 0.006 }));
+  if (vestRings.length >= 2) {
+    parts.underwearTop = mesh(
+      ringTubeGeometry(vestRings, { segments: 32, capStart: false, capEnd: false }),
+      underwearMaterial,
+      "underwearTop",
+      0.003,
+    );
+    spine.add(parts.underwearTop);
   }
 
   const chestLocalY = m.chestY - m.waistY;
