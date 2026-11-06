@@ -146,8 +146,8 @@ export function ProductDetail({ product }: { product: Product }) {
       </div>
 
       {/* ------------------------------------------------------------ info panel */}
-      <div className="px-4 pt-8 sm:px-8 lg:px-0 lg:pt-2">
-        <div className="lg:sticky lg:top-24">
+      <div className="bg-bone/90 px-4 pt-8 sm:px-8 lg:bg-transparent lg:px-0 lg:pt-2">
+        <div className="lg:sticky lg:top-24 lg:bg-bone/90 lg:p-7 lg:shadow-sm">
           <nav className="eyebrow flex items-center gap-2" aria-label="Breadcrumb">
             <Link href={`/#${product.gender}`} className="link-line hover:text-ink">
               {product.gender === "men" ? "Men" : "Women"}

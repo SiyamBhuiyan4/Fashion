@@ -13,12 +13,14 @@ import { useEffect, useRef } from "react";
  * — repeats exactly every LOOP_SECONDS, so the whole scene cycles like a seamless two-minute
  * video loop.
  *
- * With "reduce motion" switched on, a single still frame is drawn.
+ * On computers (a real mouse or trackpad) petals also shed from the cursor as it moves.
+ *
+ * With "reduce motion" switched on, a single still frame is drawn and the trail is off.
  */
 
 const LOOP_SECONDS = 120;
 const TAU = Math.PI * 2;
-const PETAL_COLORS = ["#fde4ea", "#fbd0dc", "#fff1f4", "#f7bccb", "#ffffff"];
+const PETAL_COLORS = ["#fbc6d4", "#f7aec3", "#fdd9e2", "#f29ab4", "#ffe4eb"];
 
 /** Small seeded generator, so the petals are the same on every visit. */
 function rng(seed: number) {
@@ -57,7 +59,7 @@ function makePetals(count: number): Petal[] {
       y0: random(),
       falls: 1 + Math.floor(random() * 3),
       drift: 1 + Math.floor(random() * 2),
-      size: (5 + random() * 6) * depth,
+      size: (6.5 + random() * 7) * depth,
       depth,
       swayAmp: 18 + random() * 40,
       swayTurns: 4 + Math.floor(random() * 8),
@@ -111,10 +113,67 @@ export function SakuraBackground() {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       // Fewer petals on small screens: same look, less work.
-      petals = makePetals(width < 640 ? 34 : width < 1200 ? 56 : 72);
+      petals = makePetals(width < 640 ? 52 : width < 1200 ? 85 : 115);
     };
 
+    // Cursor trail (computers only): petals shed from the pointer as it moves. These are the
+    // one interactive part of the scene, so they live outside the two-minute loop.
+    interface Shed {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      rot: number;
+      spin: number;
+      flip: number;
+      size: number;
+      age: number;
+      life: number;
+      color: string;
+    }
+    const shed: Shed[] = [];
+    const MAX_SHED = 70;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    let lastX = -1;
+    let lastY = -1;
+    let carry = 0;
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      const { clientX: x, clientY: y } = event;
+      if (lastX < 0) {
+        lastX = x;
+        lastY = y;
+        return;
+      }
+      const dx = x - lastX;
+      const dy = y - lastY;
+      lastX = x;
+      lastY = y;
+      // About one petal for every 22 px of travel, so a quick sweep leaves a fuller trail.
+      carry += Math.hypot(dx, dy) / 22;
+      while (carry >= 1 && shed.length < MAX_SHED) {
+        carry -= 1;
+        shed.push({
+          x: x + (Math.random() - 0.5) * 10,
+          y: y + (Math.random() - 0.5) * 10,
+          vx: dx * 0.6 + (Math.random() - 0.5) * 60,
+          vy: dy * 0.6 - 20 - Math.random() * 40,
+          rot: Math.random() * TAU,
+          spin: (Math.random() - 0.5) * 7,
+          flip: Math.random() * TAU,
+          size: 5 + Math.random() * 6,
+          age: 0,
+          life: 1.6 + Math.random() * 0.9,
+          color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)]!,
+        });
+      }
+      carry = Math.min(carry, 3);
+    };
+
+    let previous = 0;
     const render = (seconds: number) => {
+      const dt = Math.min(0.05, Math.max(0, seconds - previous));
+      previous = seconds;
       const t = seconds % LOOP_SECONDS;
       const p = t / LOOP_SECONDS;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -137,10 +196,43 @@ export function SakuraBackground() {
         ctx.translate(x, y);
         ctx.rotate(rotation);
         ctx.scale(0.25 + 0.75 * Math.abs(flip), 1);
-        ctx.globalAlpha = 0.5 + 0.45 * petal.depth;
+        ctx.globalAlpha = 0.72 + 0.28 * Math.min(1, petal.depth);
         ctx.fillStyle = petal.color;
         petalPath(ctx, petal.size);
         ctx.fill();
+        // A fine rose edge, so a petal still reads against white paper and pale sky.
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = "rgba(214, 94, 132, 0.45)";
+        ctx.stroke();
+      }
+
+      // Petals shed from the cursor: a little lift, then gravity and the same wind.
+      for (let i = shed.length - 1; i >= 0; i--) {
+        const petal = shed[i]!;
+        petal.age += dt;
+        if (petal.age >= petal.life) {
+          shed.splice(i, 1);
+          continue;
+        }
+        petal.vx += (gust(t) * 0.02 - petal.vx * 1.6) * dt;
+        petal.vy += (70 - petal.vy * 1.1) * dt;
+        petal.x += petal.vx * dt;
+        petal.y += petal.vy * dt;
+        petal.rot += petal.spin * dt;
+        petal.flip += 6 * dt;
+        const fadeIn = Math.min(1, petal.age / 0.12);
+        const fadeOut = 1 - Math.max(0, (petal.age - petal.life * 0.55) / (petal.life * 0.45));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.translate(petal.x, petal.y);
+        ctx.rotate(petal.rot);
+        ctx.scale(0.3 + 0.7 * Math.abs(Math.cos(petal.flip)), 1);
+        ctx.globalAlpha = 0.95 * fadeIn * fadeOut;
+        ctx.fillStyle = petal.color;
+        petalPath(ctx, petal.size);
+        ctx.fill();
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = "rgba(214, 94, 132, 0.45)";
+        ctx.stroke();
       }
       ctx.globalAlpha = 1;
     };
@@ -169,30 +261,41 @@ export function SakuraBackground() {
       }, 150);
     };
     window.addEventListener("resize", onResize);
+    if (finePointer && !still)
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
       window.clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("pointermove", onPointerMove);
     };
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* The photograph, slowly zooming and panning on the same two-minute loop. */}
-      {/* 2K on larger screens, a 1280 px copy on phones (a hidden element's background is
+    <>
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {/* The photograph, slowly zooming and panning on the same two-minute loop. */}
+        {/* 2K on larger screens, a 1280 px copy on phones (a hidden element's background is
           not downloaded, so each device fetches only one). */}
-      <div
-        className="absolute inset-[-6%] hidden animate-sakura bg-cover bg-center sm:block"
-        style={{ backgroundImage: "url(/images/sakura-bg.webp)" }}
+        <div
+          className="absolute inset-[-6%] hidden animate-sakura bg-cover bg-center sm:block"
+          style={{ backgroundImage: "url(/images/sakura-bg.webp)" }}
+        />
+        <div
+          className="absolute inset-[-6%] animate-sakura bg-cover bg-[70%_center] sm:hidden"
+          style={{ backgroundImage: "url(/images/sakura-bg-mobile.webp)" }}
+        />
+        {/* A light wash on the left keeps the headline legible over the blossom. */}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,247,245,0.9)_0%,rgba(251,247,245,0.62)_38%,rgba(251,247,245,0.12)_72%,rgba(251,247,245,0)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-bone/70 to-transparent" />
+      </div>
+      {/* The petals fall in front of the page (under the header and the bag), so they drift
+        across everything; they never take a click. */}
+      <canvas
+        ref={ref}
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-30 h-full w-full"
       />
-      <div
-        className="absolute inset-[-6%] animate-sakura bg-cover bg-[70%_center] sm:hidden"
-        style={{ backgroundImage: "url(/images/sakura-bg-mobile.webp)" }}
-      />
-      {/* A light wash on the left keeps the headline legible over the blossom. */}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,247,245,0.9)_0%,rgba(251,247,245,0.62)_38%,rgba(251,247,245,0.12)_72%,rgba(251,247,245,0)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-bone/70 to-transparent" />
-      <canvas ref={ref} className="absolute inset-0 h-full w-full" />
-    </div>
+    </>
   );
 }

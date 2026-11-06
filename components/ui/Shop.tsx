@@ -161,9 +161,8 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
         </a>
       </section>
 
-      {/* Everything below the hero sits on soft paper, so products read cleanly over the
-          blossom. */}
-      <div className="bg-bone/[0.93]">
+      {/* Below the hero a light veil keeps the blossom visible while text stays legible. */}
+      <div className="bg-bone/50">
         {/* ---------------------------------------------------------------- ticker */}
         <div
           id="ticker"
@@ -231,7 +230,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
         {withVideo.length > 0 ? (
           <section
             id="in-motion"
-            className="scroll-mt-16 border-y border-line bg-paper/60 py-14 backdrop-blur-sm sm:py-20"
+            className="scroll-mt-16 border-y border-line/60 bg-paper/35 py-14 sm:py-20"
           >
             <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
               <Reveal>

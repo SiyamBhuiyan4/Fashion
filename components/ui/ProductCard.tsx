@@ -151,7 +151,7 @@ export function ProductCard({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-1.5 pt-3">
+      <div className="flex flex-col gap-1.5 bg-bone/85 px-2 pb-2.5 pt-2.5">
         <div className="flex items-baseline justify-between gap-3">
           <Link href={`/product/${product.id}`} className="link-line text-[0.8125rem] leading-snug">
             {product.name}
