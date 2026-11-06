@@ -26,6 +26,9 @@ export function ProductCard({
 }) {
   const [colorName, setColorName] = useState(product.colors[0]!.name);
   const [hovering, setHovering] = useState(false);
+  // Set once the shopper steps through the colours with the arrows: the hover video and the
+  // hover crossfade then stand aside so the chosen photo stays in view.
+  const [browsing, setBrowsing] = useState(false);
   const [added, setAdded] = useState<string | null>(null);
   const add = useCartStore((state) => state.add);
   const openDrawer = useCartStore((state) => state.openDrawer);
@@ -55,8 +58,15 @@ export function ProductCard({
       className="group relative flex flex-col"
       onPointerEnter={(event) => {
         if (event.pointerType === "mouse") setHovering(true);
+        // Warm up the other colourways, so the arrows switch photos instantly.
+        for (const option of product.colors) {
+          if (option.image) new window.Image().src = option.image;
+        }
       }}
-      onPointerLeave={() => setHovering(false)}
+      onPointerLeave={() => {
+        setHovering(false);
+        setBrowsing(false);
+      }}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-bone-dark">
         <Link
@@ -77,14 +87,14 @@ export function ProductCard({
           ) : null}
 
           {/* Hover layer: the video if there is one, otherwise the next colourway. */}
-          {video && hovering ? (
+          {video && hovering && !browsing ? (
             <VideoPlayer
               src={video.url}
               poster={video.poster}
               preview
               className="absolute inset-0 h-full w-full object-cover"
             />
-          ) : !video && alternate?.image ? (
+          ) : !video && !browsing && alternate?.image ? (
             <Image
               src={alternate.image}
               alt=""
@@ -117,6 +127,43 @@ export function ProductCard({
             </span>
           ) : null}
         </div>
+
+        {/* Previous / next colour photo: on hover with a mouse, always shown on touch screens. */}
+        {product.colors.length > 1
+          ? [
+              { dir: -1, label: "Previous colour", path: "M15 6l-6 6 6 6", side: "left-2" },
+              { dir: 1, label: "Next colour", path: "M9 6l6 6-6 6", side: "right-2" },
+            ].map(({ dir, label, path, side }) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={label}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const count = product.colors.length;
+                  setColorName(product.colors[(index + dir + count) % count]!.name);
+                  setBrowsing(true);
+                }}
+                className={cn(
+                  "absolute top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-ink shadow-sm backdrop-blur transition-[opacity,transform] duration-300 ease-out-soft hover:scale-110",
+                  "opacity-90 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
+                  side,
+                )}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d={path} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            ))
+          : null}
 
         {/* Quick add: slides up on hover (computers only). */}
         {available ? (
@@ -171,7 +218,10 @@ export function ProductCard({
                 title={option.name}
                 aria-label={`${option.name}${active ? " (selected)" : ""}`}
                 aria-pressed={active}
-                onClick={() => setColorName(option.name)}
+                onClick={() => {
+                  setColorName(option.name);
+                  setBrowsing(true);
+                }}
                 className={cn(
                   "h-3.5 w-3.5 rounded-full ring-offset-2 ring-offset-bone transition-[box-shadow,transform] duration-300",
                   active ? "ring-1 ring-ink" : "ring-1 ring-black/10 hover:scale-110",
