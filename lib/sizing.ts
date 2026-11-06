@@ -31,11 +31,11 @@ export interface SizeHistoryEntry {
   at: string;
 }
 
-const LETTERS = ["XS", "S", "M", "L", "XL"];
+const LETTERS = ["XS", "S", "M", "L", "XL", "XXL"];
 
 /** Body range centres per letter size (cm). */
-const CHEST = { men: [86, 92, 97, 103, 109], women: [80, 85, 90, 95, 101] };
-const WAIST = { men: [72, 77, 83, 89, 95], women: [62, 67, 72, 77, 83] };
+const CHEST = { men: [86, 92, 97, 103, 109, 115], women: [80, 85, 90, 95, 101, 107] };
+const WAIST = { men: [72, 77, 83, 89, 95, 101], women: [62, 67, 72, 77, 83, 89] };
 const FIT_EASE: Record<string, number> = { slim: -2, regular: 0, relaxed: 3, wide: 4 };
 
 function estimate(body: BodyProfile, gender: "men" | "women", measure: "chest" | "waist") {
@@ -67,6 +67,8 @@ export function recommendSize(
   fitLean = 0, // -1 runs small … +1 runs large (from reviews)
 ): Recommendation | null {
   const gender = product.gender;
+  // One-size pieces (a saree, a hijab) need no suggestion.
+  if (product.sizes.length < 2) return null;
   const isShoe = product.category === "shoes";
   const sizes = product.sizes;
   const notes: string[] = [];

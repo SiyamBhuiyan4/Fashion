@@ -320,7 +320,7 @@ export function Account() {
                   className={field}
                 >
                   <option value="">—</option>
-                  {["XS", "S", "M", "L", "XL"].map((s) => (
+                  {["XS", "S", "M", "L", "XL", "XXL"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>

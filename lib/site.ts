@@ -3,9 +3,9 @@
  */
 export const site = {
   name: "MAISON",
-  tagline: "See it move before you buy it.",
+  tagline: "Bangladeshi wear, made to be worn.",
   description:
-    "Real photos of every colour, and pieces filmed on real people, so you see how they move and fit before you buy.",
+    "Jamdani and katan sarees, panjabis, three-pieces and everyday wear from Bangladesh — real photos of every colour, many on video.",
   currency: "BDT",
   currencySymbol: "৳",
   locale: "en-BD",

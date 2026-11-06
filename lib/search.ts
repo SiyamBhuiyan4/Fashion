@@ -12,8 +12,23 @@
 import type { Product } from "@/lib/schemas";
 
 const GROUPS: string[][] = [
-  ["panjabi", "punjabi", "kurta", "kurti"],
-  ["koti", "waistcoat", "vest"],
+  ["panjabi", "punjabi", "panjabee", "kurta"],
+  ["kurti", "kurtee", "tunic"],
+  ["three-piece", "threepiece", "salwar", "shalwar", "kameez", "kamiz", "lawn"],
+  ["fatua", "fotua", "fatuya"],
+  ["kabli", "kabuli", "pathani"],
+  ["sherwani", "sherowani", "groom"],
+  ["lehenga", "lehnga", "lehanga", "bridal"],
+  ["jamdani", "jamdhani", "dhakai"],
+  ["katan", "katan-silk", "benarasi", "banarasi"],
+  ["tant", "taant", "tangail", "handloom"],
+  ["hijab", "hejab", "headscarf"],
+  ["palazzo", "plazo", "co-ord"],
+  ["eid", "festive", "dawat"],
+  ["boishakh", "boishakhi", "pohela"],
+  ["biye", "wedding", "holud"],
+  ["sandal", "sandals", "chappal", "kolhapuri"],
+  ["koti", "waistcoat", "vest", "nehru"],
   ["borka", "burqa", "abaya"],
   ["saree", "sari"],
   ["orna", "dupatta", "scarf"],
@@ -179,9 +194,9 @@ export function searchProducts(
 
 export const SEARCH_SUGGESTIONS = [
   "panjabi",
-  "jeans",
-  "kalo shirt",
-  "sneakers",
-  "dress",
-  "nil blazer",
+  "jamdani",
+  "three piece",
+  "kalo abaya",
+  "eid",
+  "lal saree",
 ];

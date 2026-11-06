@@ -6,7 +6,7 @@
  * threshold, which a big discount can push an order under — and the cheapest result wins. The
  * shopper never types a code and never pays more than they have to.
  *
- *   Item level  · Shoe edit: 15% off shoes
+ *   Item level  · Footwear edit: 15% off footwear
  *   Order level · Welcome: 10% off a first order          } at most one of these two
  *               · Buy 2 save 10%, buy 3+ save 15%         }
  *   Shipping    · Free delivery when the order is ৳5,000 or more after discounts
@@ -50,7 +50,7 @@ export function bestOffer(
   const itemOptions: Offer[][] = [[]];
   if (shoeValue > 0) {
     itemOptions.push([
-      { id: "shoe-edit", label: "Shoe edit · 15% off shoes", amount: pct(shoeValue, 0.15) },
+      { id: "shoe-edit", label: "Footwear edit · 15% off sandals", amount: pct(shoeValue, 0.15) },
     ]);
   }
 

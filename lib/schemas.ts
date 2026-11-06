@@ -3,7 +3,18 @@ import { z } from "zod";
 export const genderSchema = z.enum(["men", "women"]);
 export type Gender = z.infer<typeof genderSchema>;
 
-export const categorySchema = z.enum(["tops", "bottoms", "outerwear", "shoes"]);
+/** Shop categories, in tab order. Bangladeshi wear first, then everyday basics. */
+export const categorySchema = z.enum([
+  "panjabi",
+  "saree",
+  "three-piece",
+  "kurti",
+  "modest",
+  "outerwear",
+  "tops",
+  "bottoms",
+  "shoes",
+]);
 export type Category = z.infer<typeof categorySchema>;
 
 export const productIdSchema = z
@@ -18,7 +29,7 @@ export const colorNameSchema = z
   .string()
   .min(1)
   .max(40)
-  .regex(/^[\p{L}\p{N} '-]+$/u, "Invalid color name");
+  .regex(/^[\p{L}\p{N} '&-]+$/u, "Invalid color name");
 
 export const sizeSchema = z
   .string()
@@ -27,6 +38,20 @@ export const sizeSchema = z
   .regex(/^[A-Z0-9.]+$/, "Invalid size");
 
 export const garmentKindSchema = z.enum([
+  // Bangladeshi and South Asian wear
+  "panjabi",
+  "fatua",
+  "kabli",
+  "koti",
+  "sherwani",
+  "saree",
+  "kameez",
+  "kurti",
+  "lehenga",
+  "abaya",
+  "hijab",
+  "palazzo",
+  "sandals",
   // tops
   "tee",
   "polo",
@@ -55,6 +80,14 @@ export type GarmentKind = z.infer<typeof garmentKindSchema>;
 
 export const fabricSchema = z.enum([
   "cotton",
+  "khadi",
+  "jamdani",
+  "katan",
+  "lawn",
+  "georgette",
+  "chiffon",
+  "jacquard",
+  "velvet",
   "denim",
   "knit",
   "linen",

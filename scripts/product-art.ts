@@ -528,13 +528,31 @@ export interface ProductArtOptions {
   label?: string;
 }
 
+const ART_KIND: Partial<Record<GarmentSpec["kind"], GarmentSpec["kind"]>> = {
+  panjabi: "shirt",
+  fatua: "shirt",
+  kabli: "shirt",
+  kurti: "shirt",
+  kameez: "dress",
+  saree: "dress",
+  lehenga: "dress",
+  hijab: "tank",
+  koti: "blazer",
+  sherwani: "coat",
+  abaya: "coat",
+  palazzo: "trousers",
+  sandals: "flats",
+};
+
 /** The flat-lay illustration of one product in one colour, as an SVG string. */
 export function productArtSvg(
   product: Product,
   color: ProductColor,
   options: ProductArtOptions = {},
 ): string {
-  const spec = product.garment;
+  // Bangladeshi garments are drawn with the closest existing silhouette (the artwork is only a
+  // fallback for colourways without a photo).
+  const spec = { ...product.garment, kind: ART_KIND[product.garment.kind] ?? product.garment.kind };
   const base = color.hex;
   const dark = luminance(base) < 0.22;
   const pattern = fabricPattern(spec.fabric, base);

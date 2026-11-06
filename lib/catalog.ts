@@ -27,10 +27,15 @@ export function byCategory(catalog: Catalog, gender: Gender, category: Category)
 }
 
 export const categoryLabels: Record<Category, string> = {
-  tops: "Tops",
-  bottoms: "Bottoms",
-  outerwear: "Outerwear",
-  shoes: "Shoes",
+  panjabi: "Panjabi & Kabli",
+  saree: "Saree",
+  "three-piece": "Three-piece",
+  kurti: "Kurti & Co-ords",
+  modest: "Abaya & Hijab",
+  outerwear: "Koti & Sherwani",
+  tops: "Shirts & Polos",
+  bottoms: "Pants & Jeans",
+  shoes: "Footwear",
 };
 
 export interface CollectionGroup {

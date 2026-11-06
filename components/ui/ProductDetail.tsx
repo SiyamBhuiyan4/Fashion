@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/ProductExtras";
 
 const CARE: Record<Fabric, string> = {
+  khadi: "Handwoven khadi cotton. Hand wash cold, dry in the shade; it softens with every wash.",
+  jamdani: "Handwoven Dhakai jamdani. Dry clean only; store folded in muslin, refold now and then.",
+  katan: "Pure katan silk. Dry clean only; keep away from perfume and direct sun.",
+  lawn: "Fine cotton lawn. Hand wash cold separately the first time; iron on the reverse.",
+  georgette: "Soft georgette. Hand wash cold or dry clean; dry flat; low iron.",
+  chiffon: "Light chiffon. Hand wash cold, do not wring; cool iron through a cloth.",
+  jacquard: "Woven jacquard. Dry clean to keep the weave crisp.",
+  velvet: "Velvet. Dry clean only; steam, never iron directly.",
   cotton: "100% cotton. Machine wash cold with like colours, tumble dry low, warm iron.",
   denim: "Rigid cotton denim. Wash inside out, cold, and rarely; hang to dry.",
   knit: "Soft knit. Hand wash cold or dry clean; dry flat to keep its shape.",

@@ -14,16 +14,21 @@ import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { Price } from "@/components/ui/Price";
 
 const TICKER = [
-  "New season · Autumn / Winter 26",
-  "Filmed on real people",
-  "Dhaka",
-  "Prices in Bangladeshi Taka",
+  "Eid collection 2026",
+  "Handloom jamdani from Rupganj",
+  "Cash on delivery · all 64 districts",
+  "Prices in Taka (৳)",
+  "Pohela Boishakh edit",
   "A demo store — no payment is ever taken",
 ];
 
 const GENDERS: Array<{ gender: Gender; label: string; blurb: string }> = [
-  { gender: "women", label: "Women", blurb: "Silk, wool and clean lines." },
-  { gender: "men", label: "Men", blurb: "Tailoring, denim and everyday knits." },
+  {
+    gender: "women",
+    label: "Women",
+    blurb: "Jamdani and katan sarees, three-pieces, kurtis and modest wear.",
+  },
+  { gender: "men", label: "Men", blurb: "Panjabi, kabli, koti and everyday basics." },
 ];
 
 /** Picks a photo for an editorial slot: the named product if it exists, else the first one. */
@@ -57,11 +62,11 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
 
   const all = useMemo(() => [...women, ...men], [women, men]);
   const withVideo = all.filter((product) => product.video);
-  const heroVideo = withVideo.find((p) => p.id === "w-trench-coat") ?? withVideo[0];
-  const heroLeft = photoOf(women, "w-trench-coat");
-  const heroRight = photoOf(men, "m-denim-jacket");
-  const tileWomen = photoOf(women, "w-slip-dress");
-  const tileMen = photoOf(men, "m-wool-blazer");
+  const heroVideo = withVideo.find((p) => p.id === "w-jamdani") ?? withVideo[0];
+  const heroLeft = photoOf(women, "w-jamdani");
+  const heroRight = photoOf(men, "m-silk-panjabi");
+  const tileWomen = photoOf(women, "w-katan");
+  const tileMen = photoOf(men, "m-embroidered-panjabi");
 
   return (
     <div>
@@ -71,16 +76,17 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
         <div className="relative mx-auto grid min-h-[100svh] max-w-[90rem] items-end gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-10">
           <div>
             <p className="eyebrow animate-fade-up [animation-delay:200ms]">
-              {site.name} · Spring blossom edit
+              {site.name} · Eid & Boishakh edit
             </p>
             <h1 className="display mt-5 animate-fade-up text-[clamp(3.2rem,8.4vw,8rem)] [animation-delay:320ms]">
-              Quiet clothes,
+              Woven in Bangladesh,
               <br />
-              <em className="italic text-accent">loud</em> details.
+              worn <em className="italic text-accent">your</em> way.
             </h1>
             <p className="mt-6 max-w-md animate-fade-up text-[0.9375rem] leading-relaxed text-ink-soft [animation-delay:420ms]">
-              Soft tailoring, washed denim and silk that moves like petals in the wind. Every piece
-              shown in its real colour{withVideo.length > 0 ? ", many on video" : ""}.
+              Dhakai jamdani from the looms of Rupganj, Eid panjabis, everyday three-pieces and
+              kurtis — every piece shown in its real colour
+              {withVideo.length > 0 ? ", many on video" : ""}.
             </p>
             <div className="mt-9 flex animate-fade-up flex-wrap gap-3 [animation-delay:520ms]">
               <Link
@@ -372,8 +378,8 @@ function Editorial() {
       <Reveal className="mx-auto flex max-w-[90rem] flex-col items-center px-4 py-20 text-center sm:px-8 sm:py-28">
         <p className="eyebrow text-bone/50">The idea</p>
         <p className="display mt-6 max-w-4xl text-4xl leading-[1.08] sm:text-6xl">
-          Made to be <em className="italic">worn</em>, not kept. Pieces marked video are filmed on a
-          real person, so you know how they move before they arrive.
+          From the <em className="italic">looms</em> of Rupganj to your Eid morning. Pieces marked
+          video are filmed on a real person, so you know how they drape before they arrive.
         </p>
         <Link
           href="#men"
