@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isInStock, stockLabel } from "@/lib/catalog";
@@ -15,7 +15,8 @@ import { useCartStore } from "@/store/cartStore";
  *
  * On a computer, hovering crossfades to the product's video (fetched only then) or, without one,
  * to the next colourway's photo, and a size row slides up for a one-tap "quick add". On phones
- * the card is a link to the product page, where the video plays at the top.
+ * the card is a link to the product page, where the video plays at the top, and a sideways swipe
+ * on the photo steps through the colourways.
  */
 export function ProductCard({
   product,
@@ -44,6 +45,16 @@ export function ProductCard({
   const stock = stockLabel(product);
   const video = product.video;
 
+  const step = (dir: number) => {
+    const count = product.colors.length;
+    setColorName(product.colors[(index + dir + count) % count]!.name);
+    setBrowsing(true);
+  };
+
+  // Touch swipe: a mostly-horizontal drag of 40px or more changes colour instead of opening the
+  // product (the browser drops the click after a drag, so the link is left alone).
+  const touch = useRef<{ x: number; y: number } | null>(null);
+
   const quickAdd = (size: string) => {
     add({ productId: product.id, colorName: color.name, size, quantity: 1 });
     setAdded(size);
@@ -55,7 +66,7 @@ export function ProductCard({
 
   return (
     <article
-      className="group relative flex flex-col"
+      className="group relative flex h-full flex-col"
       onPointerEnter={(event) => {
         if (event.pointerType === "mouse") setHovering(true);
         // Warm up the other colourways, so the arrows switch photos instantly.
@@ -68,7 +79,22 @@ export function ProductCard({
         setBrowsing(false);
       }}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-bone-dark">
+      <div
+        className="relative aspect-[3/4] touch-pan-y overflow-hidden bg-bone-dark"
+        onTouchStart={(event) => {
+          const point = event.touches[0];
+          touch.current = point ? { x: point.clientX, y: point.clientY } : null;
+        }}
+        onTouchEnd={(event) => {
+          const start = touch.current;
+          const point = event.changedTouches[0];
+          touch.current = null;
+          if (!start || !point || product.colors.length < 2) return;
+          const dx = point.clientX - start.x;
+          const dy = point.clientY - start.y;
+          if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+        }}
+      >
         <Link
           href={`/product/${product.id}`}
           aria-label={product.name}
@@ -106,9 +132,9 @@ export function ProductCard({
           ) : null}
         </Link>
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-1 p-2 sm:p-2.5">
           {video ? (
-            <span className="flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[0.625rem] font-medium uppercase tracking-[0.14em] text-ink backdrop-blur">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/85 px-1.5 py-0.5 text-[0.5625rem] font-medium uppercase tracking-[0.12em] text-ink backdrop-blur sm:px-2 sm:py-1 sm:text-[0.625rem] sm:tracking-[0.14em]">
               <svg viewBox="0 0 24 24" aria-hidden className="h-2.5 w-2.5" fill="currentColor">
                 <path d="M8 5.5v13l11-6.5-11-6.5Z" />
               </svg>
@@ -118,11 +144,11 @@ export function ProductCard({
             <span />
           )}
           {!available ? (
-            <span className="rounded-full bg-ink/85 px-2 py-1 text-[0.625rem] uppercase tracking-[0.14em] text-bone">
+            <span className="whitespace-nowrap rounded-full bg-ink/85 px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.12em] text-bone sm:px-2 sm:py-1 sm:text-[0.625rem] sm:tracking-[0.14em]">
               Sold out
             </span>
           ) : stock.tone === "low" ? (
-            <span className="rounded-full bg-accent px-2 py-1 text-[0.625rem] uppercase tracking-[0.14em] text-white">
+            <span className="whitespace-nowrap rounded-full bg-accent px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.12em] text-white sm:px-2 sm:py-1 sm:text-[0.625rem] sm:tracking-[0.14em]">
               {stock.text}
             </span>
           ) : null}
@@ -131,8 +157,13 @@ export function ProductCard({
         {/* Previous / next colour photo: on hover with a mouse, always shown on touch screens. */}
         {product.colors.length > 1
           ? [
-              { dir: -1, label: "Previous colour", path: "M15 6l-6 6 6 6", side: "left-2" },
-              { dir: 1, label: "Next colour", path: "M9 6l6 6-6 6", side: "right-2" },
+              {
+                dir: -1,
+                label: "Previous colour",
+                path: "M15 6l-6 6 6 6",
+                side: "left-1.5 sm:left-2",
+              },
+              { dir: 1, label: "Next colour", path: "M9 6l6 6-6 6", side: "right-1.5 sm:right-2" },
             ].map(({ dir, label, path, side }) => (
               <button
                 key={label}
@@ -141,20 +172,20 @@ export function ProductCard({
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
-                  const count = product.colors.length;
-                  setColorName(product.colors[(index + dir + count) % count]!.name);
-                  setBrowsing(true);
+                  step(dir);
                 }}
                 className={cn(
-                  "absolute top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-ink shadow-sm backdrop-blur transition-[opacity,transform] duration-300 ease-out-soft hover:scale-110",
-                  "opacity-90 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
+                  "absolute top-1/2 z-10 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/75 text-ink shadow-sm backdrop-blur transition-[opacity,transform] duration-300 ease-out-soft hover:scale-110 sm:h-9 sm:w-9 sm:bg-white/85",
+                  "opacity-80 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
+                  // A bigger invisible hit area around the small round button.
+                  "before:absolute before:-inset-2 before:content-['']",
                   side,
                 )}
               >
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden
-                  className="h-3.5 w-3.5"
+                  className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -198,14 +229,18 @@ export function ProductCard({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-1.5 bg-bone/85 px-2 pb-2.5 pt-2.5">
-        <div className="flex items-baseline justify-between gap-3">
-          <Link href={`/product/${product.id}`} className="link-line text-[0.8125rem] leading-snug">
+      <div className="flex flex-1 flex-col gap-1.5 bg-bone/85 px-2 pb-2.5 pt-2.5">
+        {/* Phones stack the name over the price; wider cards set them side by side. */}
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+          <Link
+            href={`/product/${product.id}`}
+            className="link-line line-clamp-2 text-[0.8125rem] leading-snug"
+          >
             {product.name}
           </Link>
           <Price
             amount={product.price}
-            className="shrink-0 text-[0.8125rem] tabular-nums text-ink-soft"
+            className="shrink-0 text-[0.8125rem] font-medium tabular-nums text-ink sm:font-normal sm:text-ink-soft"
           />
         </div>
         <div className="flex items-center gap-1.5">

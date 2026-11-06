@@ -2,8 +2,8 @@ import type { Product } from "@/lib/schemas";
 
 /**
  * The catalogue seed: Bangladeshi wear and everyday basics, priced in Taka. Photos are
- * free-licence images from Pexels (pexels.com/license: free for commercial use, no attribution
- * required), one per colourway, under public/images/products.
+ * free-licence images from Pexels and Unsplash (pexels.com/license, unsplash.com/license: free
+ * for commercial use, no attribution required), one per colourway, under public/images/products.
  */
 export const products: Product[] = [
   {
@@ -101,9 +101,9 @@ export const products: Product[] = [
         image: "/images/products/m-silk-panjabi--maroon.webp",
       },
       {
-        name: "Navy",
-        hex: "#232c4f",
-        image: "/images/products/m-silk-panjabi--navy.webp",
+        name: "Black",
+        hex: "#1c1c1f",
+        image: "/images/products/m-silk-panjabi--black.webp",
       },
       {
         name: "Teal",
@@ -128,7 +128,7 @@ export const products: Product[] = [
     tags: ["eid"],
     images: [
       "/images/products/m-silk-panjabi--maroon.webp",
-      "/images/products/m-silk-panjabi--navy.webp",
+      "/images/products/m-silk-panjabi--black.webp",
       "/images/products/m-silk-panjabi--teal.webp",
     ],
   },
@@ -184,9 +184,9 @@ export const products: Product[] = [
         image: "/images/products/m-fatua--mint.webp",
       },
       {
-        name: "Sky Print",
-        hex: "#a9c6e0",
-        image: "/images/products/m-fatua--sky-print.webp",
+        name: "Rose Pink",
+        hex: "#e7a3b4",
+        image: "/images/products/m-fatua--rose-pink.webp",
       },
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -204,7 +204,7 @@ export const products: Product[] = [
       sleeve: "long",
     },
     tags: ["khadi"],
-    images: ["/images/products/m-fatua--mint.webp", "/images/products/m-fatua--sky-print.webp"],
+    images: ["/images/products/m-fatua--mint.webp", "/images/products/m-fatua--rose-pink.webp"],
   },
   {
     id: "m-koti",
@@ -221,9 +221,9 @@ export const products: Product[] = [
         image: "/images/products/m-koti--indigo-print.webp",
       },
       {
-        name: "Charcoal",
-        hex: "#36383d",
-        image: "/images/products/m-koti--charcoal.webp",
+        name: "Ivory",
+        hex: "#ece3cf",
+        image: "/images/products/m-koti--ivory.webp",
       },
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -240,10 +240,7 @@ export const products: Product[] = [
       fit: "slim",
     },
     tags: ["layer"],
-    images: [
-      "/images/products/m-koti--indigo-print.webp",
-      "/images/products/m-koti--charcoal.webp",
-    ],
+    images: ["/images/products/m-koti--indigo-print.webp", "/images/products/m-koti--ivory.webp"],
   },
   {
     id: "m-sherwani",
@@ -296,9 +293,9 @@ export const products: Product[] = [
         image: "/images/products/m-shirt--maroon.webp",
       },
       {
-        name: "Sky",
-        hex: "#a9c7e3",
-        image: "/images/products/m-shirt--sky.webp",
+        name: "Denim Blue",
+        hex: "#3f5f8f",
+        image: "/images/products/m-shirt--denim-blue.webp",
       },
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -317,7 +314,7 @@ export const products: Product[] = [
       collar: true,
     },
     tags: ["everyday"],
-    images: ["/images/products/m-shirt--maroon.webp", "/images/products/m-shirt--sky.webp"],
+    images: ["/images/products/m-shirt--maroon.webp", "/images/products/m-shirt--denim-blue.webp"],
   },
   {
     id: "m-polo",
@@ -652,9 +649,9 @@ export const products: Product[] = [
         image: "/images/products/w-kurti--indigo.webp",
       },
       {
-        name: "Magenta",
-        hex: "#b4306f",
-        image: "/images/products/w-kurti--magenta.webp",
+        name: "Rose Pink",
+        hex: "#e9a7b0",
+        image: "/images/products/w-kurti--rose-pink.webp",
       },
     ],
     sizes: ["S", "M", "L", "XL"],
@@ -670,7 +667,7 @@ export const products: Product[] = [
       fit: "regular",
     },
     tags: ["everyday"],
-    images: ["/images/products/w-kurti--indigo.webp", "/images/products/w-kurti--magenta.webp"],
+    images: ["/images/products/w-kurti--indigo.webp", "/images/products/w-kurti--rose-pink.webp"],
   },
   {
     id: "w-long-kurti",
@@ -720,9 +717,9 @@ export const products: Product[] = [
       "A straight cotton kurta with wide palazzo trousers — the comfortable co-ord for long days.",
     colors: [
       {
-        name: "Peach",
-        hex: "#f2b59a",
-        image: "/images/products/w-palazzo--peach.webp",
+        name: "Rose Floral",
+        hex: "#e98f95",
+        image: "/images/products/w-palazzo--rose-floral.webp",
       },
       {
         name: "Off-white",
@@ -744,7 +741,7 @@ export const products: Product[] = [
     },
     tags: ["co-ord"],
     images: [
-      "/images/products/w-palazzo--peach.webp",
+      "/images/products/w-palazzo--rose-floral.webp",
       "/images/products/w-palazzo--off-white.webp",
     ],
   },

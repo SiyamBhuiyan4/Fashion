@@ -80,25 +80,45 @@ export function Header() {
         )}
       >
         <div className="mx-auto grid h-16 max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
-          {/* Phones: a menu button opens the full-screen menu below. */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-            className="-ml-2 grid h-11 w-11 place-items-center sm:hidden"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
+          {/* Phones: menu and search sit on the left, so the logo keeps clear space. */}
+          <div className="-ml-2 flex items-center sm:hidden">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              className="grid h-11 w-11 place-items-center"
             >
-              <path d="M4 8h16M4 16h16" strokeLinecap="round" />
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M4 8h16M4 16h16" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              className="grid h-11 w-10 place-items-center"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="M16 16l4.5 4.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
           <nav
             aria-label="Collections"
             className="hidden items-center gap-5 text-[0.8125rem] sm:flex"
@@ -121,17 +141,17 @@ export function Header() {
           <Link
             href="/"
             aria-label={`${site.name} — home`}
-            className="display text-2xl tracking-[0.32em] sm:text-[1.75rem]"
+            className="display whitespace-nowrap pl-[0.24em] text-[1.375rem] tracking-[0.24em] sm:pl-[0.32em] sm:text-[1.75rem] sm:tracking-[0.32em]"
           >
             {site.name}
           </Link>
 
-          <div className="flex items-center justify-end gap-4 sm:gap-6">
+          <div className="flex items-center justify-end gap-1 sm:gap-6">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="flex h-11 items-center gap-2 text-[0.8125rem] tracking-wide"
+              className="hidden h-11 items-center gap-2 text-[0.8125rem] tracking-wide sm:flex"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -149,7 +169,7 @@ export function Header() {
             <Link
               href={signedIn ? "/account" : "/login"}
               aria-label={signedIn ? `Your account${unread ? `, ${unread} new` : ""}` : "Sign in"}
-              className="relative flex h-11 items-center text-[0.8125rem] tracking-wide"
+              className="relative flex h-11 min-w-10 items-center justify-center text-[0.8125rem] tracking-wide sm:min-w-0"
             >
               <span className="link-line hidden sm:inline">{signedIn ? "Account" : "Sign in"}</span>
               <svg
@@ -164,13 +184,13 @@ export function Header() {
                 <path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" />
               </svg>
               {unread > 0 ? (
-                <span className="absolute -right-2 top-2.5 h-2 w-2 rounded-full bg-accent sm:-right-2.5" />
+                <span className="absolute right-1.5 top-2.5 h-2 w-2 rounded-full bg-accent sm:-right-2.5" />
               ) : null}
             </Link>
             <button
               type="button"
               onClick={openDrawer}
-              className="group relative -mr-2 flex h-11 items-center gap-2 px-2 text-[0.8125rem] tracking-wide sm:mr-0 sm:px-0"
+              className="group relative -mr-2 flex h-11 items-center gap-1.5 px-2 text-[0.8125rem] tracking-wide sm:mr-0 sm:gap-2 sm:px-0"
             >
               <span className="link-line hidden sm:inline">Bag</span>
               <svg
@@ -224,8 +244,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   }, [open, onClose]);
 
   const items = [
-    { href: "/#women", label: "Women", note: "Silk, wool and clean lines" },
-    { href: "/#men", label: "Men", note: "Tailoring, denim, knits" },
+    { href: "/#women", label: "Women", note: "Sarees, three-pieces, kurtis" },
+    { href: "/#men", label: "Men", note: "Panjabis, shirts, denim" },
     { href: "/#in-motion", label: "In motion", note: "Filmed on real people" },
     { href: "/account", label: "Account", note: "Orders, wallet, alerts" },
   ];
@@ -242,7 +262,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       )}
     >
       <div className="flex h-16 items-center justify-between px-4 pt-[env(safe-area-inset-top)]">
-        <span className="display text-2xl tracking-[0.32em]">{site.name}</span>
+        <span className="display text-[1.375rem] tracking-[0.24em]">{site.name}</span>
         <button
           type="button"
           onClick={onClose}

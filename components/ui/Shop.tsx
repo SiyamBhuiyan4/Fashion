@@ -313,7 +313,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
 
               <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
                 {visible.map((product, i) => (
-                  <Reveal key={`${current}-${product.id}`} delay={(i % 4) * 70}>
+                  <Reveal key={`${current}-${product.id}`} delay={(i % 4) * 70} className="h-full">
                     <ProductCard product={product} />
                   </Reveal>
                 ))}

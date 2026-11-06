@@ -63,9 +63,11 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           tabIndex={open ? 0 : -1}
-          placeholder="Search — try “kalo shirt” or “jeens”"
+          placeholder="Search — try “kalo shirt”"
           aria-label="Search products"
-          className="display min-w-0 flex-1 bg-transparent py-3 text-3xl outline-none placeholder:text-ink-faint/70 sm:text-5xl"
+          enterKeyHint="search"
+          autoComplete="off"
+          className="display min-w-0 flex-1 bg-transparent py-3 text-[1.75rem] outline-none placeholder:text-ink-faint/70 sm:text-5xl"
         />
         <button
           type="button"

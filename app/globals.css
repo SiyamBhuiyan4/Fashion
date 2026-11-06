@@ -102,6 +102,19 @@
     outline-offset: 3px;
   }
 
+  /* Phones: iOS Safari zooms the page into any field set below 16px, so fields stay at 16px on
+     touch screens (big display inputs such as search are already larger). Tap highlights off. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    :is(input, select, textarea):not(.display) {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
