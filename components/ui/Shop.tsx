@@ -1,11 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Gender, Product } from "@/lib/types";
 import { categoryLabels, groupByCategory } from "@/lib/catalog";
-import { tryOnParamsSchema } from "@/lib/schemas";
 import { cn, formatPrice } from "@/lib/utils";
 import { site } from "@/lib/site";
 import { useOutfitStore } from "@/store/outfitStore";
@@ -15,6 +13,7 @@ import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { SkinToneSelector } from "@/components/ui/SkinToneSelector";
 import { PoseButtons } from "@/components/ui/PoseButtons";
 import { AddOutfitDialog } from "@/components/ui/AddOutfitDialog";
+import { TryOnDeepLink } from "@/components/ui/TryOnDeepLink";
 
 // The 3D scene is heavy and needs the DOM, so it is loaded only in the browser.
 const Scene = dynamic(() => import("@/components/three/Scene").then((m) => m.Scene), {
@@ -44,7 +43,6 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
   );
   const [tab, setTab] = useState<Record<Gender, Category | "all">>({ men: "all", women: "all" });
   const [sizeDialog, setSizeDialog] = useState(false);
-  const searchParams = useSearchParams();
 
   const activeGender = useOutfitStore((state) => state.activeGender);
   const setActiveGender = useOutfitStore((state) => state.setActiveGender);
@@ -93,23 +91,6 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
     return () => observer.disconnect();
   }, [setActiveGender]);
 
-  // "Try on in 3D" from a product page arrives as ?wear=<id>&color=<name>.
-  const applied = useRef(false);
-  useEffect(() => {
-    if (applied.current) return;
-    const parsed = tryOnParamsSchema.safeParse({
-      wear: searchParams.get("wear") ?? undefined,
-      color: searchParams.get("color") ?? undefined,
-    });
-    if (!parsed.success || !parsed.data.wear) return;
-    const product = get(parsed.data.wear);
-    if (!product) return;
-    applied.current = true;
-    wear(product.id, parsed.data.color);
-    setActiveGender(product.gender);
-    sections.current[product.gender]?.scrollIntoView({ block: "start" });
-  }, [searchParams, get, wear, setActiveGender]);
-
   const wornItems = useCallback(
     (gender: Gender) => {
       const wardrobe = worn[gender];
@@ -133,6 +114,10 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
 
   return (
     <div className="lg:flex lg:items-start">
+      <Suspense fallback={null}>
+        <TryOnDeepLink />
+      </Suspense>
+
       {/* ---------------------------------------------------------------- 3D side */}
       <section
         aria-label="Fitting room"
