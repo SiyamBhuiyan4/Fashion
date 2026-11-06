@@ -7,6 +7,7 @@ import type { Category, Gender, Product } from "@/lib/types";
 import { categoryLabels, groupByCategory } from "@/lib/catalog";
 import { tryOnParamsSchema } from "@/lib/schemas";
 import { cn, formatPrice } from "@/lib/utils";
+import { site } from "@/lib/site";
 import { useOutfitStore } from "@/store/outfitStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -24,6 +25,12 @@ const Scene = dynamic(() => import("@/components/three/Scene").then((m) => m.Sce
     </div>
   ),
 });
+
+const STEPS = [
+  { n: "01", title: "Choose", body: "Men's first, women's as you scroll. Nothing to click." },
+  { n: "02", title: "Wear", body: "Tap Wear and the piece lands on the model instantly." },
+  { n: "03", title: "Buy", body: "Send the whole look to your cart in one go." },
+];
 
 const GENDERS: Array<{ gender: Gender; label: string; blurb: string }> = [
   { gender: "men", label: "Men", blurb: "Tailoring, denim and everyday knits." },
@@ -222,6 +229,33 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
 
       {/* --------------------------------------------------- one scroll, both collections */}
       <div className="lg:w-1/2">
+        {/* A short introduction, so the page opens like a shop rather than a tool. */}
+        <header className="border-b border-line px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
+          <p className="eyebrow">{site.name} · Fitting room, Dhaka</p>
+          <h1 className="display mt-3 text-3xl leading-[1.1] sm:text-4xl">
+            See it on a body
+            <span className="block text-accent">before you buy it.</span>
+          </h1>
+          <p className="mt-4 max-w-prose text-sm leading-relaxed text-ink-soft sm:text-base">
+            Every piece on this page can be worn by the model beside you. Turn it, zoom in, change
+            the skin tone and play a pose — then decide. Prices in Bangladeshi Taka.
+          </p>
+
+          <ol className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <li key={step.n} className="bg-white p-4">
+                <span className="eyebrow">{step.n}</span>
+                <h2 className="display mt-1 text-base">{step.title}</h2>
+                <p className="mt-1 text-xs leading-relaxed text-ink-faint">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-4 flex items-center gap-2 text-xs text-ink-faint">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+            A demo store — nothing can be bought and no payment is ever taken.
+          </p>
+        </header>
         {GENDERS.map(({ gender, label, blurb }, index) => {
           const products = productsByGender[gender];
           const groups = groupByCategory(products, gender);
@@ -245,7 +279,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                 )}
               >
                 <p className="eyebrow">
-                  {index === 0 ? "Collection one of two" : "Keep scrolling · collection two"}
+                  {index === 0 ? "The collection" : "Keep scrolling · the second collection"}
                 </p>
                 <h2 className="display mt-1 text-3xl">
                   {label}
