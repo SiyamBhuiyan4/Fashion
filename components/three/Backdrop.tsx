@@ -33,7 +33,14 @@ function discTexture(inner: string, outer: string): THREE.CanvasTexture {
   canvas.height = size;
   const context = canvas.getContext("2d");
   if (context) {
-    const gradient = context.createRadialGradient(size / 2, size / 2, size * 0.1, size / 2, size / 2, size / 2);
+    const gradient = context.createRadialGradient(
+      size / 2,
+      size / 2,
+      size * 0.1,
+      size / 2,
+      size / 2,
+      size / 2,
+    );
     gradient.addColorStop(0, inner);
     gradient.addColorStop(0.72, inner);
     gradient.addColorStop(0.95, outer);
@@ -57,11 +64,7 @@ export function Backdrop() {
       ]),
     [],
   );
-  const floor = useMemo(
-    () =>
-      discTexture("rgba(226,210,196,1)", "rgba(226,210,196,0.1)"),
-    [],
-  );
+  const floor = useMemo(() => discTexture("rgba(226,210,196,1)", "rgba(226,210,196,0.1)"), []);
   const halo = useMemo(() => discTexture("rgba(226,196,178,0.95)", "rgba(226,196,178,0)"), []);
 
   useEffect(

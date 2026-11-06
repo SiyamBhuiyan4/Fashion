@@ -43,10 +43,7 @@ const GENDERS: Array<{ gender: Gender; label: string; blurb: string }> = [
 ];
 
 export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
-  const productsByGender = useMemo<Record<Gender, Product[]>>(
-    () => ({ men, women }),
-    [men, women],
-  );
+  const productsByGender = useMemo<Record<Gender, Product[]>>(() => ({ men, women }), [men, women]);
   const [tab, setTab] = useState<Record<Gender, Category | "all">>({ men: "all", women: "all" });
   const [sizeDialog, setSizeDialog] = useState(false);
 
@@ -114,7 +111,12 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
     (gender: Gender) => {
       const wardrobe = worn[gender];
       const seen = new Set<string>();
-      const list: Array<{ productId: string; colorName: string; colorHex: string; product: Product }> = [];
+      const list: Array<{
+        productId: string;
+        colorName: string;
+        colorHex: string;
+        product: Product;
+      }> = [];
       for (const slot of ["top", "bottom", "outerwear", "shoes"] as const) {
         const item = wardrobe[slot];
         if (!item || seen.has(item.productId)) continue;
@@ -203,7 +205,13 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                     aria-label={`Remove ${item.product.name}`}
                     className="grid h-5 w-5 place-items-center rounded-full text-ink-faint hover:bg-bone-dark hover:text-ink"
                   >
-                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                    >
                       <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
                     </svg>
                   </button>
@@ -256,8 +264,8 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
           </ol>
 
           <p className="mt-4 flex items-center gap-2 text-xs text-ink-faint">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-            A demo store — nothing can be bought and no payment is ever taken.
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />A demo store —
+            nothing can be bought and no payment is ever taken.
           </p>
         </header>
         {GENDERS.map(({ gender, label, blurb }, index) => {
@@ -300,9 +308,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                       count: group.items.length,
                     }))}
                     active={current}
-                    onSelect={(category) =>
-                      setTab((state) => ({ ...state, [gender]: category }))
-                    }
+                    onSelect={(category) => setTab((state) => ({ ...state, [gender]: category }))}
                   />
                 </div>
               </div>
@@ -323,7 +329,13 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
 
               {index === 0 ? (
                 <p className="flex items-center justify-center gap-2 pb-6 text-xs text-ink-faint">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 animate-bounce" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 animate-bounce"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
                     <path d="M12 5v14M6 13l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Keep scrolling for the women&apos;s collection — the model changes with you

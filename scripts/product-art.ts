@@ -17,7 +17,9 @@ const shoulderHalf: Record<Fit, number> = { slim: 150, regular: 168, relaxed: 18
 const waistHalf: Record<Fit, number> = { slim: 118, regular: 130, relaxed: 145, wide: 158 };
 
 function clamp01(value: number | undefined, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : fallback;
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(1, Math.max(0, value))
+    : fallback;
 }
 
 /** #rrggbb -> #rrggbb, lightened (amount > 0) or darkened (amount < 0). */
@@ -39,7 +41,10 @@ function luminance(hex: string): number {
 }
 
 /** Fabric surface: a repeating pattern laid over the garment fill at low opacity. */
-function fabricPattern(fabric: Fabric, hex: string): { id: string; def: string; opacity: number } | null {
+function fabricPattern(
+  fabric: Fabric,
+  hex: string,
+): { id: string; def: string; opacity: number } | null {
   const line = shade(hex, luminance(hex) > 0.5 ? -0.35 : 0.4);
   const id = `fab-${fabric}`;
   switch (fabric) {
@@ -151,9 +156,9 @@ function drawTop(spec: GarmentSpec): Piece[] {
   const sleeve = spec.sleeve ?? "short";
   if (sleeve !== "none") {
     const long = sleeve === "long";
-    const reach = long ? 118 : 74;      // how far out from the shoulder
-    const drop = long ? 330 : 128;      // how far down
-    const cuffHalf = long ? 34 : 54;    // half the cuff opening
+    const reach = long ? 118 : 74; // how far out from the shoulder
+    const drop = long ? 330 : 128; // how far down
+    const cuffHalf = long ? 34 : 54; // half the cuff opening
     for (const side of [-1, 1]) {
       const shoulderX = CX + side * (sh - 4);
       const shoulderY = topY + 22;
@@ -285,7 +290,10 @@ function drawSkirt(spec: GarmentSpec): Piece[] {
       stroke: true,
       d: `M ${CX - waistW} ${topY} Q ${CX} ${topY - 20} ${CX + waistW} ${topY} l 0 40 Q ${CX} ${topY + 20} ${CX - waistW} ${topY + 40} Z`,
     },
-    { fillNone: true, d: `M ${CX - 40} ${topY + 60} C ${CX - 60} ${hemY * 0.7} ${CX - 70} ${hemY - 120} ${CX - 86} ${hemY - 10}` },
+    {
+      fillNone: true,
+      d: `M ${CX - 40} ${topY + 60} C ${CX - 60} ${hemY * 0.7} ${CX - 70} ${hemY - 120} ${CX - 86} ${hemY - 10}`,
+    },
   ];
 }
 
@@ -345,7 +353,10 @@ function drawOuterwear(spec: GarmentSpec): Piece[] {
       d: `M ${CX - 118} ${topY + 16} C ${CX - 96} ${topY - 96} ${CX + 96} ${topY - 96} ${CX + 118} ${topY + 16} C ${CX + 60} ${topY + 70} ${CX - 60} ${topY + 70} ${CX - 118} ${topY + 16} Z`,
     });
     // Drawcords and kangaroo pocket.
-    pieces.push({ fillNone: true, d: `M ${CX - 34} ${topY + 54} v 120 M ${CX + 34} ${topY + 54} v 120` });
+    pieces.push({
+      fillNone: true,
+      d: `M ${CX - 34} ${topY + 54} v 120 M ${CX + 34} ${topY + 54} v 120`,
+    });
     pieces.push({ fillNone: true, d: `M ${CX - 120} ${hemY - 150} h 240` });
   } else if (spec.collar) {
     for (const side of [-1, 1]) {
@@ -455,7 +466,10 @@ function drawShoes(spec: GarmentSpec): Piece[] {
         stroke: true,
         d: `M ${x(62)} ${y(214)} L ${x(128)} ${y(212)} L ${x(128)} ${y(118)} L ${x(62)} ${y(120)} Z`,
       });
-      out.push({ fillNone: true, d: `M ${x(150)} ${y(226)} q ${26 * scale} ${10 * scale} ${28 * scale} ${28 * scale}` });
+      out.push({
+        fillNone: true,
+        d: `M ${x(150)} ${y(226)} q ${26 * scale} ${10 * scale} ${28 * scale} ${28 * scale}`,
+      });
     } else if (heel) {
       // Block heel down to the ground, plus the ankle strap.
       out.push({

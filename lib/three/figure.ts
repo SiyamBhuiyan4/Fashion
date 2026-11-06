@@ -486,7 +486,7 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   // An anime head: larger than life (about a seventh of the body) and slightly tapered to
   // the chin.
   const headRadius = female ? 0.108 : 0.112;
-  const headGeometry = new THREE.SphereGeometry(headRadius, 30, 24);
+  const headGeometry = new THREE.SphereGeometry(headRadius, 32, 26);
   headGeometry.scale(0.82, 1.1, 0.92);
   headGeometry.translate(0, 0.012, 0.004);
   // Narrow the jaw: everything below the cheekbones is pulled in towards the chin.
@@ -494,7 +494,7 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   for (let i = 0; i < headPosition.count; i++) {
     const y = headPosition.getY(i);
     const chin = THREE.MathUtils.clamp((-y + 0.01) / (headRadius * 1.1), 0, 1);
-    const pinch = 1 - chin * chin * 0.42;
+    const pinch = female ? 1 - chin * chin * 0.44 : 1 - chin * chin * 0.36;
     headPosition.setX(i, headPosition.getX(i) * pinch);
     headPosition.setZ(i, headPosition.getZ(i) * (1 - chin * chin * 0.22));
   }
@@ -502,12 +502,24 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   parts.head = mesh(headGeometry, skinMaterial, "head", 0.004);
   head.add(parts.head);
 
+  // Stylized 3D anime ears on the sides of the head
+  for (const side of ["L", "R"] as const) {
+    const sign = side === "L" ? 1 : -1;
+    const earGeometry = new THREE.SphereGeometry(headRadius * 0.24, 16, 12);
+    earGeometry.scale(0.32, 1.35, 0.72);
+    earGeometry.translate(sign * (headRadius * 0.81), -0.012, -0.018);
+    const ear = mesh(earGeometry, skinMaterial, `ear${side}`, 0.0032);
+    ear.rotation.y = sign * 0.24;
+    ear.rotation.z = -sign * 0.1;
+    head.add(ear);
+  }
+
   // The face is painted onto a patch that hugs the front of the skull.
   const face = faceTexture(gender);
   const faceGeometry = new THREE.SphereGeometry(
     headRadius * 1.003,
-    40,
-    40,
+    44,
+    44,
     Math.PI / 2 - 0.52,
     1.04,
     Math.PI * 0.3,
@@ -526,24 +538,24 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
   // ---------------------------------------------------------------- hair
   // Cap over the skull.
   const capGeometry = new THREE.SphereGeometry(
-    headRadius * 1.07,
-    32,
-    24,
+    headRadius * 1.075,
+    36,
+    28,
     0,
     Math.PI * 2,
     0,
-    Math.PI * 0.47,
+    Math.PI * 0.48,
   );
-  capGeometry.scale(0.87, 1.12, 0.98);
+  capGeometry.scale(0.88, 1.12, 0.98);
   capGeometry.translate(0, 0.012, -0.004);
-  parts.hair = mesh(capGeometry, hairMaterial, "hair", 0.004);
+  parts.hair = mesh(capGeometry, hairMaterial, "hair", 0.0038);
   head.add(parts.hair);
 
   // Back of the head down to the nape.
   const napeRings = toRings([
-    [-0.075, headRadius * 0.6, headRadius * 0.66, -0.012],
+    [-0.078, headRadius * 0.62, headRadius * 0.68, -0.012],
     [-0.02, headRadius * 0.84, headRadius * 0.9, -0.01],
-    [0.035, headRadius * 0.9, headRadius * 0.95, -0.008],
+    [0.035, headRadius * 0.91, headRadius * 0.96, -0.008],
   ]);
   head.add(
     mesh(
@@ -560,54 +572,118 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
     ),
   );
 
-  /** One pointed lock of hair, hanging from the hairline. */
+  /** Stylized curved anime lock with dynamic tip flick and cel outline */
+  const makeCurvedStrandGeometry = (
+    length: number,
+    baseWidth: number,
+    depth: number,
+    curveX = 0,
+    curveZ = 0,
+  ): THREE.BufferGeometry => {
+    const geom = new THREE.ConeGeometry(baseWidth, length, 6, 4);
+    geom.scale(1, 1, depth / Math.max(0.001, baseWidth));
+    geom.translate(0, -length / 2, 0);
+    const pos = geom.getAttribute("position");
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      const t = THREE.MathUtils.clamp(-y / length, 0, 1);
+      pos.setX(i, pos.getX(i) + curveX * t * t);
+      pos.setZ(i, pos.getZ(i) + curveZ * t * t);
+    }
+    geom.computeVertexNormals();
+    return geom;
+  };
+
   const strand = (
     length: number,
     width: number,
+    depth: number,
     position: [number, number, number],
     rotation: [number, number, number],
+    curveX = 0,
+    curveZ = 0,
   ): THREE.Mesh => {
-    const geometry = new THREE.ConeGeometry(width, length, 5, 1);
-    geometry.scale(1, 1, 0.55);
-    geometry.translate(0, -length / 2, 0);
+    const geometry = makeCurvedStrandGeometry(length, width, depth, curveX, curveZ);
     const piece = mesh(geometry, hairMaterial, "hairStrand", 0.0028);
     piece.position.set(...position);
     piece.rotation.set(...rotation);
     return piece;
   };
 
-  const front = headRadius * 0.74;
   if (female) {
-    // A long fringe parted off-centre, side locks to the collarbone and length down the back.
-    const fringe: Array<[number, number, number, number, number]> = [
-      [0.1, 0.028, -0.07, 0.092, 0.055],
-      [0.115, 0.03, -0.028, 0.098, 0.075],
-      [0.11, 0.028, 0.026, 0.098, 0.074],
-      [0.095, 0.026, 0.068, 0.09, 0.052],
+    // ---------------------------------------------------- Women's Layered Wolf Cut
+    // Feathered curtain bangs with center parting
+    const fringe: Array<
+      [number, number, number, [number, number, number], [number, number, number], number, number]
+    > = [
+      // Left curtain bangs
+      [0.105, 0.03, 0.015, [-0.018, 0.102, 0.082], [0.52, 0, 0.15], -0.012, 0.012],
+      [0.115, 0.032, 0.016, [-0.046, 0.098, 0.076], [0.5, 0, 0.3], -0.016, 0.01],
+      [0.12, 0.034, 0.016, [-0.074, 0.092, 0.058], [0.46, 0, 0.48], -0.02, 0.008],
+      // Right curtain bangs
+      [0.108, 0.03, 0.015, [0.02, 0.102, 0.08], [0.54, 0, -0.16], 0.014, 0.012],
+      [0.118, 0.032, 0.016, [0.048, 0.098, 0.074], [0.5, 0, -0.32], 0.018, 0.01],
+      [0.122, 0.034, 0.016, [0.076, 0.092, 0.056], [0.46, 0, -0.5], 0.022, 0.008],
+      // Delicate center fringe accent
+      [0.08, 0.022, 0.012, [0.002, 0.105, 0.086], [0.6, 0, 0.05], 0.004, 0.01],
     ];
-    for (const [length, width, x, y, z] of fringe) {
-      head.add(strand(length, width, [x, y, z], [0.46, 0, -x * 2.2]));
+    for (const [len, w, d, pos, rot, cx, cz] of fringe) {
+      head.add(strand(len, w, d, pos, rot, cx, cz));
     }
+
+    // Face-framing side locks sweeping along jaw down to collarbone
     for (const side of [-1, 1]) {
+      // Front jaw-hugging lock
       head.add(
-        strand(0.26, 0.042, [side * (headRadius * 0.78), 0.02, 0.012], [0.06, 0, side * 0.12]),
+        strand(
+          0.28,
+          0.042,
+          0.02,
+          [side * (headRadius * 0.76), 0.025, 0.022],
+          [0.1, 0, side * 0.14],
+          side * 0.018,
+          0.012,
+        ),
       );
+      // Mid-cheek wolf lock
       head.add(
-        strand(0.17, 0.034, [side * (headRadius * 0.86), 0.03, -0.02], [-0.04, 0, side * 0.2]),
+        strand(
+          0.33,
+          0.046,
+          0.022,
+          [side * (headRadius * 0.82), -0.01, 0.006],
+          [0.06, 0, side * 0.18],
+          side * 0.022,
+          -0.008,
+        ),
+      );
+      // Behind-ear side lock
+      head.add(
+        strand(
+          0.26,
+          0.038,
+          0.018,
+          [side * (headRadius * 0.86), 0.02, -0.025],
+          [-0.04, 0, side * 0.22],
+          side * 0.016,
+          -0.012,
+        ),
       );
     }
+
+    // Layered back wolf-cut fall over shoulders
     const fall = toRings([
-      [-0.34, 0.082, 0.056, -0.055],
-      [-0.2, 0.098, 0.07, -0.05],
-      [-0.06, 0.108, 0.086, -0.032],
-      [0.04, 0.104, 0.096, -0.014],
+      [-0.32, 0.084, 0.058, -0.052],
+      [-0.18, 0.099, 0.072, -0.048],
+      [-0.05, 0.109, 0.088, -0.03],
+      [0.04, 0.105, 0.098, -0.012],
     ]);
     head.add(
       mesh(
         ringTubeGeometry(fall, {
           segments: 28,
-          arcStart: 0.46,
-          arcLength: 0.58,
+          arcStart: 0.44,
+          arcLength: 0.62,
           capStart: false,
           capEnd: false,
         }),
@@ -616,31 +692,85 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
         0.003,
       ),
     );
-  } else {
-    // Short, tousled: a shorter fringe plus spikes lifting off the crown.
-    const fringe: Array<[number, number, number, number, number]> = [
-      [0.062, 0.028, -0.068, 0.104, 0.05],
-      [0.075, 0.03, -0.026, 0.108, 0.07],
-      [0.07, 0.028, 0.024, 0.108, 0.069],
-      [0.06, 0.026, 0.066, 0.102, 0.048],
+
+    // Crown volume tufts
+    const crownTufts: Array<
+      [number, number, number, [number, number, number], [number, number, number]]
+    > = [
+      [0.08, 0.03, 0.016, [-0.035, 0.108, 0.02], [0.35, 0, -0.45]],
+      [0.082, 0.03, 0.016, [0.038, 0.108, 0.018], [0.35, 0, 0.45]],
+      [0.075, 0.028, 0.015, [-0.02, 0.112, -0.03], [-0.5, 0, -0.3]],
+      [0.078, 0.028, 0.015, [0.024, 0.112, -0.032], [-0.5, 0, 0.3]],
     ];
-    for (const [length, width, x, y, z] of fringe) {
-      head.add(strand(length, width, [x, y, z], [0.72, 0, -x * 3]));
+    for (const [len, w, d, pos, rot] of crownTufts) {
+      head.add(strand(len, w, d, pos, rot));
     }
-    // Tufts lying back across the crown, lifted just enough to read as tousled.
-    const tufts: Array<[number, number, number, number, number, number]> = [
-      [0.07, 0.03, -0.072, 0.088, 0.032, -0.95],
-      [0.082, 0.032, -0.028, 0.095, 0.046, -1.05],
-      [0.078, 0.03, 0.032, 0.094, 0.044, -1.0],
-      [0.068, 0.028, 0.074, 0.086, 0.028, -0.9],
-      [0.072, 0.03, -0.048, 0.092, -0.048, -2.2],
-      [0.07, 0.03, 0.048, 0.09, -0.05, -2.15],
+  } else {
+    // ---------------------------------------------------- Men's Messy Layered Anime Cut
+    // Dynamic layered fringe parted naturally
+    const fringe: Array<
+      [number, number, number, [number, number, number], [number, number, number], number, number]
+    > = [
+      // Center-left front fringe
+      [0.088, 0.034, 0.018, [-0.018, 0.108, 0.082], [0.74, 0, 0.14], -0.014, 0.012],
+      // Center-right front fringe
+      [0.094, 0.034, 0.018, [0.02, 0.108, 0.08], [0.75, 0, -0.16], 0.016, 0.012],
+      // Left fringe locks
+      [0.082, 0.03, 0.016, [-0.052, 0.104, 0.07], [0.7, 0, 0.35], -0.018, 0.012],
+      [0.075, 0.028, 0.015, [-0.078, 0.098, 0.048], [0.65, 0, 0.55], -0.02, 0.008],
+      // Right fringe locks
+      [0.084, 0.03, 0.016, [0.054, 0.104, 0.068], [0.68, 0, -0.38], 0.02, 0.012],
+      [0.074, 0.028, 0.015, [0.08, 0.096, 0.046], [0.63, 0, -0.58], 0.02, 0.008],
+      // Foreground crossing strand
+      [0.07, 0.026, 0.014, [-0.004, 0.104, 0.088], [0.82, 0, 0.06], 0.01, 0.015],
     ];
-    for (const [length, width, x, y, z, tilt] of tufts) {
-      head.add(strand(length, width, [x, y, z], [tilt, 0, -x * 3]));
+    for (const [len, w, d, pos, rot, cx, cz] of fringe) {
+      head.add(strand(len, w, d, pos, rot, cx, cz));
+    }
+
+    // Sleek anime sideburns framing cheeks and jaw
+    for (const side of [-1, 1]) {
+      head.add(
+        strand(
+          0.16,
+          0.038,
+          0.018,
+          [side * (headRadius * 0.78), 0.02, 0.014],
+          [0.08, 0, side * 0.12],
+          side * 0.012,
+          -0.008,
+        ),
+      );
+      head.add(
+        strand(
+          0.13,
+          0.032,
+          0.016,
+          [side * (headRadius * 0.85), 0.012, -0.015],
+          [-0.04, 0, side * 0.18],
+          side * 0.015,
+          -0.01,
+        ),
+      );
+    }
+
+    // Tousled crown spikes and tufts (signature messy anime silhouette)
+    const tufts: Array<
+      [number, number, number, [number, number, number], [number, number, number]]
+    > = [
+      [0.082, 0.032, 0.016, [-0.072, 0.092, 0.03], [0.35, 0, -1.0]],
+      [0.092, 0.034, 0.018, [-0.028, 0.098, 0.044], [0.4, 0, -1.1]],
+      [0.088, 0.032, 0.018, [0.032, 0.097, 0.042], [0.38, 0, 1.05]],
+      [0.078, 0.03, 0.016, [0.076, 0.09, 0.028], [0.32, 0, 0.95]],
+      // Rear crown volume
+      [0.084, 0.032, 0.016, [-0.046, 0.095, -0.048], [-1.2, 0, -2.1]],
+      [0.082, 0.032, 0.016, [0.048, 0.093, -0.05], [-1.15, 0, 2.05]],
+      [0.076, 0.03, 0.015, [0, 0.11, -0.02], [-0.85, 0, 0]],
+    ];
+    for (const [len, w, d, pos, rot] of tufts) {
+      head.add(strand(len, w, d, pos, rot));
     }
   }
-  void front;
 
   // ------------------------------------------------------------------------ arms
   for (const side of ["L", "R"] as const) {
@@ -681,10 +811,16 @@ export function buildFigure(gender: Gender, skinHex: string): Figure {
     joints[`wrist${side}` as JointName] = wrist;
     elbow.add(wrist);
 
-    const handGeometry = new THREE.SphereGeometry(female ? 0.036 : 0.042, 16, 12);
-    handGeometry.scale(0.62, 1.5, 1);
-    handGeometry.translate(0, -m.handLength * 0.4, 0);
-    const hand = mesh(handGeometry, skinMaterial, `hand${side}`);
+    // Stylized anime hand with tapered palm and fingers
+    const handRings = toRings([
+      [0, female ? 0.018 : 0.021, female ? 0.013 : 0.015, 0, 0.5],
+      [-m.handLength * 0.28, female ? 0.025 : 0.028, female ? 0.015 : 0.017, sign * 0.003, 0.6],
+      [-m.handLength * 0.6, female ? 0.024 : 0.027, female ? 0.013 : 0.015, sign * 0.002, 0.6],
+      [-m.handLength * 0.9, female ? 0.018 : 0.02, female ? 0.009 : 0.011, -sign * 0.002, 0.45],
+      [-m.handLength, female ? 0.012 : 0.014, female ? 0.006 : 0.008, -sign * 0.003, 0.3],
+    ]);
+    const handGeometry = ringTubeGeometry(handRings, { segments: 18 });
+    const hand = mesh(handGeometry, skinMaterial, `hand${side}`, 0.003);
     parts[`hand${side}` as PartName] = hand;
     wrist.add(hand);
   }

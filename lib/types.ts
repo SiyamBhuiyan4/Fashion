@@ -1,4 +1,13 @@
-export type { Category, Fabric, GarmentKind, GarmentSpec, Gender, Product, ProductColor, Slot } from "@/lib/schemas";
+export type {
+  Category,
+  Fabric,
+  GarmentKind,
+  GarmentSpec,
+  Gender,
+  Product,
+  ProductColor,
+  Slot,
+} from "@/lib/schemas";
 
 export type Pose = "idle" | "walk" | "turn";
 

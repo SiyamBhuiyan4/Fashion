@@ -28,8 +28,14 @@ if (process.argv.includes("--json")) {
   for (const [table, rows] of Object.entries(snapshot.tables)) {
     console.log(`  ${table}: ${Array.isArray(rows) ? rows.length : 0} rows`);
   }
-  const products = (snapshot.tables.products ?? []) as Array<{ id: string; name: string; colors: Array<{ image?: string }> }>;
+  const products = (snapshot.tables.products ?? []) as Array<{
+    id: string;
+    name: string;
+    colors: Array<{ image?: string }>;
+  }>;
   for (const product of products.slice(0, 3)) {
-    console.log(`  e.g. ${product.id} "${product.name}" -> ${product.colors[0]?.image ?? "no image"}`);
+    console.log(
+      `  e.g. ${product.id} "${product.name}" -> ${product.colors[0]?.image ?? "no image"}`,
+    );
   }
 }

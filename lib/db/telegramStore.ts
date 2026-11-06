@@ -73,8 +73,8 @@ function tagPatterns(tag: string) {
 export function isConfigured(): boolean {
   return Boolean(
     process.env.TELEGRAM_BOT_TOKEN &&
-      process.env.TELEGRAM_CHAT_ID &&
-      (process.env.FASHION_DB_SECRET ?? "").length >= 16,
+    process.env.TELEGRAM_CHAT_ID &&
+    (process.env.FASHION_DB_SECRET ?? "").length >= 16,
   );
 }
 
@@ -114,9 +114,13 @@ async function tg<T>(
       // No `cache: "no-store"`: that would opt every page that reads the catalogue out of
       // static rendering. Telegram's API is POST-only here, which Next never caches anyway.
     });
-    const data = (await res.json().catch(() => null)) as
-      | { ok: boolean; result?: T; description?: string; error_code?: number; parameters?: { retry_after?: number } }
-      | null;
+    const data = (await res.json().catch(() => null)) as {
+      ok: boolean;
+      result?: T;
+      description?: string;
+      error_code?: number;
+      parameters?: { retry_after?: number };
+    } | null;
     if (data?.ok && data.result !== undefined) return data.result;
     const retryAfter = data?.parameters?.retry_after;
     if (data?.error_code === 429 && retryAfter && attempt < 3) {
@@ -147,10 +151,7 @@ function decrypt(key: Buffer, text: string): unknown {
   const box = JSON.parse(text) as { iv: string; tag: string; data: string };
   const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(box.iv, "base64"));
   decipher.setAuthTag(Buffer.from(box.tag, "base64"));
-  const plain = Buffer.concat([
-    decipher.update(Buffer.from(box.data, "base64")),
-    decipher.final(),
-  ]);
+  const plain = Buffer.concat([decipher.update(Buffer.from(box.data, "base64")), decipher.final()]);
   return JSON.parse(plain.toString("utf8"));
 }
 

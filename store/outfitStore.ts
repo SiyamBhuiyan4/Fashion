@@ -76,7 +76,8 @@ export const useOutfitStore = create<OutfitState>((set, get) => ({
         if (previous && previous.productId !== product.id) {
           // Clear every slot held by the garment being replaced (a dress covers two).
           const previousProduct = catalogProduct(previous.productId);
-          if (previousProduct) for (const held of slotsForProduct(previousProduct)) delete next[held];
+          if (previousProduct)
+            for (const held of slotsForProduct(previousProduct)) delete next[held];
         }
         next[slot] = item;
       }
@@ -125,7 +126,8 @@ export const useOutfitStore = create<OutfitState>((set, get) => ({
   wornColor: (productId) => {
     const gender = genderOf(productId);
     if (!gender) return undefined;
-    return Object.values(get().worn[gender]).find((item) => item?.productId === productId)?.colorName;
+    return Object.values(get().worn[gender]).find((item) => item?.productId === productId)
+      ?.colorName;
   },
 
   wornItems: (gender) => uniqueWorn(get().worn[gender ?? get().activeGender]),

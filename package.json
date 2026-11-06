@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "models:optimize": "node scripts/optimize-models.mjs",
+    "models:export": "npx tsx scripts/export-avatars.ts",
     "db:seed": "node scripts/seed-db.ts",
     "db:dump": "node scripts/db-dump.ts"
   },

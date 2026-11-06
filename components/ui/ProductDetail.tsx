@@ -61,7 +61,14 @@ export function ProductDetail({ product }: { product: Product }) {
               )}
             >
               {option.image ? (
-                <Image src={option.image} alt="" fill unoptimized sizes="64px" className="object-cover" />
+                <Image
+                  src={option.image}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="64px"
+                  className="object-cover"
+                />
               ) : (
                 <span className="block h-full w-full" style={{ backgroundColor: option.hex }} />
               )}
@@ -82,7 +89,9 @@ export function ProductDetail({ product }: { product: Product }) {
         <h1 className="display mt-3 text-3xl sm:text-4xl">{product.name}</h1>
         <p className="mt-2 text-xl text-ink-soft">{formatPrice(product.price)}</p>
 
-        <p className="mt-5 max-w-prose text-sm leading-relaxed text-ink-soft">{product.description}</p>
+        <p className="mt-5 max-w-prose text-sm leading-relaxed text-ink-soft">
+          {product.description}
+        </p>
 
         <div className="mt-6">
           <p className="eyebrow mb-2">
@@ -99,7 +108,9 @@ export function ProductDetail({ product }: { product: Product }) {
                 onClick={() => setColorName(option.name)}
                 className={cn(
                   "h-8 w-8 rounded-full border-2 transition-transform",
-                  option.name === color.name ? "scale-110 border-ink" : "border-white hover:scale-110",
+                  option.name === color.name
+                    ? "scale-110 border-ink"
+                    : "border-white hover:scale-110",
                 )}
                 style={{ backgroundColor: option.hex }}
               />
@@ -120,7 +131,9 @@ export function ProductDetail({ product }: { product: Product }) {
                   onClick={() => setSize(option)}
                   className={cn(
                     "min-w-12 rounded-lg border px-3 py-2 text-sm transition-colors",
-                    size === option ? "border-ink bg-ink text-bone" : "border-line bg-white hover:border-ink",
+                    size === option
+                      ? "border-ink bg-ink text-bone"
+                      : "border-line bg-white hover:border-ink",
                     available ? "" : "cursor-not-allowed line-through opacity-40",
                   )}
                 >
@@ -132,7 +145,11 @@ export function ProductDetail({ product }: { product: Product }) {
           <p
             className={cn(
               "mt-2 text-xs",
-              stock.tone === "out" ? "text-danger" : stock.tone === "low" ? "text-warn" : "text-success",
+              stock.tone === "out"
+                ? "text-danger"
+                : stock.tone === "low"
+                  ? "text-warn"
+                  : "text-success",
             )}
           >
             {stock.text}

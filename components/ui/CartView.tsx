@@ -37,7 +37,10 @@ export function CartView() {
         <div className="mt-8 rounded-2xl border border-line bg-white p-10 text-center">
           <p className="text-ink-soft">Nothing in here yet.</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link href="/#men" className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90">
+            <Link
+              href="/#men"
+              className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90"
+            >
               Shop men
             </Link>
             <Link
@@ -54,15 +57,26 @@ export function CartView() {
             {lines.map(({ item, index, product }) => {
               if (!product) return null;
               const color =
-                product.colors.find((option) => option.name === item.colorName) ?? product.colors[0]!;
+                product.colors.find((option) => option.name === item.colorName) ??
+                product.colors[0]!;
               return (
-                <li key={`${item.productId}-${item.size}-${item.colorName}`} className="flex gap-4 p-4">
+                <li
+                  key={`${item.productId}-${item.size}-${item.colorName}`}
+                  className="flex gap-4 p-4"
+                >
                   <Link
                     href={`/product/${product.id}`}
                     className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-bone-dark"
                   >
                     {color.image ? (
-                      <Image src={color.image} alt="" fill unoptimized sizes="96px" className="object-cover" />
+                      <Image
+                        src={color.image}
+                        alt=""
+                        fill
+                        unoptimized
+                        sizes="96px"
+                        className="object-cover"
+                      />
                     ) : null}
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
@@ -129,7 +143,10 @@ export function CartView() {
               Checkout
             </button>
             {notice ? (
-              <p role="status" className="mt-3 rounded-lg bg-bone-dark px-3 py-2 text-center text-xs text-ink-soft">
+              <p
+                role="status"
+                className="mt-3 rounded-lg bg-bone-dark px-3 py-2 text-center text-xs text-ink-soft"
+              >
                 Demo only — checkout is not available.
               </p>
             ) : null}

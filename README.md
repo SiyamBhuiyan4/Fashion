@@ -1,7 +1,7 @@
 # MAISON — 3D virtual try-on (customer demo)
 
 A customer-facing fashion store where every piece can be worn by a 3D model before buying.
-The home page *is* the fitting room: the model stays on the left while the men's collection runs
+The home page _is_ the fitting room: the model stays on the left while the men's collection runs
 down the right, and the women's collection follows underneath. Nothing has to be clicked to switch
 — scroll into the women's section and the model changes with you. Each model keeps its own outfit,
 so scrolling back up finds the men's look still on. Tap **Wear** and the garment appears on the
@@ -11,15 +11,15 @@ Demo only: no login, no admin, no payment. Checkout says so.
 
 ## Stack
 
-| | |
-|---|---|
-| Framework | Next.js 16 (App Router) · React 19 · TypeScript strict |
-| 3D | three.js · React Three Fiber · drei |
-| State | Zustand (outfit, cart, preferences, catalogue) |
-| Styling | Tailwind CSS v4 |
+|            |                                                                           |
+| ---------- | ------------------------------------------------------------------------- |
+| Framework  | Next.js 16 (App Router) · React 19 · TypeScript strict                    |
+| 3D         | three.js · React Three Fiber · drei                                       |
+| State      | Zustand (outfit, cart, preferences, catalogue)                            |
+| Styling    | Tailwind CSS v4                                                           |
 | Validation | zod — product data, URL parameters, and everything read back from storage |
-| Data | Telegram channel (encrypted JSON snapshot) |
-| Media | Telegram channel, served through `/api/tg/<file_id>.<ext>` |
+| Data       | Telegram channel (encrypted JSON snapshot)                                |
+| Media      | Telegram channel, served through `/api/tg/<file_id>.<ext>`                |
 
 ## The 3D is built in code
 
@@ -56,12 +56,12 @@ writer is `npm run db:seed`.
 
 Copy `.env.example` to `.env.local` (and set the same values in Vercel):
 
-| Variable | Meaning |
-|---|---|
-| `TELEGRAM_BOT_TOKEN` | Bot that is an administrator of the channel |
-| `TELEGRAM_CHAT_ID` | The channel id |
-| `FASHION_DB_SECRET` | 32+ random characters; encrypts the snapshot |
-| `FASHION_DB_TAG` | Pointer label, `fashion-db` (use `fashion-db-test` for throwaway runs) |
+| Variable             | Meaning                                                                |
+| -------------------- | ---------------------------------------------------------------------- |
+| `TELEGRAM_BOT_TOKEN` | Bot that is an administrator of the channel                            |
+| `TELEGRAM_CHAT_ID`   | The channel id                                                         |
+| `FASHION_DB_SECRET`  | 32+ random characters; encrypts the snapshot                           |
+| `FASHION_DB_TAG`     | Pointer label, `fashion-db` (use `fashion-db-test` for throwaway runs) |
 
 ## Scripts
 
@@ -78,13 +78,13 @@ npm run models:optimize     # compress any *.src.glb under public/models
 
 ## Routes
 
-| Route | |
-|---|---|
-| `/` | The shop: sticky 3D model, men's collection, then women's on scroll |
-| `/men`, `/women` | Redirect to `/#men` and `/#women` (the old two-page layout) |
-| `/product/[id]` | Detail: gallery, colours, sizes, stock, "Try on in 3D", add to cart |
-| `/cart` | Cart (localStorage), quantities, subtotal, demo checkout notice |
-| `/api/tg/[name]` | Permanent link to a file in the Telegram channel |
+| Route            |                                                                     |
+| ---------------- | ------------------------------------------------------------------- |
+| `/`              | The shop: sticky 3D model, men's collection, then women's on scroll |
+| `/men`, `/women` | Redirect to `/#men` and `/#women` (the old two-page layout)         |
+| `/product/[id]`  | Detail: gallery, colours, sizes, stock, "Try on in 3D", add to cart |
+| `/cart`          | Cart (localStorage), quantities, subtotal, demo checkout notice     |
+| `/api/tg/[name]` | Permanent link to a file in the Telegram channel                    |
 
 ## Security notes
 

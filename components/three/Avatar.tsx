@@ -27,10 +27,7 @@ export function Avatar({ gender }: { gender: Gender }) {
 
   const figure = useMemo<Figure>(() => buildFigure(gender, skinColor(gender)), [gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const animator = useMemo(
-    () => new PoseAnimator(figure.joints, figure.parts.torso),
-    [figure],
-  );
+  const animator = useMemo(() => new PoseAnimator(figure.joints, figure.parts.torso), [figure]);
 
   const builds = useRef<GarmentBuild[]>([]);
 
@@ -112,7 +109,14 @@ export function GroundShadow() {
     canvas.height = size;
     const context = canvas.getContext("2d");
     if (context) {
-      const gradient = context.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      const gradient = context.createRadialGradient(
+        size / 2,
+        size / 2,
+        0,
+        size / 2,
+        size / 2,
+        size / 2,
+      );
       gradient.addColorStop(0, "rgba(40,34,28,0.5)");
       gradient.addColorStop(0.55, "rgba(40,34,28,0.18)");
       gradient.addColorStop(1, "rgba(40,34,28,0)");

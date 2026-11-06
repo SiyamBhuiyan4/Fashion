@@ -37,7 +37,12 @@ export function CartDrawer() {
   }, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Cart">
+    <div
+      className="fixed inset-0 z-50 flex justify-end"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cart"
+    >
       <button
         type="button"
         aria-label="Close cart"
@@ -53,7 +58,13 @@ export function CartDrawer() {
             className="rounded-full p-2 text-ink-soft transition-colors hover:bg-bone-dark hover:text-ink"
             aria-label="Close"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            >
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
           </button>
@@ -75,9 +86,13 @@ export function CartDrawer() {
             {items.map((item, index) => {
               const product = get(item.productId);
               if (!product) return null;
-              const color = product.colors.find((c) => c.name === item.colorName) ?? product.colors[0]!;
+              const color =
+                product.colors.find((c) => c.name === item.colorName) ?? product.colors[0]!;
               return (
-                <li key={`${item.productId}-${item.size}-${item.colorName}`} className="flex gap-3 p-4">
+                <li
+                  key={`${item.productId}-${item.size}-${item.colorName}`}
+                  className="flex gap-3 p-4"
+                >
                   <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-md bg-white">
                     {color.image ? (
                       <Image

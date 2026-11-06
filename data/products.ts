@@ -1,24 +1,10 @@
 import type { Product } from "@/lib/schemas";
 
-/**
- * Catalog source of truth for the demo. Validated by lib/products.ts against the zod
- * schema at module load, so a malformed entry fails loudly at build time.
- *
- * Replacing this file with a database or API call only requires changing lib/products.ts —
- * no UI component imports this file directly.
- */
-
 const sizesApparel = ["XS", "S", "M", "L", "XL"];
 const sizesShoesMen = ["40", "41", "42", "43", "44"];
 const sizesShoesWomen = ["36", "37", "38", "39", "40"];
 
-const stockApparel = { XS: 4, S: 9, M: 12, L: 7, XL: 3 };
-const stockApparelLow = { XS: 0, S: 2, M: 1, L: 0, XL: 0 };
-const stockShoesMen = { "40": 3, "41": 6, "42": 8, "43": 5, "44": 2 };
-const stockShoesWomen = { "36": 4, "37": 7, "38": 8, "39": 4, "40": 2 };
-
 export const products: Product[] = [
-  // ---------------------------------------------------------------- MEN · TOPS
   {
     id: "m-tee-essential",
     name: "Essential Cotton Tee",
@@ -28,15 +14,43 @@ export const products: Product[] = [
     description:
       "A midweight combed-cotton crew neck cut straight through the body. The shoulder seam sits exactly on the bone, so it layers under a jacket without bunching.",
     colors: [
-      { name: "Chalk", hex: "#efeae1" },
-      { name: "Black", hex: "#1b1b1d" },
-      { name: "Olive", hex: "#5a6150" },
-      { name: "Clay", hex: "#b4705a" },
+      {
+        name: "Chalk",
+        hex: "#efeae1",
+        image: "/images/products/m-tee-essential.webp",
+      },
+      {
+        name: "Black",
+        hex: "#1b1b1d",
+        image: "/images/products/m-tee-essential.webp",
+      },
+      {
+        name: "Olive",
+        hex: "#5a6150",
+        image: "/images/products/m-tee-essential.webp",
+      },
+      {
+        name: "Clay",
+        hex: "#b4705a",
+        image: "/images/products/m-tee-essential.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "tee", fabric: "cotton", sleeve: "short", fit: "regular" },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "tee",
+      fabric: "cotton",
+      sleeve: "short",
+      fit: "regular",
+    },
     tags: ["everyday"],
+    images: ["/images/products/m-tee-essential.webp"],
   },
   {
     id: "m-oxford-shirt",
@@ -47,13 +61,38 @@ export const products: Product[] = [
     description:
       "Woven oxford cotton with a soft roll collar and a single patch pocket. Finished with mother-of-pearl buttons and a split back yoke for movement.",
     colors: [
-      { name: "White", hex: "#f6f4f0" },
-      { name: "Sky", hex: "#9db7cf" },
-      { name: "Sand", hex: "#cbb89c" },
+      {
+        name: "White",
+        hex: "#f6f4f0",
+        image: "/images/products/m-oxford-shirt.webp",
+      },
+      {
+        name: "Sky",
+        hex: "#9db7cf",
+        image: "/images/products/m-oxford-shirt.webp",
+      },
+      {
+        name: "Sand",
+        hex: "#cbb89c",
+        image: "/images/products/m-oxford-shirt.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "shirt", fabric: "cotton", sleeve: "long", fit: "regular", collar: true },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "shirt",
+      fabric: "cotton",
+      sleeve: "long",
+      fit: "regular",
+      collar: true,
+    },
+    images: ["/images/products/m-oxford-shirt.webp"],
   },
   {
     id: "m-polo-pique",
@@ -64,13 +103,38 @@ export const products: Product[] = [
     description:
       "Textured piqué knit with a ribbed collar and a two-button placket. Holds its shape through the day and dries flat.",
     colors: [
-      { name: "Navy", hex: "#273349" },
-      { name: "Stone", hex: "#cfc6b8" },
-      { name: "Burgundy", hex: "#6c2b33" },
+      {
+        name: "Navy",
+        hex: "#273349",
+        image: "/images/products/m-polo-pique.webp",
+      },
+      {
+        name: "Stone",
+        hex: "#cfc6b8",
+        image: "/images/products/m-polo-pique.webp",
+      },
+      {
+        name: "Burgundy",
+        hex: "#6c2b33",
+        image: "/images/products/m-polo-pique.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "polo", fabric: "knit", sleeve: "short", fit: "slim", collar: true },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "polo",
+      fabric: "knit",
+      sleeve: "short",
+      fit: "slim",
+      collar: true,
+    },
+    images: ["/images/products/m-polo-pique.webp"],
   },
   {
     id: "m-merino-sweater",
@@ -81,17 +145,39 @@ export const products: Product[] = [
     description:
       "Fine-gauge merino wool knitted in a clean crew neck. Warm without weight, with ribbed cuffs and hem that stay snug.",
     colors: [
-      { name: "Charcoal", hex: "#3b3d42" },
-      { name: "Oat", hex: "#d6c9b0" },
-      { name: "Forest", hex: "#36473c" },
+      {
+        name: "Charcoal",
+        hex: "#3b3d42",
+        image: "/images/products/m-merino-sweater.webp",
+      },
+      {
+        name: "Oat",
+        hex: "#d6c9b0",
+        image: "/images/products/m-merino-sweater.webp",
+      },
+      {
+        name: "Forest",
+        hex: "#36473c",
+        image: "/images/products/m-merino-sweater.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparelLow,
-    garment: { kind: "sweater", fabric: "wool", sleeve: "long", fit: "regular" },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 0,
+      S: 2,
+      M: 1,
+      L: 0,
+      XL: 0,
+    },
+    garment: {
+      kind: "sweater",
+      fabric: "wool",
+      sleeve: "long",
+      fit: "regular",
+    },
     tags: ["low stock"],
+    images: ["/images/products/m-merino-sweater.webp"],
   },
-
-  // ------------------------------------------------------------- MEN · BOTTOMS
   {
     id: "m-slim-jeans",
     name: "Slim Rigid Jeans",
@@ -101,13 +187,37 @@ export const products: Product[] = [
     description:
       "Rigid 13oz denim with a mid rise and a slim leg that tapers below the knee. Breaks in to the shape of the wearer over a few weeks.",
     colors: [
-      { name: "Indigo", hex: "#2f4057" },
-      { name: "Washed Black", hex: "#2a2a2c" },
-      { name: "Stone Wash", hex: "#7b93a8" },
+      {
+        name: "Indigo",
+        hex: "#2f4057",
+        image: "/images/products/m-slim-jeans.webp",
+      },
+      {
+        name: "Washed Black",
+        hex: "#2a2a2c",
+        image: "/images/products/m-slim-jeans.webp",
+      },
+      {
+        name: "Stone Wash",
+        hex: "#7b93a8",
+        image: "/images/products/m-slim-jeans.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "jeans", fabric: "denim", fit: "slim", length: 1 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "jeans",
+      fabric: "denim",
+      fit: "slim",
+      length: 1,
+    },
+    images: ["/images/products/m-slim-jeans.webp"],
   },
   {
     id: "m-pleated-trouser",
@@ -118,13 +228,37 @@ export const products: Product[] = [
     description:
       "A single forward pleat and a wide straight leg in tropical-weight wool. Sits at the natural waist and drapes without clinging.",
     colors: [
-      { name: "Graphite", hex: "#45474c" },
-      { name: "Taupe", hex: "#9a8c78" },
-      { name: "Ink", hex: "#232838" },
+      {
+        name: "Graphite",
+        hex: "#45474c",
+        image: "/images/products/m-pleated-trouser.webp",
+      },
+      {
+        name: "Taupe",
+        hex: "#9a8c78",
+        image: "/images/products/m-pleated-trouser.webp",
+      },
+      {
+        name: "Ink",
+        hex: "#232838",
+        image: "/images/products/m-pleated-trouser.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "trousers", fabric: "wool", fit: "wide", length: 1 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "trousers",
+      fabric: "wool",
+      fit: "wide",
+      length: 1,
+    },
+    images: ["/images/products/m-pleated-trouser.webp"],
   },
   {
     id: "m-cargo-short",
@@ -135,16 +269,38 @@ export const products: Product[] = [
     description:
       "Cotton canvas cut just above the knee with roomy side pockets and a webbing-ready waistband.",
     colors: [
-      { name: "Khaki", hex: "#a79469" },
-      { name: "Black", hex: "#24242a" },
-      { name: "Moss", hex: "#5d6347" },
+      {
+        name: "Khaki",
+        hex: "#a79469",
+        image: "/images/products/m-cargo-short.webp",
+      },
+      {
+        name: "Black",
+        hex: "#24242a",
+        image: "/images/products/m-cargo-short.webp",
+      },
+      {
+        name: "Moss",
+        hex: "#5d6347",
+        image: "/images/products/m-cargo-short.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "shorts", fabric: "canvas", fit: "relaxed", length: 0.45 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "shorts",
+      fabric: "canvas",
+      fit: "relaxed",
+      length: 0.45,
+    },
+    images: ["/images/products/m-cargo-short.webp"],
   },
-
-  // ----------------------------------------------------------- MEN · OUTERWEAR
   {
     id: "m-denim-jacket",
     name: "Type II Denim Jacket",
@@ -154,11 +310,25 @@ export const products: Product[] = [
     description:
       "A boxy denim jacket with pleated front panels, two chest flap pockets and a cinch tab at each hip.",
     colors: [
-      { name: "Mid Indigo", hex: "#3b5273" },
-      { name: "Ecru", hex: "#ded5c4" },
+      {
+        name: "Mid Indigo",
+        hex: "#3b5273",
+        image: "/images/products/m-denim-jacket.webp",
+      },
+      {
+        name: "Ecru",
+        hex: "#ded5c4",
+        image: "/images/products/m-denim-jacket.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
     garment: {
       kind: "jacket",
       fabric: "denim",
@@ -167,6 +337,7 @@ export const products: Product[] = [
       collar: true,
       length: 0.55,
     },
+    images: ["/images/products/m-denim-jacket.webp"],
   },
   {
     id: "m-wool-blazer",
@@ -177,11 +348,25 @@ export const products: Product[] = [
     description:
       "Half-lined and unpadded, so it moves like a shirt. Notch lapels, two buttons and patch pockets in a mid-grey wool hopsack.",
     colors: [
-      { name: "Grey Melange", hex: "#6c6f76" },
-      { name: "Navy", hex: "#2b3550" },
+      {
+        name: "Grey Melange",
+        hex: "#6c6f76",
+        image: "/images/products/m-wool-blazer.webp",
+      },
+      {
+        name: "Navy",
+        hex: "#2b3550",
+        image: "/images/products/m-wool-blazer.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparelLow,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 0,
+      S: 2,
+      M: 1,
+      L: 0,
+      XL: 0,
+    },
     garment: {
       kind: "blazer",
       fabric: "wool",
@@ -191,6 +376,7 @@ export const products: Product[] = [
       length: 0.62,
     },
     tags: ["low stock"],
+    images: ["/images/products/m-wool-blazer.webp"],
   },
   {
     id: "m-hooded-parka",
@@ -201,12 +387,30 @@ export const products: Product[] = [
     description:
       "A long nylon shell with taped seams, a drawcord waist and a storm hood. Cut wide enough to wear over a sweater.",
     colors: [
-      { name: "Slate", hex: "#4a5560" },
-      { name: "Sand", hex: "#bda887" },
-      { name: "Black", hex: "#1f2124" },
+      {
+        name: "Slate",
+        hex: "#4a5560",
+        image: "/images/products/m-hooded-parka.webp",
+      },
+      {
+        name: "Sand",
+        hex: "#bda887",
+        image: "/images/products/m-hooded-parka.webp",
+      },
+      {
+        name: "Black",
+        hex: "#1f2124",
+        image: "/images/products/m-hooded-parka.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
     garment: {
       kind: "coat",
       fabric: "nylon",
@@ -215,9 +419,8 @@ export const products: Product[] = [
       collar: true,
       length: 0.8,
     },
+    images: ["/images/products/m-hooded-parka.webp"],
   },
-
-  // --------------------------------------------------------------- MEN · SHOES
   {
     id: "m-court-sneaker",
     name: "Leather Court Sneaker",
@@ -227,12 +430,31 @@ export const products: Product[] = [
     description:
       "A low-profile court shoe in smooth leather on a vulcanised rubber sole, with a padded collar and a perforated toe.",
     colors: [
-      { name: "White", hex: "#eeebe4" },
-      { name: "Black", hex: "#20201f" },
+      {
+        name: "White",
+        hex: "#eeebe4",
+        image: "/images/products/m-court-sneaker.webp",
+      },
+      {
+        name: "Black",
+        hex: "#20201f",
+        image: "/images/products/m-court-sneaker.webp",
+      },
     ],
-    sizes: sizesShoesMen,
-    stock: stockShoesMen,
-    garment: { kind: "sneakers", fabric: "leather", fit: "regular" },
+    sizes: ["40", "41", "42", "43", "44"],
+    stock: {
+      "40": 3,
+      "41": 6,
+      "42": 8,
+      "43": 5,
+      "44": 2,
+    },
+    garment: {
+      kind: "sneakers",
+      fabric: "leather",
+      fit: "regular",
+    },
+    images: ["/images/products/m-court-sneaker.webp"],
   },
   {
     id: "m-chelsea-boot",
@@ -243,15 +465,32 @@ export const products: Product[] = [
     description:
       "Ankle-height suede with elastic side gores and a pull tab at the heel, set on a stacked leather sole.",
     colors: [
-      { name: "Tobacco", hex: "#7c4e2d" },
-      { name: "Charcoal", hex: "#3a3a3d" },
+      {
+        name: "Tobacco",
+        hex: "#7c4e2d",
+        image: "/images/products/m-chelsea-boot.webp",
+      },
+      {
+        name: "Charcoal",
+        hex: "#3a3a3d",
+        image: "/images/products/m-chelsea-boot.webp",
+      },
     ],
-    sizes: sizesShoesMen,
-    stock: stockShoesMen,
-    garment: { kind: "boots", fabric: "suede", fit: "regular" },
+    sizes: ["40", "41", "42", "43", "44"],
+    stock: {
+      "40": 3,
+      "41": 6,
+      "42": 8,
+      "43": 5,
+      "44": 2,
+    },
+    garment: {
+      kind: "boots",
+      fabric: "suede",
+      fit: "regular",
+    },
+    images: ["/images/products/m-chelsea-boot.webp"],
   },
-
-  // -------------------------------------------------------------- WOMEN · TOPS
   {
     id: "w-silk-blouse",
     name: "Silk Shell Blouse",
@@ -261,14 +500,43 @@ export const products: Product[] = [
     description:
       "Washed silk with a soft shoulder and a straight hem that sits at the hip. Light enough to tuck, structured enough to wear loose.",
     colors: [
-      { name: "Ivory", hex: "#f0e8dc" },
-      { name: "Black", hex: "#1d1c1f" },
-      { name: "Rosewood", hex: "#9c5f63" },
-      { name: "Sage", hex: "#8f9d86" },
+      {
+        name: "Ivory",
+        hex: "#f0e8dc",
+        image: "/images/products/w-silk-blouse.webp",
+      },
+      {
+        name: "Black",
+        hex: "#1d1c1f",
+        image: "/images/products/w-silk-blouse.webp",
+      },
+      {
+        name: "Rosewood",
+        hex: "#9c5f63",
+        image: "/images/products/w-silk-blouse.webp",
+      },
+      {
+        name: "Sage",
+        hex: "#8f9d86",
+        image: "/images/products/w-silk-blouse.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "shirt", fabric: "silk", sleeve: "short", fit: "regular", collar: true },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "shirt",
+      fabric: "silk",
+      sleeve: "short",
+      fit: "regular",
+      collar: true,
+    },
+    images: ["/images/products/w-silk-blouse.webp"],
   },
   {
     id: "w-ribbed-tank",
@@ -279,14 +547,38 @@ export const products: Product[] = [
     description:
       "A close rib knit with narrow straps and a scoop neck. Stretches with the body and returns to shape.",
     colors: [
-      { name: "White", hex: "#f2efe9" },
-      { name: "Espresso", hex: "#43332b" },
-      { name: "Butter", hex: "#e8d79b" },
+      {
+        name: "White",
+        hex: "#f2efe9",
+        image: "/images/products/w-ribbed-tank.webp",
+      },
+      {
+        name: "Espresso",
+        hex: "#43332b",
+        image: "/images/products/w-ribbed-tank.webp",
+      },
+      {
+        name: "Butter",
+        hex: "#e8d79b",
+        image: "/images/products/w-ribbed-tank.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "tank", fabric: "knit", sleeve: "none", fit: "slim" },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "tank",
+      fabric: "knit",
+      sleeve: "none",
+      fit: "slim",
+    },
     tags: ["everyday"],
+    images: ["/images/products/w-ribbed-tank.webp"],
   },
   {
     id: "w-slip-dress",
@@ -297,14 +589,39 @@ export const products: Product[] = [
     description:
       "Cut on the bias so it falls in a long column and skims rather than grips. Midi length with a low back and adjustable straps.",
     colors: [
-      { name: "Champagne", hex: "#dcc9a8" },
-      { name: "Midnight", hex: "#232a3d" },
-      { name: "Plum", hex: "#5d3448" },
+      {
+        name: "Champagne",
+        hex: "#dcc9a8",
+        image: "/images/products/w-slip-dress.webp",
+      },
+      {
+        name: "Midnight",
+        hex: "#232a3d",
+        image: "/images/products/w-slip-dress.webp",
+      },
+      {
+        name: "Plum",
+        hex: "#5d3448",
+        image: "/images/products/w-slip-dress.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "dress", fabric: "silk", sleeve: "none", fit: "slim", length: 0.78 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "dress",
+      fabric: "silk",
+      sleeve: "none",
+      fit: "slim",
+      length: 0.78,
+    },
     tags: ["dress"],
+    images: ["/images/products/w-slip-dress.webp"],
   },
   {
     id: "w-cashmere-crew",
@@ -315,17 +632,39 @@ export const products: Product[] = [
     description:
       "Two-ply cashmere in a relaxed crew neck with dropped shoulders and a slightly cropped hem.",
     colors: [
-      { name: "Camel", hex: "#c39a6b" },
-      { name: "Dove", hex: "#c7c4bd" },
-      { name: "Navy", hex: "#2a3350" },
+      {
+        name: "Camel",
+        hex: "#c39a6b",
+        image: "/images/products/w-cashmere-crew.webp",
+      },
+      {
+        name: "Dove",
+        hex: "#c7c4bd",
+        image: "/images/products/w-cashmere-crew.webp",
+      },
+      {
+        name: "Navy",
+        hex: "#2a3350",
+        image: "/images/products/w-cashmere-crew.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparelLow,
-    garment: { kind: "sweater", fabric: "wool", sleeve: "long", fit: "relaxed" },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 0,
+      S: 2,
+      M: 1,
+      L: 0,
+      XL: 0,
+    },
+    garment: {
+      kind: "sweater",
+      fabric: "wool",
+      sleeve: "long",
+      fit: "relaxed",
+    },
     tags: ["low stock"],
+    images: ["/images/products/w-cashmere-crew.webp"],
   },
-
-  // ----------------------------------------------------------- WOMEN · BOTTOMS
   {
     id: "w-wide-jeans",
     name: "High-Rise Wide Jeans",
@@ -335,13 +674,37 @@ export const products: Product[] = [
     description:
       "Rigid denim with a high waist and a full straight leg that falls from the hip without a break.",
     colors: [
-      { name: "Light Indigo", hex: "#6b88a6" },
-      { name: "Deep Indigo", hex: "#2d3c54" },
-      { name: "Ecru", hex: "#ddd3c1" },
+      {
+        name: "Light Indigo",
+        hex: "#6b88a6",
+        image: "/images/products/w-wide-jeans.webp",
+      },
+      {
+        name: "Deep Indigo",
+        hex: "#2d3c54",
+        image: "/images/products/w-wide-jeans.webp",
+      },
+      {
+        name: "Ecru",
+        hex: "#ddd3c1",
+        image: "/images/products/w-wide-jeans.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "jeans", fabric: "denim", fit: "wide", length: 1 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "jeans",
+      fabric: "denim",
+      fit: "wide",
+      length: 1,
+    },
+    images: ["/images/products/w-wide-jeans.webp"],
   },
   {
     id: "w-midi-skirt",
@@ -352,13 +715,37 @@ export const products: Product[] = [
     description:
       "A bias-cut midi in matte satin that swings as you walk. Hidden side zip, no slit.",
     colors: [
-      { name: "Olive", hex: "#6d7353" },
-      { name: "Black", hex: "#1f1e21" },
-      { name: "Terracotta", hex: "#a8603f" },
+      {
+        name: "Olive",
+        hex: "#6d7353",
+        image: "/images/products/w-midi-skirt.webp",
+      },
+      {
+        name: "Black",
+        hex: "#1f1e21",
+        image: "/images/products/w-midi-skirt.webp",
+      },
+      {
+        name: "Terracotta",
+        hex: "#a8603f",
+        image: "/images/products/w-midi-skirt.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "skirt", fabric: "silk", fit: "regular", length: 0.72 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "skirt",
+      fabric: "silk",
+      fit: "regular",
+      length: 0.72,
+    },
+    images: ["/images/products/w-midi-skirt.webp"],
   },
   {
     id: "w-tailored-trouser",
@@ -369,16 +756,38 @@ export const products: Product[] = [
     description:
       "A long, clean trouser with a flat front, side-seam pockets and a straight leg that just brushes the floor.",
     colors: [
-      { name: "Charcoal", hex: "#3f4248" },
-      { name: "Cream", hex: "#e3d9c6" },
-      { name: "Chocolate", hex: "#4b352a" },
+      {
+        name: "Charcoal",
+        hex: "#3f4248",
+        image: "/images/products/w-tailored-trouser.webp",
+      },
+      {
+        name: "Cream",
+        hex: "#e3d9c6",
+        image: "/images/products/w-tailored-trouser.webp",
+      },
+      {
+        name: "Chocolate",
+        hex: "#4b352a",
+        image: "/images/products/w-tailored-trouser.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
-    garment: { kind: "trousers", fabric: "wool", fit: "regular", length: 1 },
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
+    garment: {
+      kind: "trousers",
+      fabric: "wool",
+      fit: "regular",
+      length: 1,
+    },
+    images: ["/images/products/w-tailored-trouser.webp"],
   },
-
-  // --------------------------------------------------------- WOMEN · OUTERWEAR
   {
     id: "w-trench-coat",
     name: "Cotton Trench Coat",
@@ -388,11 +797,25 @@ export const products: Product[] = [
     description:
       "Water-resistant cotton gabardine with a double-breasted front, storm flap and a belted waist. Falls below the knee.",
     colors: [
-      { name: "Honey", hex: "#c0a173" },
-      { name: "Black", hex: "#212024" },
+      {
+        name: "Honey",
+        hex: "#c0a173",
+        image: "/images/products/w-trench-coat.webp",
+      },
+      {
+        name: "Black",
+        hex: "#212024",
+        image: "/images/products/w-trench-coat.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
     garment: {
       kind: "coat",
       fabric: "cotton",
@@ -401,6 +824,7 @@ export const products: Product[] = [
       collar: true,
       length: 0.85,
     },
+    images: ["/images/products/w-trench-coat.webp"],
   },
   {
     id: "w-cropped-blazer",
@@ -411,12 +835,30 @@ export const products: Product[] = [
     description:
       "A short, sharp blazer with strong shoulders, peak lapels and a single button at the waist.",
     colors: [
-      { name: "Ink", hex: "#262c3e" },
-      { name: "Bone", hex: "#ded4c2" },
-      { name: "Scarlet", hex: "#8e2f33" },
+      {
+        name: "Ink",
+        hex: "#262c3e",
+        image: "/images/products/w-cropped-blazer.webp",
+      },
+      {
+        name: "Bone",
+        hex: "#ded4c2",
+        image: "/images/products/w-cropped-blazer.webp",
+      },
+      {
+        name: "Scarlet",
+        hex: "#8e2f33",
+        image: "/images/products/w-cropped-blazer.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparelLow,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 0,
+      S: 2,
+      M: 1,
+      L: 0,
+      XL: 0,
+    },
     garment: {
       kind: "blazer",
       fabric: "wool",
@@ -425,6 +867,7 @@ export const products: Product[] = [
       collar: true,
       length: 0.5,
     },
+    images: ["/images/products/w-cropped-blazer.webp"],
   },
   {
     id: "w-zip-hoodie",
@@ -435,12 +878,30 @@ export const products: Product[] = [
     description:
       "Heavyweight brushed-back cotton with a lined hood, a full-length zip and deep kangaroo pockets.",
     colors: [
-      { name: "Heather Grey", hex: "#a3a3a1" },
-      { name: "Faded Rose", hex: "#c08f90" },
-      { name: "Black", hex: "#232325" },
+      {
+        name: "Heather Grey",
+        hex: "#a3a3a1",
+        image: "/images/products/w-zip-hoodie.webp",
+      },
+      {
+        name: "Faded Rose",
+        hex: "#c08f90",
+        image: "/images/products/w-zip-hoodie.webp",
+      },
+      {
+        name: "Black",
+        hex: "#232325",
+        image: "/images/products/w-zip-hoodie.webp",
+      },
     ],
-    sizes: sizesApparel,
-    stock: stockApparel,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    stock: {
+      XS: 4,
+      S: 9,
+      M: 12,
+      L: 7,
+      XL: 3,
+    },
     garment: {
       kind: "hoodie",
       fabric: "cotton",
@@ -449,9 +910,8 @@ export const products: Product[] = [
       collar: false,
       length: 0.52,
     },
+    images: ["/images/products/w-zip-hoodie.webp"],
   },
-
-  // ------------------------------------------------------------- WOMEN · SHOES
   {
     id: "w-leather-flat",
     name: "Pointed Leather Flat",
@@ -460,13 +920,36 @@ export const products: Product[] = [
     price: 5490,
     description: "A soft pointed flat in nappa leather with a cushioned insole and a thin sole.",
     colors: [
-      { name: "Black", hex: "#1f1e20" },
-      { name: "Bone", hex: "#ddd2bf" },
-      { name: "Oxblood", hex: "#6a2b2f" },
+      {
+        name: "Black",
+        hex: "#1f1e20",
+        image: "/images/products/w-leather-flat.webp",
+      },
+      {
+        name: "Bone",
+        hex: "#ddd2bf",
+        image: "/images/products/w-leather-flat.webp",
+      },
+      {
+        name: "Oxblood",
+        hex: "#6a2b2f",
+        image: "/images/products/w-leather-flat.webp",
+      },
     ],
-    sizes: sizesShoesWomen,
-    stock: stockShoesWomen,
-    garment: { kind: "flats", fabric: "leather", fit: "regular" },
+    sizes: ["36", "37", "38", "39", "40"],
+    stock: {
+      "36": 4,
+      "37": 7,
+      "38": 8,
+      "39": 4,
+      "40": 2,
+    },
+    garment: {
+      kind: "flats",
+      fabric: "leather",
+      fit: "regular",
+    },
+    images: ["/images/products/w-leather-flat.webp"],
   },
   {
     id: "w-block-heel",
@@ -477,12 +960,31 @@ export const products: Product[] = [
     description:
       "A 60mm block heel with a wide ankle strap and a squared toe, built on a padded footbed.",
     colors: [
-      { name: "Tan", hex: "#a97b50" },
-      { name: "Black", hex: "#222124" },
+      {
+        name: "Tan",
+        hex: "#a97b50",
+        image: "/images/products/w-block-heel.webp",
+      },
+      {
+        name: "Black",
+        hex: "#222124",
+        image: "/images/products/w-block-heel.webp",
+      },
     ],
-    sizes: sizesShoesWomen,
-    stock: stockShoesWomen,
-    garment: { kind: "heels", fabric: "leather", fit: "regular" },
+    sizes: ["36", "37", "38", "39", "40"],
+    stock: {
+      "36": 4,
+      "37": 7,
+      "38": 8,
+      "39": 4,
+      "40": 2,
+    },
+    garment: {
+      kind: "heels",
+      fabric: "leather",
+      fit: "regular",
+    },
+    images: ["/images/products/w-block-heel.webp"],
   },
   {
     id: "w-runner-sneaker",
@@ -493,11 +995,30 @@ export const products: Product[] = [
     description:
       "A low suede-and-mesh runner on a gum sole, with a soft foam midsole and a slim silhouette.",
     colors: [
-      { name: "Off White", hex: "#e9e4d9" },
-      { name: "Sage", hex: "#93a089" },
+      {
+        name: "Off White",
+        hex: "#e9e4d9",
+        image: "/images/products/w-runner-sneaker.webp",
+      },
+      {
+        name: "Sage",
+        hex: "#93a089",
+        image: "/images/products/w-runner-sneaker.webp",
+      },
     ],
-    sizes: sizesShoesWomen,
-    stock: stockShoesWomen,
-    garment: { kind: "sneakers", fabric: "suede", fit: "regular" },
+    sizes: ["36", "37", "38", "39", "40"],
+    stock: {
+      "36": 4,
+      "37": 7,
+      "38": 8,
+      "39": 4,
+      "40": 2,
+    },
+    garment: {
+      kind: "sneakers",
+      fabric: "suede",
+      fit: "regular",
+    },
+    images: ["/images/products/w-runner-sneaker.webp"],
   },
 ];

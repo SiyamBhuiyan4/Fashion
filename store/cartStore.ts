@@ -68,8 +68,7 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      remove: (index) =>
-        set((state) => ({ items: state.items.filter((_, i) => i !== index) })),
+      remove: (index) => set((state) => ({ items: state.items.filter((_, i) => i !== index) })),
 
       setQuantity: (index, quantity) =>
         set((state) => {

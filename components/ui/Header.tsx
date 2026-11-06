@@ -56,7 +56,14 @@ export function Header() {
           onClick={openDrawer}
           className="relative flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm text-ink transition-colors hover:border-ink"
         >
-          <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          >
             <path d="M6 7h12l-1 13H7L6 7Z" strokeLinejoin="round" />
             <path d="M9 7a3 3 0 1 1 6 0" strokeLinecap="round" />
           </svg>

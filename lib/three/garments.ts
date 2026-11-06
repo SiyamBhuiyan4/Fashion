@@ -178,19 +178,18 @@ function buildSleeves(
   const sleeve = spec.sleeve ?? "short";
   if (sleeve === "none") return { attachments, hidden };
 
-  // A cap over each shoulder, so the sleeve joins the body instead of floating beside it.
-  const shoulderRadius = (figure.measurements.gender === "women" ? 0.047 : 0.054) + ease;
+  // A cap over each shoulder, contoured smoothly to bridge sleeve and deltoid
+  const shoulderRadius = (figure.measurements.gender === "women" ? 0.045 : 0.052) + ease;
   for (const side of ["L", "R"] as const) {
     const sign = side === "L" ? 1 : -1;
     const cap = new THREE.Mesh(
-      new THREE.SphereGeometry(shoulderRadius, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62),
+      new THREE.SphereGeometry(shoulderRadius, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.54),
       material,
     );
-    // Reaches in over the shoulder seam, so no skin shows between body and sleeve.
-    cap.scale.set(1.75, 1.05, 1.1);
-    cap.position.set(-sign * 0.052, 0.004, 0);
+    cap.scale.set(1.15, 0.95, 1.05);
+    cap.position.set(-sign * 0.018, -0.004, 0);
     cap.name = `shoulderCap${side}`;
-    withOutline(cap, 0.0035);
+    withOutline(cap, 0.0028);
     attachments.push({ joint: `arm${side}` as JointName, object: cap });
   }
 
@@ -202,9 +201,14 @@ function buildSleeves(
     for (const side of ["L", "R"] as const) {
       attachments.push({
         joint: `arm${side}` as JointName,
-        object: buildMesh(withHem(sliceProfile(upper, cut, 0.05), 1.08), material, `sleeve${side}`, {
-          segments: 20,
-        }),
+        object: buildMesh(
+          withHem(sliceProfile(upper, cut, 0.05), 1.08),
+          material,
+          `sleeve${side}`,
+          {
+            segments: 20,
+          },
+        ),
       });
     }
     return { attachments, hidden };
@@ -215,9 +219,14 @@ function buildSleeves(
   for (const side of ["L", "R"] as const) {
     attachments.push({
       joint: `arm${side}` as JointName,
-      object: buildMesh(sliceProfile(upper, -upperLength - 0.005, 0.05), material, `sleeveUpper${side}`, {
-        segments: 20,
-      }),
+      object: buildMesh(
+        sliceProfile(upper, -upperLength - 0.005, 0.05),
+        material,
+        `sleeveUpper${side}`,
+        {
+          segments: 20,
+        },
+      ),
     });
     const cuffEnd = -figure.measurements.forearmLength + (spec.kind === "blazer" ? 0.03 : 0.005);
     attachments.push({
@@ -253,11 +262,7 @@ function buildCollar(
   return collar;
 }
 
-function buildBottoms(
-  figure: Figure,
-  spec: GarmentSpec,
-  material: THREE.Material,
-): GarmentBuild {
+function buildBottoms(figure: Figure, spec: GarmentSpec, material: THREE.Material): GarmentBuild {
   const attachments: GarmentBuild["attachments"] = [];
   // The hips are fully enclosed by anything worn on the lower body, so the body mesh is
   // hidden rather than left to poke through a close-fitting seat.
@@ -267,15 +272,16 @@ function buildBottoms(
   const column = bodyColumn(figure);
   const waistToHips = m.waistY - m.hipY;
 
-  // Seat and waistband, worn on the hips joint.
+  // Seat and waistband, worn on the hips joint with smooth organic curvature.
   const seatTop = spec.kind === "skirt" || spec.kind === "trousers" ? 0.02 : -0.01;
   const seat = offsetProfile(
     sliceProfile(column, -waistToHips - 0.17, seatTop).map((ring) => ({
       ...ring,
+      box: Math.min(ring.box ?? 0, 0.18),
       y: ring.y + waistToHips,
     })),
-    ease + 0.006,
-    1.01,
+    ease + 0.003,
+    1.0,
   );
   attachments.push({ joint: "hips", object: buildMesh(seat, material, "seat", { segments: 32 }) });
 
@@ -297,12 +303,16 @@ function buildBottoms(
       { y: -0.1, rx: bottom.rx * 1.03, rz: bottom.rz * 1.03, box: 0.14 },
       { y: 0.0, rx: hipRing.rx * 0.98, rz: hipRing.rz * 0.98, box: 0.14 },
     ];
-    attachments.push({ joint: "hips", object: buildMesh(rings, material, "skirt", { segments: 36 }) });
+    attachments.push({
+      joint: "hips",
+      object: buildMesh(rings, material, "skirt", { segments: 36 }),
+    });
     return { attachments, hidden, dispose: () => undefined };
   }
 
   // Trouser legs.
-  const widen = spec.fit === "wide" ? 1.3 : spec.fit === "relaxed" ? 1.16 : spec.fit === "slim" ? 1.02 : 1.08;
+  const widen =
+    spec.fit === "wide" ? 1.3 : spec.fit === "relaxed" ? 1.16 : spec.fit === "slim" ? 1.02 : 1.08;
   const upper = offsetProfile(figure.profiles.upperLeg, ease, 1.02);
   const lower = offsetProfile(figure.profiles.lowerLeg, ease, 1.02);
   const upperLength = m.hipY - 0.02 - m.kneeY;
@@ -340,7 +350,8 @@ function buildBottoms(
 
     // The hem can stop above the ankle for a cropped trouser.
     const hemY = -lowerLength * Math.min(1, 0.45 + length * 0.62);
-    const taper = spec.fit === "wide" ? 1.5 : spec.fit === "relaxed" ? 1.28 : spec.fit === "slim" ? 1.05 : 1.16;
+    const taper =
+      spec.fit === "wide" ? 1.5 : spec.fit === "relaxed" ? 1.28 : spec.fit === "slim" ? 1.05 : 1.16;
     const lowerRings = withHem(
       sliceProfile(lower, hemY, 0.02).map((ring, index, all) => {
         // Widen towards the hem so the leg opening reads correctly.
@@ -391,7 +402,8 @@ function buildTop(figure: Figure, spec: GarmentSpec, material: THREE.Material): 
     hidden.push("underwearBottom", "underwearTop", "pelvis", "baseLegL", "baseLegR");
   } else {
     rings = withHem(offsetProfile(sliceProfile(column, hemY, neckY), ease, 1.0), 1.03);
-    if (neckY > figure.measurements.chestY - figure.measurements.waistY) hidden.push("underwearTop");
+    if (neckY > figure.measurements.chestY - figure.measurements.waistY)
+      hidden.push("underwearTop");
   }
 
   const attachments: GarmentBuild["attachments"] = [
@@ -409,10 +421,7 @@ function buildTop(figure: Figure, spec: GarmentSpec, material: THREE.Material): 
     // Straps over each shoulder.
     for (const side of ["L", "R"] as const) {
       const sign = side === "L" ? 1 : -1;
-      const strap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.012, 0.012, 0.1, 8),
-        material,
-      );
+      const strap = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.1, 8), material);
       strap.position.set(sign * 0.085, -0.01, 0.01);
       strap.rotation.z = sign * 0.25;
       strap.rotation.x = -0.1;
@@ -463,7 +472,10 @@ function buildOuterwear(figure: Figure, spec: GarmentSpec, material: THREE.Mater
 
   if (spec.kind === "hoodie") {
     // Hood resting on the shoulders, behind the head.
-    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.115, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62), material);
+    const hood = new THREE.Mesh(
+      new THREE.SphereGeometry(0.115, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62),
+      material,
+    );
     hood.scale.set(1.08, 1.0, 1.12);
     hood.rotation.x = 0.45;
     hood.position.set(0, 0.0, -0.075);
@@ -512,8 +524,20 @@ function buildShoes(figure: Figure, spec: GarmentSpec, material: THREE.Material)
     shoe.name = `shoe${side}`;
 
     const upperRings: Ring[] = [
-      { y: -m.ankleY + soleThickness, rx: 0.05, rz: m.footLength * 0.52, dz: m.footLength * 0.16, box: 0.55 },
-      { y: -m.ankleY * 0.35, rx: 0.053, rz: m.footLength * 0.48, dz: m.footLength * 0.14, box: 0.5 },
+      {
+        y: -m.ankleY + soleThickness,
+        rx: 0.05,
+        rz: m.footLength * 0.52,
+        dz: m.footLength * 0.16,
+        box: 0.55,
+      },
+      {
+        y: -m.ankleY * 0.35,
+        rx: 0.053,
+        rz: m.footLength * 0.48,
+        dz: m.footLength * 0.14,
+        box: 0.5,
+      },
       { y: 0.015, rx: 0.051, rz: m.footLength * 0.3, dz: m.footLength * 0.015, box: 0.35 },
       { y: 0.055, rx: 0.047, rz: m.footLength * 0.22, dz: -m.footLength * 0.04, box: 0.3 },
     ];
@@ -526,7 +550,13 @@ function buildShoes(figure: Figure, spec: GarmentSpec, material: THREE.Material)
     });
     const soleRings: Ring[] = [
       { y: -m.ankleY, rx: 0.051, rz: m.footLength * 0.5, dz: m.footLength * 0.15, box: 0.65 },
-      { y: -m.ankleY + soleThickness, rx: 0.053, rz: m.footLength * 0.53, dz: m.footLength * 0.16, box: 0.6 },
+      {
+        y: -m.ankleY + soleThickness,
+        rx: 0.053,
+        rz: m.footLength * 0.53,
+        dz: m.footLength * 0.16,
+        box: 0.6,
+      },
     ];
     const sole = buildMesh(soleRings, soleMaterial, "sole", { segments: 22, caps: true });
     sole.position.y = -heelHeight;
@@ -541,7 +571,11 @@ function buildShoes(figure: Figure, spec: GarmentSpec, material: THREE.Material)
     if (boot) {
       // Shaft up the lower leg.
       const shaft = offsetProfile(
-        sliceProfile(figure.profiles.lowerLeg, -(m.kneeY - m.ankleY) + 0.01, -(m.kneeY - m.ankleY) + 0.16),
+        sliceProfile(
+          figure.profiles.lowerLeg,
+          -(m.kneeY - m.ankleY) + 0.01,
+          -(m.kneeY - m.ankleY) + 0.16,
+        ),
         0.014,
         1.03,
       );

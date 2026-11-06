@@ -21,8 +21,11 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
   catalog: [],
   hydrated: false,
   hydrate: (catalog) =>
-    set((state) => (state.hydrated && state.catalog === catalog ? state : { catalog, hydrated: true })),
+    set((state) =>
+      state.hydrated && state.catalog === catalog ? state : { catalog, hydrated: true },
+    ),
   get: (id) => findById(get().catalog, id),
 }));
 
-export const catalogProduct = (id: string): Product | undefined => useCatalogStore.getState().get(id);
+export const catalogProduct = (id: string): Product | undefined =>
+  useCatalogStore.getState().get(id);

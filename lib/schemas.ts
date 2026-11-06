@@ -129,11 +129,19 @@ export const productSchema = z
   .superRefine((p, ctx) => {
     for (const size of p.sizes) {
       if (!(size in p.stock)) {
-        ctx.addIssue({ code: "custom", message: `Missing stock for size ${size}`, path: ["stock"] });
+        ctx.addIssue({
+          code: "custom",
+          message: `Missing stock for size ${size}`,
+          path: ["stock"],
+        });
       }
     }
     if (p.id.startsWith("m-") !== (p.gender === "men")) {
-      ctx.addIssue({ code: "custom", message: "Id prefix must match gender (m-/w-)", path: ["id"] });
+      ctx.addIssue({
+        code: "custom",
+        message: "Id prefix must match gender (m-/w-)",
+        path: ["id"],
+      });
     }
   });
 export type Product = z.infer<typeof productSchema>;

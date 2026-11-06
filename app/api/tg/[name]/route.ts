@@ -38,9 +38,10 @@ async function telegramPath(token: string, fileId: string, fresh: boolean): Prom
     `https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`,
     { cache: "no-store" },
   );
-  const data = (await res.json().catch(() => null)) as
-    | { ok: boolean; result?: { file_path?: string } }
-    | null;
+  const data = (await res.json().catch(() => null)) as {
+    ok: boolean;
+    result?: { file_path?: string };
+  } | null;
   const path = data?.ok ? data.result?.file_path : null;
   if (path) pathCache.set(fileId, { path, at: Date.now() });
   return path ?? null;
@@ -74,7 +75,8 @@ export async function GET(
   // A cached path can expire before the TTL; resolve it once more before giving up.
   if (!upstream || (!upstream.ok && upstream.status !== 416)) upstream = await fetchFile(true);
   if (!upstream) return new Response("File not found on Telegram", { status: 404 });
-  if (!upstream.ok && upstream.status !== 416) return new Response("Telegram error", { status: 502 });
+  if (!upstream.ok && upstream.status !== 416)
+    return new Response("Telegram error", { status: 502 });
 
   const headers = new Headers();
   headers.set("Content-Type", type);

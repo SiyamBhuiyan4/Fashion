@@ -18,7 +18,8 @@ export function AddOutfitDialog({ items, onClose }: { items: WornItem[]; onClose
   const openDrawer = useCartStore((state) => state.openDrawer);
 
   const products = useMemo(
-    () => items.map((item) => ({ item, product: get(item.productId) })).filter((row) => row.product),
+    () =>
+      items.map((item) => ({ item, product: get(item.productId) })).filter((row) => row.product),
     [items, get],
   );
 
@@ -53,8 +54,18 @@ export function AddOutfitDialog({ items, onClose }: { items: WornItem[]; onClose
   );
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center" role="dialog" aria-modal="true" aria-label="Choose sizes">
-      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-ink/35" />
+    <div
+      className="fixed inset-0 z-50 grid place-items-end sm:place-items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Choose sizes"
+    >
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0 bg-ink/35"
+      />
       <div className="relative w-full max-w-md rounded-t-2xl border border-line bg-bone p-5 sm:rounded-2xl">
         <h2 className="display text-lg">Choose your sizes</h2>
         <p className="mt-1 text-sm text-ink-soft">
@@ -82,7 +93,9 @@ export function AddOutfitDialog({ items, onClose }: { items: WornItem[]; onClose
                         key={size}
                         type="button"
                         disabled={!stocked}
-                        onClick={() => setChosen((current) => ({ ...current, [item.productId]: size }))}
+                        onClick={() =>
+                          setChosen((current) => ({ ...current, [item.productId]: size }))
+                        }
                         className={[
                           "min-w-10 rounded-md border px-2 py-1 text-xs transition-colors",
                           selected === size

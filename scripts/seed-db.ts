@@ -19,7 +19,12 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { products as seedProducts } from "../data/products.ts";
 import { catalogSchema, type Product } from "../lib/schemas.ts";
-import { loadSnapshot, withWriteLock, uploadMedia, type Snapshot } from "../lib/db/telegramStore.ts";
+import {
+  loadSnapshot,
+  withWriteLock,
+  uploadMedia,
+  type Snapshot,
+} from "../lib/db/telegramStore.ts";
 import { productArtSvg } from "./product-art.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -70,7 +75,9 @@ async function renderArt(product: Product, colorIndex: number): Promise<Buffer> 
 async function main(): Promise<void> {
   loadEnv();
   const catalog = catalogSchema.parse(seedProducts);
-  console.log(`Catalogue: ${catalog.length} products, ${catalog.reduce((n, p) => n + p.colors.length, 0)} colourways`);
+  console.log(
+    `Catalogue: ${catalog.length} products, ${catalog.reduce((n, p) => n + p.colors.length, 0)} colourways`,
+  );
 
   if (dryRun) {
     const out = join(here, ".preview");
