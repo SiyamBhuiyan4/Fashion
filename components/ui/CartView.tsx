@@ -28,7 +28,7 @@ export function CartView() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <div className="mx-auto min-h-[70dvh] max-w-5xl bg-bone/[0.93] px-4 py-10 sm:px-6">
       <h1 className="display text-5xl sm:text-6xl">Your bag</h1>
 
       {!mounted ? (

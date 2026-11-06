@@ -33,7 +33,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const related = relatedProducts(await getCatalog(), product, 4);
 
   return (
-    <>
+    // A soft paper layer over the blossom background, so the product reads cleanly.
+    <div className="bg-bone/[0.93]">
       <ProductDetail product={product} />
       {related.length > 0 ? (
         <section className="mx-auto max-w-[90rem] border-t border-line px-4 py-14 sm:px-8 sm:py-20">
@@ -52,6 +53,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           </div>
         </section>
       ) : null}
-    </>
+    </div>
   );
 }

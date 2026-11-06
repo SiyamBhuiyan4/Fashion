@@ -161,154 +161,162 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
         </a>
       </section>
 
-      {/* ---------------------------------------------------------------- ticker */}
-      <div
-        id="ticker"
-        className="overflow-hidden border-y border-line bg-paper/70 py-3.5 backdrop-blur-md"
-      >
-        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-ink-soft">
-          {[...TICKER, ...TICKER].map((item, i) => (
-            <span key={i} className="flex items-center gap-12">
-              {item}
-              <span aria-hidden className="h-1 w-1 rounded-full bg-accent" />
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* -------------------------------------------------------- category tiles */}
-      <section className="mx-auto grid max-w-[90rem] gap-3 px-4 py-14 sm:grid-cols-2 sm:px-8 sm:py-20">
-        {[
-          { slot: tileWomen, href: "#women", label: "Women", count: women.length },
-          { slot: tileMen, href: "#men", label: "Men", count: men.length },
-        ].map(({ slot, href, label, count }, i) =>
-          slot ? (
-            <Reveal key={label} delay={i * 120}>
-              <Link
-                href={href}
-                className="group relative block aspect-[4/5] overflow-hidden bg-bone-dark sm:aspect-auto sm:h-[78vh] sm:max-h-[54rem]"
-              >
-                <Image
-                  src={slot.image}
-                  alt={`${label}'s collection`}
-                  fill
-                  unoptimized
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-[1600ms] ease-out-soft group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 text-white sm:p-8">
-                  <div>
-                    <p className="eyebrow text-white/70">{count} pieces</p>
-                    <h2 className="display mt-2 text-5xl sm:text-6xl">{label}</h2>
-                  </div>
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink transition-transform duration-500 ease-out-soft group-hover:translate-x-1 group-hover:-rotate-45">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                    >
-                      <path
-                        d="M5 12h14M13 6l6 6-6 6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            </Reveal>
-          ) : null,
-        )}
-      </section>
-
-      {/* ------------------------------------------------------------- in motion */}
-      {withVideo.length > 0 ? (
-        <section
-          id="in-motion"
-          className="scroll-mt-16 border-y border-line bg-paper/60 py-14 backdrop-blur-sm sm:py-20"
+      {/* Everything below the hero sits on soft paper, so products read cleanly over the
+          blossom. */}
+      <div className="bg-bone/[0.93]">
+        {/* ---------------------------------------------------------------- ticker */}
+        <div
+          id="ticker"
+          className="overflow-hidden border-y border-line bg-paper/70 py-3.5 backdrop-blur-md"
         >
-          <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
-            <Reveal>
-              <p className="eyebrow">Filmed on real people</p>
-              <h2 className="display mt-3 text-5xl sm:text-6xl">
-                In <em className="italic">motion</em>
-              </h2>
-            </Reveal>
-            <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
-              See how it falls, folds and moves before it arrives.
-            </p>
-          </div>
-          <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
-            {withVideo.map((product) => (
-              <MotionCard key={product.id} product={product} />
+          <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-ink-soft">
+            {[...TICKER, ...TICKER].map((item, i) => (
+              <span key={i} className="flex items-center gap-12">
+                {item}
+                <span aria-hidden className="h-1 w-1 rounded-full bg-accent" />
+              </span>
             ))}
           </div>
-        </section>
-      ) : null}
+        </div>
 
-      {/* ----------------------------------------------------------- collections */}
-      {GENDERS.map(({ gender, label, blurb }, sectionIndex) => {
-        const products = productsByGender[gender];
-        const groups = groupByCategory(products, gender).filter((g) => g.items.length > 0);
-        const current = tab[gender];
-        const visible =
-          current === "all" ? products : (groups.find((g) => g.category === current)?.items ?? []);
-
-        return (
-          <section
-            key={gender}
-            id={gender}
-            data-gender={gender}
-            ref={(element) => {
-              sections.current[gender] = element;
-            }}
-            className="scroll-mt-16"
-          >
-            <div className="mx-auto max-w-[90rem] px-4 pt-16 sm:px-8 sm:pt-24">
-              <Reveal className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="eyebrow">Collection {String(sectionIndex + 1).padStart(2, "0")}</p>
-                  <h2 className="display mt-3 text-6xl sm:text-7xl">
-                    {label}
-                    <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
-                      {products.length}
-                    </sup>
-                  </h2>
-                  <p className="mt-3 text-sm text-ink-soft">{blurb}</p>
-                </div>
+        {/* -------------------------------------------------------- category tiles */}
+        <section className="mx-auto grid max-w-[90rem] gap-3 px-4 py-14 sm:grid-cols-2 sm:px-8 sm:py-20">
+          {[
+            { slot: tileWomen, href: "#women", label: "Women", count: women.length },
+            { slot: tileMen, href: "#men", label: "Men", count: men.length },
+          ].map(({ slot, href, label, count }, i) =>
+            slot ? (
+              <Reveal key={label} delay={i * 120}>
+                <Link
+                  href={href}
+                  className="group relative block aspect-[4/5] overflow-hidden bg-bone-dark sm:aspect-auto sm:h-[78vh] sm:max-h-[54rem]"
+                >
+                  <Image
+                    src={slot.image}
+                    alt={`${label}'s collection`}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 640px) 100vw, 50vw"
+                    className="object-cover transition-transform duration-[1600ms] ease-out-soft group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 text-white sm:p-8">
+                    <div>
+                      <p className="eyebrow text-white/70">{count} pieces</p>
+                      <h2 className="display mt-2 text-5xl sm:text-6xl">{label}</h2>
+                    </div>
+                    <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink transition-transform duration-500 ease-out-soft group-hover:translate-x-1 group-hover:-rotate-45">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      >
+                        <path
+                          d="M5 12h14M13 6l6 6-6 6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
               </Reveal>
-            </div>
+            ) : null,
+          )}
+        </section>
 
-            {/* Category filter sticks under the header while the collection scrolls by. */}
-            <div className="sticky top-16 z-20 mt-6 border-y border-line bg-bone/85 backdrop-blur-xl">
-              <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-8">
-                <CategoryTabs
-                  categories={groups.map((group) => ({
-                    category: group.category,
-                    label: group.label,
-                    count: group.items.length,
-                  }))}
-                  active={current}
-                  onSelect={(category) => setTab((state) => ({ ...state, [gender]: category }))}
-                />
-              </div>
+        {/* ------------------------------------------------------------- in motion */}
+        {withVideo.length > 0 ? (
+          <section
+            id="in-motion"
+            className="scroll-mt-16 border-y border-line bg-paper/60 py-14 backdrop-blur-sm sm:py-20"
+          >
+            <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
+              <Reveal>
+                <p className="eyebrow">Filmed on real people</p>
+                <h2 className="display mt-3 text-5xl sm:text-6xl">
+                  In <em className="italic">motion</em>
+                </h2>
+              </Reveal>
+              <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
+                See how it falls, folds and moves before it arrives.
+              </p>
             </div>
-
-            <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
-              {visible.map((product, i) => (
-                <Reveal key={`${current}-${product.id}`} delay={(i % 4) * 70}>
-                  <ProductCard product={product} />
-                </Reveal>
+            <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
+              {withVideo.map((product) => (
+                <MotionCard key={product.id} product={product} />
               ))}
             </div>
-
-            {sectionIndex === 0 ? <Editorial /> : null}
           </section>
-        );
-      })}
+        ) : null}
+
+        {/* ----------------------------------------------------------- collections */}
+        {GENDERS.map(({ gender, label, blurb }, sectionIndex) => {
+          const products = productsByGender[gender];
+          const groups = groupByCategory(products, gender).filter((g) => g.items.length > 0);
+          const current = tab[gender];
+          const visible =
+            current === "all"
+              ? products
+              : (groups.find((g) => g.category === current)?.items ?? []);
+
+          return (
+            <section
+              key={gender}
+              id={gender}
+              data-gender={gender}
+              ref={(element) => {
+                sections.current[gender] = element;
+              }}
+              className="scroll-mt-16"
+            >
+              <div className="mx-auto max-w-[90rem] px-4 pt-16 sm:px-8 sm:pt-24">
+                <Reveal className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <p className="eyebrow">
+                      Collection {String(sectionIndex + 1).padStart(2, "0")}
+                    </p>
+                    <h2 className="display mt-3 text-6xl sm:text-7xl">
+                      {label}
+                      <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
+                        {products.length}
+                      </sup>
+                    </h2>
+                    <p className="mt-3 text-sm text-ink-soft">{blurb}</p>
+                  </div>
+                </Reveal>
+              </div>
+
+              {/* Category filter sticks under the header while the collection scrolls by. */}
+              <div className="sticky top-16 z-20 mt-6 border-y border-line bg-bone/85 backdrop-blur-xl">
+                <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-8">
+                  <CategoryTabs
+                    categories={groups.map((group) => ({
+                      category: group.category,
+                      label: group.label,
+                      count: group.items.length,
+                    }))}
+                    active={current}
+                    onSelect={(category) => setTab((state) => ({ ...state, [gender]: category }))}
+                  />
+                </div>
+              </div>
+
+              <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
+                {visible.map((product, i) => (
+                  <Reveal key={`${current}-${product.id}`} delay={(i % 4) * 70}>
+                    <ProductCard product={product} />
+                  </Reveal>
+                ))}
+              </div>
+
+              {sectionIndex === 0 ? <Editorial /> : null}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

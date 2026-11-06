@@ -3,22 +3,23 @@
 import { useEffect, useRef } from "react";
 
 /**
- * The site's living background: a cherry tree in blossom with petals carried on the wind.
+ * The site's living background: a real cherry-blossom photograph that drifts in a slow zoom,
+ * with petals carried across it on the wind.
  *
- * It is drawn on a canvas rather than played as a video: nothing to download, sharp on every
- * screen, and it costs very little. Every motion — each petal's fall, drift, sway and spin, the
- * wind gusts and the branches' sway — is a function of time that repeats exactly every
- * LOOP_SECONDS, so the scene cycles like a seamless two-minute video loop.
+ * The petals are drawn on a canvas rather than played as a video: nothing extra to download,
+ * sharp on every screen, and cheap to run. Every motion — each petal's fall, drift, sway and
+ * spin, the wind gusts, and the photo's slow zoom (the `sakura-drift` keyframes in globals.css)
+ * — repeats exactly every LOOP_SECONDS, so the whole scene cycles like a seamless two-minute
+ * video loop.
  *
  * With "reduce motion" switched on, a single still frame is drawn.
  */
 
 const LOOP_SECONDS = 120;
 const TAU = Math.PI * 2;
-const PETAL_COLORS = ["#f9c9d4", "#f5b3c4", "#fbdbe3", "#f0a3b9", "#fde8ee"];
-const BLOSSOM_COLORS = ["#fbd3dc", "#f7bfcd", "#fde3e9", "#f3b0c2", "#fff0f3", "#f9c8d4"];
+const PETAL_COLORS = ["#fde4ea", "#fbd0dc", "#fff1f4", "#f7bccb", "#ffffff"];
 
-/** Small seeded generator, so the tree and the petals are the same on every visit. */
+/** Small seeded generator, so the petals are the same on every visit. */
 function rng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -76,95 +77,6 @@ function gust(t: number): number {
   );
 }
 
-/** Draws the tree once into its own canvas: trunk from the bottom right, canopy above. */
-function drawTree(width: number, height: number, dpr: number): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
-  const ctx = canvas.getContext("2d")!;
-  ctx.scale(dpr, dpr);
-  const random = rng(21);
-  const scale = Math.min(1.15, Math.max(0.55, Math.min(width / 1400, height / 800)));
-  const blossoms: Array<[number, number, number, string, number]> = [];
-
-  const branch = (
-    x: number,
-    y: number,
-    angle: number,
-    length: number,
-    thick: number,
-    level: number,
-  ) => {
-    const bend = (random() - 0.5) * 0.5;
-    const x2 = x + Math.cos(angle) * length;
-    const y2 = y + Math.sin(angle) * length;
-    const cx = x + Math.cos(angle + bend) * length * 0.55;
-    const cy = y + Math.sin(angle + bend) * length * 0.55;
-    ctx.strokeStyle = level < 2 ? "#4a3a36" : "#5a4642";
-    ctx.lineWidth = thick;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(cx, cy, x2, y2);
-    ctx.stroke();
-
-    if (level >= 6 || length < 14 * scale) {
-      // Blossom cluster at the tip.
-      const count = 12 + Math.floor(random() * 10);
-      for (let i = 0; i < count; i++) {
-        const r = (5 + random() * 9) * scale;
-        const a = random() * TAU;
-        const d = random() * 30 * scale;
-        blossoms.push([
-          x2 + Math.cos(a) * d,
-          y2 + Math.sin(a) * d,
-          r,
-          BLOSSOM_COLORS[Math.floor(random() * BLOSSOM_COLORS.length)]!,
-          0.55 + random() * 0.4,
-        ]);
-      }
-      return;
-    }
-    const children = level < 2 ? 2 + Math.floor(random() * 2) : 2 + Math.floor(random() * 3);
-    for (let i = 0; i < children; i++) {
-      const spread = (i / Math.max(1, children - 1) - 0.5) * (0.9 + random() * 0.5);
-      branch(
-        x2,
-        y2,
-        angle + spread + (random() - 0.5) * 0.3,
-        length * (0.66 + random() * 0.16),
-        Math.max(1, thick * 0.66),
-        level + 1,
-      );
-    }
-    // A few blossoms along the older branches too.
-    if (level >= 3 && random() < 0.6) {
-      blossoms.push([cx, cy, (5 + random() * 6) * scale, BLOSSOM_COLORS[0]!, 0.6]);
-    }
-  };
-
-  const baseX = width * 0.9;
-  const baseY = height + 10;
-  branch(baseX, baseY, -Math.PI / 2 - 0.32, 210 * scale, 26 * scale, 0);
-  branch(baseX + 30 * scale, baseY, -Math.PI / 2 + 0.12, 150 * scale, 14 * scale, 1);
-
-  // Soft, overlapping blossoms: each a radial glow with a paler heart, so the canopy reads as
-  // a cloud of flowers rather than separate dots.
-  for (const [x, y, r, color, alpha] of blossoms) {
-    const glow = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, r * 0.1, x, y, r);
-    glow.addColorStop(0, "#fff7f9");
-    glow.addColorStop(0.45, color);
-    glow.addColorStop(1, `${color}00`);
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, TAU);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  return canvas;
-}
-
 function petalPath(ctx: CanvasRenderingContext2D, s: number) {
   // A cherry petal: rounded, with the small notch at its tip.
   ctx.beginPath();
@@ -189,7 +101,6 @@ export function SakuraBackground() {
     let width = 0;
     let height = 0;
     let dpr = 1;
-    let tree: HTMLCanvasElement | null = null;
     let petals: Petal[] = [];
 
     const resize = () => {
@@ -198,7 +109,6 @@ export function SakuraBackground() {
       height = window.innerHeight;
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
-      tree = drawTree(width, height, dpr);
       // Fewer petals on small screens: same look, less work.
       petals = makePetals(width < 640 ? 34 : width < 1200 ? 56 : 72);
     };
@@ -208,19 +118,6 @@ export function SakuraBackground() {
       const p = t / LOOP_SECONDS;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-
-      // The tree sways a touch with the gusts, pivoting at its base.
-      if (tree) {
-        const sway = 0.006 * Math.sin(TAU * 3 * p) + 0.00008 * gust(t);
-        const baseX = width * 0.9;
-        const baseY = height + 10;
-        ctx.save();
-        ctx.translate(baseX, baseY);
-        ctx.rotate(sway);
-        ctx.translate(-baseX, -baseY);
-        ctx.drawImage(tree, 0, 0, width, height);
-        ctx.restore();
-      }
 
       const margin = 40;
       const spanY = height + margin * 2;
@@ -279,10 +176,16 @@ export function SakuraBackground() {
   }, []);
 
   return (
-    <canvas
-      ref={ref}
-      aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 h-full w-full"
-    />
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      {/* The photograph, slowly zooming and panning on the same two-minute loop. */}
+      <div
+        className="absolute inset-[-6%] animate-sakura bg-cover bg-center"
+        style={{ backgroundImage: "url(/images/sakura-bg.webp)" }}
+      />
+      {/* A light wash on the left keeps the headline legible over the blossom. */}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,247,245,0.9)_0%,rgba(251,247,245,0.62)_38%,rgba(251,247,245,0.12)_72%,rgba(251,247,245,0)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-bone/70 to-transparent" />
+      <canvas ref={ref} className="absolute inset-0 h-full w-full" />
+    </div>
   );
 }
