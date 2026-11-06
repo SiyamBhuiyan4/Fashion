@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * The site's living background: a real cherry-blossom photograph that drifts in a slow zoom,
+ * The site's living background: a real cherry-blossom photograph (Pexels, free licence; 2K)
+ * that drifts in a slow zoom,
  * with petals carried across it on the wind.
  *
  * The petals are drawn on a canvas rather than played as a video: nothing extra to download,
@@ -178,9 +179,15 @@ export function SakuraBackground() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {/* The photograph, slowly zooming and panning on the same two-minute loop. */}
+      {/* 2K on larger screens, a 1280 px copy on phones (a hidden element's background is
+          not downloaded, so each device fetches only one). */}
       <div
-        className="absolute inset-[-6%] animate-sakura bg-cover bg-center"
+        className="absolute inset-[-6%] hidden animate-sakura bg-cover bg-center sm:block"
         style={{ backgroundImage: "url(/images/sakura-bg.webp)" }}
+      />
+      <div
+        className="absolute inset-[-6%] animate-sakura bg-cover bg-[70%_center] sm:hidden"
+        style={{ backgroundImage: "url(/images/sakura-bg-mobile.webp)" }}
       />
       {/* A light wash on the left keeps the headline legible over the blossom. */}
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(251,247,245,0.9)_0%,rgba(251,247,245,0.62)_38%,rgba(251,247,245,0.12)_72%,rgba(251,247,245,0)_100%)]" />
