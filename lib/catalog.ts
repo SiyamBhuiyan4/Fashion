@@ -48,15 +48,28 @@ export function groupByCategory(catalog: Catalog, gender: Gender): CollectionGro
   }));
 }
 
-export function relatedProducts(catalog: Catalog, product: Product, limit = 4): Product[] {
+/**
+ * The pieces most like this one, for "Similar pieces" on the product page: same collection,
+ * scored by category, garment type, fabric and how close the price is. In-stock pieces first.
+ */
+export function similarProducts(catalog: Catalog, product: Product, limit = 8): Product[] {
+  const score = (other: Product) => {
+    let s = 0;
+    if (other.category === product.category) s += 4;
+    if (other.garment.kind === product.garment.kind) s += 3;
+    if (other.garment.fabric === product.garment.fabric) s += 1.5;
+    if (other.garment.fit === product.garment.fit) s += 0.5;
+    const gap = Math.abs(other.price - product.price) / Math.max(product.price, other.price);
+    s += 2 * (1 - gap);
+    if (isInStock(other)) s += 0.5;
+    return s;
+  };
   return catalog
     .filter((p) => p.id !== product.id && p.gender === product.gender)
-    .sort((a, b) => {
-      const sameCategory =
-        Number(b.category === product.category) - Number(a.category === product.category);
-      return sameCategory !== 0 ? sameCategory : a.price - b.price;
-    })
-    .slice(0, limit);
+    .map((p) => ({ p, s: score(p) }))
+    .sort((a, b) => b.s - a.s || a.p.price - b.p.price)
+    .slice(0, limit)
+    .map(({ p }) => p);
 }
 
 export function isInStock(product: Product, size?: string): boolean {

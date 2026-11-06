@@ -22,7 +22,7 @@ const CARE: Record<Fabric, string> = {
   nylon: "Technical nylon. Machine wash cold, no fabric softener, hang to dry.",
 };
 
-type Media = { kind: "video" } | { kind: "photo"; image: string; alt: string };
+type Media = { kind: "video" } | { kind: "photo"; image: string; alt: string; color: string };
 
 export function ProductDetail({ product }: { product: Product }) {
   const [colorName, setColorName] = useState(product.colors[0]!.name);
@@ -37,38 +37,58 @@ export function ProductDetail({ product }: { product: Product }) {
   const sizeInStock = isInStock(product, size);
   const video = product.video;
 
-  // The video first, then the selected colour's photo, then the other colourways.
+  // The video first, then one photo per colourway, in a fixed order so the arrows and the
+  // thumbnails always step through the same sequence.
   const media = useMemo<Media[]>(() => {
-    const photos = [color, ...product.colors.filter((c) => c.name !== color.name)]
+    const photos = product.colors
       .filter((c) => c.image)
       .map((c) => ({
         kind: "photo" as const,
         image: c.image!,
         alt: `${product.name} in ${c.name}`,
+        color: c.name,
       }));
     return video ? [{ kind: "video" }, ...photos] : photos;
-  }, [color, product, video]);
+  }, [product, video]);
 
   const gallery = useRef<HTMLDivElement>(null);
   const [slide, setSlide] = useState(0);
+  const goTo = (index: number) => {
+    const rail = gallery.current;
+    if (!rail) return;
+    const target = Math.max(0, Math.min(media.length - 1, index));
+    rail.scrollTo({ left: rail.clientWidth * target, behavior: "smooth" });
+  };
   const pickColor = (name: string) => {
     setColorName(name);
-    // Bring the newly chosen colour into view: on phones the carousel, on desktop the page.
-    const target = video ? 1 : 0;
-    const rail = gallery.current;
-    if (rail && rail.scrollWidth > rail.clientWidth) {
-      rail.scrollTo({ left: rail.clientWidth * target, behavior: "smooth" });
-    }
+    // Show the chosen colour's photo.
+    const index = media.findIndex((item) => item.kind === "photo" && item.color === name);
+    if (index >= 0) goTo(index);
   };
 
-  // Which slide the phone carousel is on, for the counter.
+  // Which slide is showing (the rail scrolls by swipe, arrows, thumbnails or keys), and which
+  // one it has come to rest on — only that one moves the colour picker, so it does not flicker
+  // through every colour the rail passes on the way.
+  const [settled, setSettled] = useState(0);
   useEffect(() => {
     const rail = gallery.current;
     if (!rail) return;
-    const onScroll = () => setSlide(Math.round(rail.scrollLeft / Math.max(1, rail.clientWidth)));
+    const onScroll = () => {
+      const width = Math.max(1, rail.clientWidth);
+      const index = Math.round(rail.scrollLeft / width);
+      setSlide(index);
+      if (Math.abs(rail.scrollLeft - index * width) < 2) setSettled(index);
+    };
     rail.addEventListener("scroll", onScroll, { passive: true });
     return () => rail.removeEventListener("scroll", onScroll);
   }, []);
+
+  const resting = media[settled];
+  const [synced, setSynced] = useState(0);
+  if (synced !== settled) {
+    setSynced(settled);
+    if (resting?.kind === "photo" && resting.color !== colorName) setColorName(resting.color);
+  }
 
   const addToCart = () => {
     if (!sizeInStock) return;
@@ -93,53 +113,156 @@ export function ProductDetail({ product }: { product: Product }) {
   return (
     <div className="mx-auto max-w-[90rem] pb-28 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,1fr)] lg:gap-12 lg:px-8 lg:pb-16 lg:pt-6">
       {/* ---------------------------------------------------------------- gallery */}
-      <div className="relative">
-        <div
-          ref={gallery}
-          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto lg:grid lg:grid-cols-2 lg:gap-2 lg:overflow-visible"
-        >
-          {media.map((item, i) => (
-            <div
-              key={item.kind === "video" ? "video" : item.image}
-              className={cn(
-                "relative aspect-[3/4] w-full shrink-0 snap-start overflow-hidden bg-bone-dark",
-                // The first piece of media runs full width; so does a last one left on its own.
-                (i === 0 || (i === media.length - 1 && i % 2 === 1)) &&
-                  "lg:col-span-2 lg:aspect-[4/5]",
-              )}
-            >
-              {item.kind === "video" && video ? (
-                <VideoPlayer
-                  src={video.url}
-                  poster={video.poster}
-                  controls
-                  className="h-full w-full bg-ink object-cover"
-                />
-              ) : item.kind === "photo" ? (
-                <Image
-                  src={item.image}
-                  alt={item.alt}
-                  fill
-                  unoptimized
-                  priority={i < 2}
-                  sizes="(max-width: 1024px) 100vw, 40vw"
-                  className="animate-[fade-up_0.8s_var(--ease-out-soft)_both] object-cover"
-                />
-              ) : null}
-            </div>
-          ))}
+      {/* One piece of media at a time: swipe, the arrows, the thumbnails or the arrow keys. */}
+      <div
+        className="relative lg:sticky lg:top-24 lg:self-start"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={`${product.name} photos and video`}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight") goTo(slide + 1);
+          if (event.key === "ArrowLeft") goTo(slide - 1);
+        }}
+      >
+        <div className="relative">
+          <div ref={gallery} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
+            {media.map((item, i) => (
+              <div
+                key={item.kind === "video" ? "video" : item.image}
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${media.length}`}
+                className="relative aspect-[3/4] w-full shrink-0 snap-start overflow-hidden bg-bone-dark lg:aspect-auto lg:h-[calc(100svh-8.5rem)]"
+              >
+                {item.kind === "video" && video ? (
+                  <VideoPlayer
+                    src={video.url}
+                    poster={video.poster}
+                    controls
+                    className="h-full w-full bg-ink object-cover lg:object-contain"
+                  />
+                ) : item.kind === "photo" ? (
+                  <>
+                    {/* Desktop frames are wider than the photos: the whole photo is shown,
+                        over a soft blurred copy of itself instead of empty bars. */}
+                    <Image
+                      src={item.image}
+                      alt=""
+                      fill
+                      unoptimized
+                      sizes="55vw"
+                      className="hidden scale-110 object-cover opacity-70 blur-2xl lg:block"
+                    />
+                    <Image
+                      src={item.image}
+                      alt={item.alt}
+                      fill
+                      unoptimized
+                      priority={i < 2}
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      className="object-cover lg:object-contain"
+                    />
+                  </>
+                ) : null}
+              </div>
+            ))}
+          </div>
+
+          {media.length > 1 ? (
+            <>
+              {/* Previous / next. */}
+              {[
+                { dir: -1, label: "Previous", path: "M15 6l-6 6 6 6", side: "left-3" },
+                { dir: 1, label: "Next", path: "M9 6l6 6-6 6", side: "right-3" },
+              ].map(({ dir, label, path, side }) => {
+                const disabled = dir < 0 ? slide === 0 : slide === media.length - 1;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    aria-label={label}
+                    disabled={disabled}
+                    onClick={() => goTo(slide + dir)}
+                    className={cn(
+                      "absolute top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-ink shadow-md backdrop-blur transition-[opacity,transform] duration-300 ease-out-soft hover:scale-105 disabled:pointer-events-none disabled:opacity-0",
+                      side,
+                    )}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <path d={path} strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                );
+              })}
+
+              <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-white/85 px-2.5 py-1 text-[0.6875rem] tabular-nums text-ink backdrop-blur">
+                {slide + 1} / {media.length}
+              </span>
+
+              <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5">
+                {media.map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-1 rounded-full bg-white shadow-sm transition-all duration-500 ease-out-soft",
+                      i === slide ? "w-6 opacity-100" : "w-1.5 opacity-60",
+                    )}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
-        {/* Phone carousel position. */}
+
+        {/* Thumbnails: jump straight to any photo or the video. */}
         {media.length > 1 ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 lg:hidden">
-            {media.map((_, i) => (
-              <span
-                key={i}
+          <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4 sm:px-8 lg:px-0">
+            {media.map((item, i) => (
+              <button
+                key={item.kind === "video" ? "video" : item.image}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={item.kind === "video" ? "Play video" : item.alt}
+                aria-current={i === slide ? "true" : undefined}
                 className={cn(
-                  "h-1 rounded-full bg-white transition-all duration-500 ease-out-soft",
-                  i === slide ? "w-6 opacity-100" : "w-1.5 opacity-60",
+                  "relative h-20 w-16 shrink-0 overflow-hidden bg-bone-dark ring-offset-2 ring-offset-bone transition-[box-shadow,opacity] duration-300",
+                  i === slide ? "ring-1 ring-ink" : "opacity-70 hover:opacity-100",
                 )}
-              />
+              >
+                {item.kind === "photo" ? (
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    unoptimized
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                ) : video?.poster ? (
+                  <Image
+                    src={video.poster}
+                    alt=""
+                    fill
+                    unoptimized
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                ) : null}
+                {item.kind === "video" ? (
+                  <span className="absolute inset-0 grid place-items-center bg-ink/35 text-white">
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="currentColor">
+                      <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+                    </svg>
+                  </span>
+                ) : null}
+              </button>
             ))}
           </div>
         ) : null}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCatalog, getProduct, getProductIds } from "@/lib/products.server";
-import { relatedProducts } from "@/lib/catalog";
+import { similarProducts } from "@/lib/catalog";
 import { ProductDetail } from "@/components/ui/ProductDetail";
 import { ProductCard } from "@/components/ui/ProductCard";
 
@@ -30,7 +30,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const product = await getProduct(id);
   if (!product) notFound();
 
-  const related = relatedProducts(await getCatalog(), product, 4);
+  const related = similarProducts(await getCatalog(), product, 8);
 
   return (
     // A light veil over the blossom background; the info panel has its own paper.
@@ -39,9 +39,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       {related.length > 0 ? (
         <section className="mx-auto max-w-[90rem] border-t border-line px-4 py-14 sm:px-8 sm:py-20">
           <div className="flex items-end justify-between gap-4">
-            <h2 className="display text-4xl sm:text-5xl">
-              Wear it <em className="italic">with</em>
-            </h2>
+            <div>
+              <p className="eyebrow">You may also like</p>
+              <h2 className="display mt-2 text-4xl sm:text-5xl">
+                Similar <em className="italic">pieces</em>
+              </h2>
+            </div>
             <Link href={`/#${product.gender}`} className="link-line pb-1 text-[0.8125rem]">
               See the collection
             </Link>
