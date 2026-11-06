@@ -36,14 +36,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <>
       <ProductDetail product={product} />
       {related.length > 0 ? (
-        <section className="mx-auto max-w-6xl border-t border-line px-4 py-10 sm:px-6">
-          <div className="flex items-baseline justify-between">
-            <h2 className="display text-xl">Wear it with</h2>
-            <Link href={`/#${product.gender}`} className="text-sm text-ink-soft hover:text-ink">
-              See the collection →
+        <section className="mx-auto max-w-[90rem] border-t border-line px-4 py-14 sm:px-8 sm:py-20">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="display text-4xl sm:text-5xl">
+              Wear it <em className="italic">with</em>
+            </h2>
+            <Link href={`/#${product.gender}`} className="link-line pb-1 text-[0.8125rem]">
+              See the collection
             </Link>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
             {related.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}

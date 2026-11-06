@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import { formatPrice } from "@/lib/utils";
@@ -15,6 +15,20 @@ export function CartDrawer() {
   const remove = useCartStore((state) => state.remove);
   const setQuantity = useCartStore((state) => state.setQuantity);
   const get = useCatalogStore((state) => state.get);
+
+  // Stay mounted while the slide-out plays, so closing is as smooth as opening.
+  const [mounted, setMounted] = useState(open);
+  const [shown, setShown] = useState(false);
+  if (open && !mounted) setMounted(true);
+  useEffect(() => {
+    // Two frames, so the panel is painted off-screen before it slides in.
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => setShown(open)));
+    const timer = open ? undefined : window.setTimeout(() => setMounted(false), 500);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -29,7 +43,7 @@ export function CartDrawer() {
     };
   }, [open, close]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   const subtotal = items.reduce((sum, item) => {
     const product = get(item.productId);
@@ -47,11 +61,13 @@ export function CartDrawer() {
         type="button"
         aria-label="Close cart"
         onClick={close}
-        className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
+        className={`absolute inset-0 bg-ink/40 backdrop-blur-[3px] transition-opacity duration-500 ease-out-soft ${shown ? "opacity-100" : "opacity-0"}`}
       />
-      <aside className="relative flex h-full w-full max-w-md flex-col border-l border-line bg-bone shadow-2xl">
+      <aside
+        className={`relative flex h-full w-full max-w-md flex-col bg-bone shadow-2xl transition-transform duration-500 ease-out-soft ${shown ? "translate-x-0" : "translate-x-full"}`}
+      >
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 className="display text-lg">Your cart</h2>
+          <h2 className="display text-3xl">Your bag</h2>
           <button
             type="button"
             onClick={close}
@@ -72,13 +88,14 @@ export function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <p className="text-ink-soft">Your cart is empty.</p>
+            <p className="display text-3xl">Nothing here yet.</p>
+            <p className="text-sm text-ink-soft">Your bag is waiting for its first piece.</p>
             <Link
               href="/#women"
               onClick={close}
-              className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone transition-opacity hover:opacity-90"
+              className="mt-2 rounded-full bg-ink px-6 py-3 text-sm text-bone transition-opacity hover:opacity-90"
             >
-              Start the fitting
+              Start shopping
             </Link>
           </div>
         ) : (
@@ -93,7 +110,7 @@ export function CartDrawer() {
                   key={`${item.productId}-${item.size}-${item.colorName}`}
                   className="flex gap-3 p-4"
                 >
-                  <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-md bg-white">
+                  <div className="relative h-28 w-21 shrink-0 overflow-hidden bg-bone-dark">
                     {color.image ? (
                       <Image
                         src={color.image}
@@ -158,9 +175,10 @@ export function CartDrawer() {
           <Link
             href="/cart"
             onClick={close}
-            className="mt-3 block rounded-full bg-ink py-3 text-center text-sm text-bone transition-opacity hover:opacity-90"
+            className="mt-4 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
           >
-            View cart
+            <span>View bag</span>
+            <span aria-hidden>→</span>
           </Link>
         </div>
       </aside>

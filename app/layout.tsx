@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import { getCatalog } from "@/lib/products.server";
 import { site } from "@/lib/site";
 import { CatalogProvider } from "@/components/ui/CatalogProvider";
@@ -9,9 +9,11 @@ import { CartDrawer } from "@/components/ui/CartDrawer";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const playfair = Playfair_Display({
+const serif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f7f4ef",
+  themeColor: "#f5f3ef",
   width: "device-width",
   initialScale: 1,
 };
@@ -33,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const catalog = await getCatalog();
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${serif.variable}`}>
       <body className="flex min-h-dvh flex-col">
         <CatalogProvider catalog={catalog}>
           <a
