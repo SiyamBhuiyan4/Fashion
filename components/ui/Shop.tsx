@@ -67,7 +67,7 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
     <div>
       {/* ------------------------------------------------------------------ hero */}
       {/* The cherry tree and its petals (SakuraBackground) play behind this section. */}
-      <section className="relative min-h-[100svh] w-full overflow-hidden">
+      <section data-butterfly-zone className="relative min-h-[100svh] w-full overflow-hidden">
         <div className="relative mx-auto grid min-h-[100svh] max-w-[90rem] items-end gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-10">
           <div>
             <p className="eyebrow animate-fade-up [animation-delay:200ms]">

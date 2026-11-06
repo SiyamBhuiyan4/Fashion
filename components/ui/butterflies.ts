@@ -4,8 +4,10 @@
  *
  *   perched   — resting on the top-right corner of a hero card (elements marked
  *               `data-butterfly-perch="0"` / `"1"`), slowly opening and closing their wings.
- *   flying    — once the mouse moves, each one circles the cursor on its own orbit.
- *   returning — after the mouse has been still for a second, they fly home and settle.
+ *   flying    — once the mouse moves over the hero (the element marked
+ *               `data-butterfly-zone`), each one circles the cursor on its own orbit.
+ *   returning — after the mouse has been still for a second, or as soon as it leaves the hero
+ *               (or the hero scrolls away), they fly home and settle.
  *
  * While in the air each leaves a soft blue trail that fades out over half a second.
  */
@@ -63,6 +65,16 @@ export function updateButterflies(
   seconds: number,
   pointer: { x: number; y: number; movedAt: number },
 ) {
+  const zone = document
+    .querySelector<HTMLElement>("[data-butterfly-zone]")
+    ?.getBoundingClientRect();
+  const inZone = Boolean(
+    zone &&
+    pointer.x >= zone.left &&
+    pointer.x <= zone.right &&
+    pointer.y >= Math.max(0, zone.top) &&
+    pointer.y <= zone.bottom,
+  );
   for (const b of butterflies) {
     const home = perchPoint(b.perch);
     if (!home) {
@@ -76,7 +88,9 @@ export function updateButterflies(
       b.y = home.y;
     }
 
-    const idle = now - pointer.movedAt > IDLE_MS;
+    // They only follow the cursor while it is over the hero; anywhere else (or once the hero
+    // has scrolled away) they go home as if the mouse had stopped.
+    const idle = now - pointer.movedAt > IDLE_MS || !inZone;
     if (b.state === "perched" && !idle && pointer.movedAt > 0) b.state = "flying";
     if (b.state === "flying" && idle) b.state = "returning";
     if (b.state === "returning" && !idle) b.state = "flying";
