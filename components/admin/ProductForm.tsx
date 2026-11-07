@@ -16,6 +16,7 @@ import { categoriesFor, categoryName, type CategoryRow } from "@/lib/categories"
 import type { Category, Fabric, GarmentKind, Gender } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { ImagePicker } from "@/components/admin/ImagePicker";
+import { CategoryQuickAdd, SectionPicker } from "@/components/admin/SectionPicker";
 import type { AdminProduct } from "@/components/admin/ProductsList";
 import {
   adminPost,
@@ -67,7 +68,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     productId ? "/api/admin/products" : null,
   );
   const existing = productId ? data?.products.find((p) => p.id === productId) : undefined;
-  const { data: catData } = useAdminData<{
+  const { data: catData, reload: reloadCategories } = useAdminData<{
     categories: CategoryRow[];
     sections: SectionRow[];
   }>("/api/admin/categories");
@@ -268,36 +269,13 @@ export function ProductForm({ productId }: { productId?: string }) {
         <div className="space-y-6">
           <Card title="Basics">
             <div className="space-y-4">
-              <div>
-                <p className={label}>Section</p>
-                <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {(sections.some((x) => x.id === gender)
-                    ? sections
-                    : [...sections, { id: gender, name: sectionName(sections, gender) }]
-                  ).map(({ id: g, name: sectionLabel }) => (
-                    <button
-                      key={g}
-                      type="button"
-                      aria-pressed={gender === g}
-                      onClick={() => pickGender(g)}
-                      className={cn(
-                        "h-12 rounded-xl border text-sm font-medium transition-colors",
-                        gender === g
-                          ? "border-ink bg-ink text-bone"
-                          : "border-line bg-white hover:border-ink",
-                      )}
-                    >
-                      {sectionLabel}
-                    </button>
-                  ))}
-                </div>
-                <Link
-                  href="/admin/categories"
-                  className="mt-1 block text-xs text-ink-soft underline"
-                >
-                  Add or edit sections
-                </Link>
-              </div>
+              <SectionPicker
+                sections={sections}
+                categories={categories}
+                value={gender}
+                onPick={pickGender}
+                onChanged={reloadCategories}
+              />
               <label className={label}>
                 Product name
                 <input
@@ -309,9 +287,10 @@ export function ProductForm({ productId }: { productId?: string }) {
                 />
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className={label}>
-                  Category
+                <div className={label}>
+                  <span>Category</span>
                   <select
+                    aria-label="Category"
                     value={category}
                     onChange={(e) => pickCategory(e.target.value as Category)}
                     className={input}
@@ -327,13 +306,16 @@ export function ProductForm({ productId }: { productId?: string }) {
                       </option>
                     ) : null}
                   </select>
-                  <Link
-                    href="/admin/categories"
-                    className="mt-1 block text-xs font-normal text-ink-soft underline"
-                  >
-                    Add or edit categories
-                  </Link>
-                </label>
+                  <CategoryQuickAdd
+                    sections={sections}
+                    categories={categories}
+                    section={gender}
+                    onAdded={(id) => {
+                      reloadCategories();
+                      setCategory(id);
+                    }}
+                  />
+                </div>
                 <label className={label}>
                   Price (৳)
                   <input
