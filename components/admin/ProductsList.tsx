@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { categoryLabels } from "@/lib/catalog";
+import { categoryLabel, GENDER_LABELS } from "@/lib/catalog";
 import { sizeLabel } from "@/lib/adminProduct";
 import type { Product } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,7 @@ export type AdminProduct = Product & { hasVideo: boolean };
 export function ProductsList() {
   const { data, error, reload } = useAdminData<{ products: AdminProduct[] }>("/api/admin/products");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "live" | "hidden" | "out">("all");
+  const [filter, setFilter] = useState<"all" | "women" | "men" | "live" | "hidden" | "out">("all");
   const [busy, setBusy] = useState<string | null>(null);
   const { toast, show } = useToast();
 
@@ -32,6 +32,7 @@ export function ProductsList() {
     const q = query.trim().toLowerCase();
     return (data?.products ?? []).filter((p) => {
       const total = Object.values(p.stock).reduce((a, b) => a + b, 0);
+      if ((filter === "women" || filter === "men") && p.gender !== filter) return false;
       if (filter === "live" && p.hidden) return false;
       if (filter === "hidden" && !p.hidden) return false;
       if (filter === "out" && total > 0) return false;
@@ -78,6 +79,8 @@ export function ProductsList() {
           {(
             [
               ["all", "All"],
+              ["women", "Women"],
+              ["men", "Men"],
               ["live", "In shop"],
               ["hidden", "Hidden"],
               ["out", "Sold out"],
@@ -147,7 +150,7 @@ export function ProductsList() {
                     {p.name}
                   </Link>
                   <p className="text-xs text-ink-faint">
-                    {categoryLabels[p.category]}
+                    {GENDER_LABELS[p.gender]} · {categoryLabel(p.category, p.gender)}
                     {p.hasVideo ? " · 🎬 video" : ""}
                   </p>
                   <p className="mt-1 font-medium tabular-nums">{taka(p.price)}</p>

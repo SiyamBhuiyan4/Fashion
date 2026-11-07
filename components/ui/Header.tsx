@@ -8,13 +8,17 @@ import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/useHydrated";
 import { useCartStore } from "@/store/cartStore";
-import { useSectionStore } from "@/store/sectionStore";
+import { useCatalogStore } from "@/store/catalogStore";
+import { GENDER_LABELS, gendersIn } from "@/lib/catalog";
 import { SearchOverlay } from "@/components/ui/SearchOverlay";
 
-const links = [
-  { href: "/#shop", label: "Shop", section: "women" },
-  { href: "/cart", label: "Bag", section: null },
-] as const;
+/** "Women" / "Men" when both sections have products, otherwise one "Shop" link. */
+function useSectionLinks(): Array<{ href: string; label: string }> {
+  const catalog = useCatalogStore((s) => s.catalog);
+  const genders = gendersIn(catalog);
+  if (genders.length > 1) return genders.map((g) => ({ href: `/#${g}`, label: GENDER_LABELS[g] }));
+  return [{ href: "/#shop", label: "Shop" }];
+}
 
 /**
  * Fixed header. On the home page it sits transparent over the hero, in white, and settles into a
@@ -24,7 +28,7 @@ export function Header() {
   const pathname = usePathname();
   const home = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
-  const activeGender = useSectionStore((state) => state.active);
+  const links = useSectionLinks();
   const openDrawer = useCartStore((state) => state.openDrawer);
   const items = useCartStore((state) => state.items);
   // The cart is restored from localStorage after hydration, so the count waits for it.
@@ -116,19 +120,11 @@ export function Header() {
             aria-label="Collections"
             className="hidden items-center gap-5 text-[0.8125rem] sm:flex"
           >
-            {links.map((link) => {
-              const active = home && !clear && link.section === activeGender;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={active ? "true" : undefined}
-                  className={cn("link-line py-1 tracking-wide", active && "bg-[length:100%_1px]")}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+            {links.map((link) => (
+              <Link key={link.href} href={link.href} className="link-line py-1 tracking-wide">
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           <Link
@@ -225,8 +221,9 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     };
   }, [open, onClose]);
 
+  const sections = useSectionLinks();
   const items = [
-    { href: "/#shop", label: "Shop", note: "Sarees, three-pieces, kurtis" },
+    ...sections.map((l) => ({ href: l.href, label: l.label, note: "The collection" })),
     { href: "/#in-motion", label: "On video", note: "See how it drapes" },
     { href: "/cart", label: "Bag", note: "Order on WhatsApp" },
   ];

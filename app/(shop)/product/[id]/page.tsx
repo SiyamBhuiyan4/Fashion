@@ -45,7 +45,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 Similar <em className="italic">pieces</em>
               </h2>
             </div>
-            <Link href="/#shop" className="link-line pb-1 text-[0.8125rem]">
+            <Link href={`/#${product.gender}`} className="link-line pb-1 text-[0.8125rem]">
               See the collection
             </Link>
           </div>

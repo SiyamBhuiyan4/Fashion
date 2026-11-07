@@ -54,11 +54,12 @@ function slug(text: string): string {
     .replace(/-+$/g, "");
 }
 
-function newProductId(name: string, taken: Set<string>): string {
+function newProductId(name: string, gender: "women" | "men", taken: Set<string>): string {
   for (;;) {
     const suffix = randomBytes(3).toString("hex").slice(0, 4);
     const base = slug(name);
-    const id = base ? `w-${base}-${suffix}` : `w-piece-${suffix}`;
+    const prefix = gender === "men" ? "m" : "w";
+    const id = base ? `${prefix}-${base}-${suffix}` : `${prefix}-piece-${suffix}`;
     if (!taken.has(id)) return id;
   }
 }
@@ -87,7 +88,8 @@ export async function saveProduct(input: AdminProductInput): Promise<Product> {
     const existing = index >= 0 ? productSchema.safeParse(rows[index]) : null;
     const previous = existing?.success ? existing.data : undefined;
 
-    const id = input.id ?? newProductId(input.name, new Set(rows.map((r) => String(r.id))));
+    const id =
+      input.id ?? newProductId(input.name, input.gender, new Set(rows.map((r) => String(r.id))));
     const sizes = [...new Set(input.sizes)];
     const names = new Set<string>();
     for (const color of input.colors) {
@@ -100,7 +102,7 @@ export async function saveProduct(input: AdminProductInput): Promise<Product> {
     const product = productSchema.parse({
       id,
       name: input.name,
-      gender: "women",
+      gender: input.gender,
       category: input.category,
       price: input.price,
       description: input.description,

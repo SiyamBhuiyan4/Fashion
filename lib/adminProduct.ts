@@ -7,6 +7,7 @@ import {
   categorySchema,
   fabricSchema,
   garmentKindSchema,
+  genderSchema,
   mediaUrlSchema,
   productColorSchema,
   productIdSchema,
@@ -14,10 +15,12 @@ import {
   type Category,
   type Fabric,
   type GarmentKind,
+  type Gender,
 } from "@/lib/schemas";
 
 export const adminProductSchema = z.object({
   id: productIdSchema.optional(),
+  gender: genderSchema,
   name: z.string().trim().min(2, "Write the product name.").max(80, "The name is too long."),
   category: categorySchema,
   price: z
@@ -54,16 +57,32 @@ export function sizeLabel(size: string): string {
 }
 
 /** What a new product in each category is, until the owner says otherwise. */
-export const CATEGORY_DEFAULTS: Record<Category, { kind: GarmentKind; fabric: Fabric }> = {
-  saree: { kind: "saree", fabric: "cotton" },
-  "three-piece": { kind: "kameez", fabric: "lawn" },
-  kurti: { kind: "kurti", fabric: "cotton" },
-  modest: { kind: "abaya", fabric: "georgette" },
-  tops: { kind: "dress", fabric: "georgette" },
-  bottoms: { kind: "palazzo", fabric: "cotton" },
-  outerwear: { kind: "jacket", fabric: "wool" },
-  shoes: { kind: "sandals", fabric: "leather" },
-  panjabi: { kind: "panjabi", fabric: "cotton" },
+export const CATEGORY_DEFAULTS: Record<
+  Gender,
+  Record<Category, { kind: GarmentKind; fabric: Fabric }>
+> = {
+  women: {
+    saree: { kind: "saree", fabric: "cotton" },
+    "three-piece": { kind: "kameez", fabric: "lawn" },
+    kurti: { kind: "kurti", fabric: "cotton" },
+    modest: { kind: "abaya", fabric: "georgette" },
+    tops: { kind: "dress", fabric: "georgette" },
+    bottoms: { kind: "palazzo", fabric: "cotton" },
+    outerwear: { kind: "jacket", fabric: "wool" },
+    shoes: { kind: "sandals", fabric: "leather" },
+    panjabi: { kind: "kurti", fabric: "cotton" },
+  },
+  men: {
+    panjabi: { kind: "panjabi", fabric: "cotton" },
+    tops: { kind: "shirt", fabric: "cotton" },
+    bottoms: { kind: "trousers", fabric: "cotton" },
+    outerwear: { kind: "koti", fabric: "cotton" },
+    shoes: { kind: "sandals", fabric: "leather" },
+    saree: { kind: "panjabi", fabric: "cotton" },
+    "three-piece": { kind: "panjabi", fabric: "cotton" },
+    kurti: { kind: "panjabi", fabric: "cotton" },
+    modest: { kind: "panjabi", fabric: "cotton" },
+  },
 };
 
 export const KIND_LABELS: Partial<Record<GarmentKind, string>> = {
@@ -83,10 +102,19 @@ export const KIND_LABELS: Partial<Record<GarmentKind, string>> = {
   jacket: "Shawl / Jacket",
   coat: "Coat",
   sweater: "Sweater / Cardigan",
+  panjabi: "Panjabi",
+  fatua: "Fatua",
+  kabli: "Kabli",
+  koti: "Koti",
+  sherwani: "Sherwani",
+  polo: "Polo",
+  shorts: "Shorts",
   sandals: "Sandals",
   flats: "Flats",
   heels: "Heels",
   sneakers: "Sneakers",
+  loafers: "Loafers",
+  boots: "Boots",
 };
 
 export const FABRIC_LABELS: Record<Fabric, string> = {

@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Category, Product } from "@/lib/types";
-import { groupByCategory } from "@/lib/catalog";
+import type { Category, Gender, Product } from "@/lib/types";
+import { GENDER_LABELS, gendersIn, groupByCategory } from "@/lib/catalog";
 import { site } from "@/lib/site";
 import { useCatalogStore } from "@/store/catalogStore";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -15,7 +15,6 @@ import { Price } from "@/components/ui/Price";
 
 export function Shop({ products }: { products: Product[] }) {
   const settings = useCatalogStore((s) => s.settings);
-  const [tab, setTab] = useState<Category | "all">("all");
 
   const ticker = useMemo(() => {
     const own = settings.announcement
@@ -40,16 +39,7 @@ export function Shop({ products }: { products: Product[] }) {
     () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
     [products],
   );
-  const groups = groupByCategory(sorted, "women")
-    .concat(groupByCategory(sorted, "men"))
-    .filter((g) => g.items.length > 0);
-  const merged = new Map<Category, { category: Category; label: string; items: Product[] }>();
-  for (const g of groups) {
-    const existing = merged.get(g.category);
-    merged.set(g.category, existing ? { ...g, items: [...existing.items, ...g.items] } : g);
-  }
-  const categories = [...merged.values()];
-  const visible = tab === "all" ? sorted : (merged.get(tab)?.items ?? []);
+  const genders = gendersIn(products);
 
   return (
     <div>
@@ -187,61 +177,28 @@ export function Shop({ products }: { products: Product[] }) {
         </section>
       ) : null}
 
-      {/* ------------------------------------------------------------ collection */}
-      <section id="shop" className="scroll-mt-16">
-        <div className="mx-auto max-w-[90rem] px-4 pt-16 text-center sm:px-8 sm:pt-24">
-          <Reveal>
-            <p className="eyebrow">{site.subtitle}</p>
-            <h2 className="display mt-3 text-6xl sm:text-7xl">
-              The <em className="italic">collection</em>
-              {products.length > 0 ? (
-                <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
-                  {products.length}
-                </sup>
-              ) : null}
-            </h2>
-            <p className="gold-rule mx-auto mt-5 max-w-xs text-xs uppercase tracking-[0.2em]">
-              {site.tagline}
-            </p>
-          </Reveal>
-        </div>
-
-        {products.length === 0 ? (
-          <div className="mx-auto max-w-md px-4 py-20 text-center">
-            <p className="display text-3xl">New pieces are on their way.</p>
-            <p className="mt-3 text-sm text-ink-soft">
-              Our collection is being photographed right now.
-              {settings.facebook ? " Follow us on Facebook to see them first." : ""}
-            </p>
-          </div>
-        ) : (
-          <>
-            {categories.length > 1 ? (
-              <div className="sticky top-16 z-20 mt-8 border-y border-line bg-bone/85 backdrop-blur-xl">
-                <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-8">
-                  <CategoryTabs
-                    categories={categories.map((group) => ({
-                      category: group.category,
-                      label: group.label,
-                      count: group.items.length,
-                    }))}
-                    active={tab}
-                    onSelect={setTab}
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
-              {visible.map((product, i) => (
-                <Reveal key={`${tab}-${product.id}`} delay={(i % 4) * 70} className="h-full">
-                  <ProductCard product={product} />
-                </Reveal>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+      {/* ----------------------------------------------------------- collections */}
+      {/* An anchor for links to "the shop", whichever sections exist. */}
+      <div id="shop" className="scroll-mt-16" />
+      {genders.length === 0 ? (
+        <section className="mx-auto max-w-md px-4 py-24 text-center">
+          <p className="eyebrow">{site.subtitle}</p>
+          <p className="display mt-4 text-4xl">New pieces are on their way.</p>
+          <p className="mt-3 text-sm text-ink-soft">
+            Our collection is being photographed right now.
+            {settings.facebook ? " Follow us on Facebook to see them first." : ""}
+          </p>
+        </section>
+      ) : (
+        genders.map((gender) => (
+          <Collection
+            key={gender}
+            gender={gender}
+            products={sorted.filter((p) => p.gender === gender)}
+            title={genders.length > 1 ? GENDER_LABELS[gender] : null}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -286,5 +243,70 @@ function MotionCard({ product }: { product: Product }) {
         <Price amount={product.price} className="text-sm tabular-nums text-white/80" />
       </div>
     </Link>
+  );
+}
+
+/** One section (Women or Men) with its category tabs and products. */
+function Collection({
+  gender,
+  products,
+  title,
+}: {
+  gender: Gender;
+  products: Product[];
+  /** Null when this is the only section: it is then simply "The collection". */
+  title: string | null;
+}) {
+  const [tab, setTab] = useState<Category | "all">("all");
+  const groups = groupByCategory(products, gender).filter((g) => g.items.length > 0);
+  const visible = tab === "all" ? products : (groups.find((g) => g.category === tab)?.items ?? []);
+
+  return (
+    <section id={gender} className="scroll-mt-16">
+      <div className="mx-auto max-w-[90rem] px-4 pt-16 text-center sm:px-8 sm:pt-24">
+        <Reveal>
+          <p className="eyebrow">{title ? site.name : site.subtitle}</p>
+          <h2 className="display mt-3 text-6xl sm:text-7xl">
+            {title ? (
+              title
+            ) : (
+              <>
+                The <em className="italic">collection</em>
+              </>
+            )}
+            <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
+              {products.length}
+            </sup>
+          </h2>
+          <p className="gold-rule mx-auto mt-5 max-w-xs text-xs uppercase tracking-[0.2em]">
+            {site.tagline}
+          </p>
+        </Reveal>
+      </div>
+
+      {groups.length > 1 ? (
+        <div className="sticky top-16 z-20 mt-8 border-y border-line bg-bone/85 backdrop-blur-xl">
+          <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-8">
+            <CategoryTabs
+              categories={groups.map((group) => ({
+                category: group.category,
+                label: group.label,
+                count: group.items.length,
+              }))}
+              active={tab}
+              onSelect={setTab}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
+        {visible.map((product, i) => (
+          <Reveal key={`${tab}-${product.id}`} delay={(i % 4) * 70} className="h-full">
+            <ProductCard product={product} />
+          </Reveal>
+        ))}
+      </div>
+    </section>
   );
 }

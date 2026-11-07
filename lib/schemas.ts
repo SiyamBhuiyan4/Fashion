@@ -213,13 +213,6 @@ export const productSchema = z
         });
       }
     }
-    if (p.id.startsWith("m-") !== (p.gender === "men")) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Id prefix must match gender (m-/w-)",
-        path: ["id"],
-      });
-    }
   });
 export type Product = z.infer<typeof productSchema>;
 

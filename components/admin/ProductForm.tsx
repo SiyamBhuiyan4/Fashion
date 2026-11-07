@@ -11,8 +11,8 @@ import {
   SIZE_PRESETS,
   sizeLabel,
 } from "@/lib/adminProduct";
-import { categoryLabels, shopCategories } from "@/lib/catalog";
-import type { Category, Fabric, GarmentKind } from "@/lib/schemas";
+import { CATEGORIES, categoryLabel, GENDER_LABELS } from "@/lib/catalog";
+import type { Category, Fabric, GarmentKind, Gender } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import type { AdminProduct } from "@/components/admin/ProductsList";
@@ -69,6 +69,7 @@ export function ProductForm({ productId }: { productId?: string }) {
 
   const [loaded, setLoaded] = useState(!productId);
   const [name, setName] = useState("");
+  const [gender, setGender] = useState<Gender>("women");
   const [category, setCategory] = useState<Category>("saree");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -76,8 +77,8 @@ export function ProductForm({ productId }: { productId?: string }) {
   const [sizes, setSizes] = useState<string[]>(["FREE"]);
   const [stock, setStock] = useState<Record<string, string>>({ FREE: "1" });
   const [extras, setExtras] = useState<string[]>([]);
-  const [kind, setKind] = useState<GarmentKind>(CATEGORY_DEFAULTS.saree.kind);
-  const [fabric, setFabric] = useState<Fabric>(CATEGORY_DEFAULTS.saree.fabric);
+  const [kind, setKind] = useState<GarmentKind>(CATEGORY_DEFAULTS.women.saree.kind);
+  const [fabric, setFabric] = useState<Fabric>(CATEGORY_DEFAULTS.women.saree.fabric);
   const [tags, setTags] = useState("");
   const [hidden, setHidden] = useState(false);
   const [customSize, setCustomSize] = useState("");
@@ -92,6 +93,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     if (loaded || !existing) return;
     /* eslint-disable react-hooks/set-state-in-effect -- one-time copy of loaded data into the form */
     setName(existing.name);
+    setGender(existing.gender);
     setCategory(existing.category);
     setPrice(String(existing.price));
     setDescription(existing.description);
@@ -141,12 +143,18 @@ export function ProductForm({ productId }: { productId?: string }) {
     setError(null);
   };
 
-  const pickCategory = (next: Category) => {
+  const pickCategory = (next: Category, forGender: Gender = gender) => {
     setCategory(next);
     if (!existing) {
-      setKind(CATEGORY_DEFAULTS[next].kind);
-      setFabric(CATEGORY_DEFAULTS[next].fabric);
+      setKind(CATEGORY_DEFAULTS[forGender][next].kind);
+      setFabric(CATEGORY_DEFAULTS[forGender][next].fabric);
     }
+  };
+
+  const pickGender = (next: Gender) => {
+    setGender(next);
+    // Keep the category if the other section has it too, otherwise take that section's first.
+    if (!CATEGORIES[next].includes(category)) pickCategory(CATEGORIES[next][0]!, next);
   };
 
   const save = async () => {
@@ -154,6 +162,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     const body = {
       id: existing?.id,
       name,
+      gender,
       category,
       price: Number(price.replace(/[,\s৳]/g, "")),
       description,
@@ -231,6 +240,30 @@ export function ProductForm({ productId }: { productId?: string }) {
         <div className="space-y-6">
           <Card title="Basics">
             <div className="space-y-4">
+              <div>
+                <p className={label}>Section</p>
+                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                  {(["women", "men"] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      aria-pressed={gender === g}
+                      onClick={() => pickGender(g)}
+                      className={cn(
+                        "h-12 rounded-xl border text-sm font-medium transition-colors",
+                        gender === g
+                          ? "border-ink bg-ink text-bone"
+                          : "border-line bg-white hover:border-ink",
+                      )}
+                    >
+                      {GENDER_LABELS[g]}
+                    </button>
+                  ))}
+                </div>
+                <span className="mt-1 block text-xs text-ink-faint">
+                  The shop only shows a section once it has products.
+                </span>
+              </div>
               <label className={label}>
                 Product name
                 <input
@@ -249,9 +282,9 @@ export function ProductForm({ productId }: { productId?: string }) {
                     onChange={(e) => pickCategory(e.target.value as Category)}
                     className={input}
                   >
-                    {shopCategories.map((c) => (
+                    {CATEGORIES[gender].map((c) => (
                       <option key={c} value={c}>
-                        {categoryLabels[c]}
+                        {categoryLabel(c, gender)}
                       </option>
                     ))}
                   </select>

@@ -5,7 +5,7 @@ import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Fabric, Product } from "@/lib/types";
-import { categoryLabels, defaultSize, isInStock, stockLabel } from "@/lib/catalog";
+import { categoryLabel, defaultSize, GENDER_LABELS, isInStock, stockLabel } from "@/lib/catalog";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
@@ -310,11 +310,11 @@ export function ProductDetail({ product }: { product: Product }) {
       <div className="bg-bone/90 px-4 pt-8 sm:px-8 lg:bg-transparent lg:px-0 lg:pt-2">
         <div className="lg:sticky lg:top-24 lg:bg-bone/90 lg:p-7 lg:shadow-sm">
           <nav className="eyebrow flex items-center gap-2" aria-label="Breadcrumb">
-            <Link href="/#shop" className="link-line hover:text-ink">
-              Shop
+            <Link href={`/#${product.gender}`} className="link-line hover:text-ink">
+              {GENDER_LABELS[product.gender]}
             </Link>
             <span aria-hidden>/</span>
-            <span>{categoryLabels[product.category]}</span>
+            <span>{categoryLabel(product.category, product.gender)}</span>
           </nav>
 
           <h1 className="display mt-4 text-5xl leading-[0.95] sm:text-6xl">{product.name}</h1>

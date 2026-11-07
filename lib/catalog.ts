@@ -26,29 +26,48 @@ export function byCategory(catalog: Catalog, gender: Gender, category: Category)
   return catalog.filter((p) => p.gender === gender && p.category === category);
 }
 
-export const categoryLabels: Record<Category, string> = {
-  panjabi: "Panjabi",
-  saree: "Saree",
-  "three-piece": "Three-piece",
-  kurti: "Kurti & Co-ords",
-  modest: "Abaya & Hijab",
-  outerwear: "Shawl & Outerwear",
-  tops: "Tops & Dresses",
-  bottoms: "Pants & Palazzo",
-  shoes: "Footwear",
+export const GENDER_LABELS: Record<Gender, string> = { women: "Women", men: "Men" };
+
+/** Category names as each section calls them. */
+const LABELS: Record<Gender, Record<Category, string>> = {
+  women: {
+    panjabi: "Panjabi",
+    saree: "Saree",
+    "three-piece": "Three-piece",
+    kurti: "Kurti & Co-ords",
+    modest: "Abaya & Hijab",
+    outerwear: "Shawl & Outerwear",
+    tops: "Tops & Dresses",
+    bottoms: "Pants & Palazzo",
+    shoes: "Footwear",
+  },
+  men: {
+    panjabi: "Panjabi & Kabli",
+    saree: "Saree",
+    "three-piece": "Three-piece",
+    kurti: "Kurta",
+    modest: "Modest wear",
+    outerwear: "Koti & Sherwani",
+    tops: "Shirts & T-shirts",
+    bottoms: "Pants & Jeans",
+    shoes: "Footwear",
+  },
 };
 
-/** The categories of a ladies' collection, in the order the shop and the admin panel list them. */
-export const shopCategories: Category[] = [
-  "saree",
-  "three-piece",
-  "kurti",
-  "modest",
-  "tops",
-  "bottoms",
-  "outerwear",
-  "shoes",
-];
+export function categoryLabel(category: Category, gender: Gender): string {
+  return LABELS[gender][category];
+}
+
+/** The categories each section offers, in the order the shop and the admin panel list them. */
+export const CATEGORIES: Record<Gender, Category[]> = {
+  women: ["saree", "three-piece", "kurti", "modest", "tops", "bottoms", "outerwear", "shoes"],
+  men: ["panjabi", "tops", "bottoms", "outerwear", "shoes"],
+};
+
+/** Sections that have at least one product, women first. */
+export function gendersIn(catalog: Catalog): Gender[] {
+  return (["women", "men"] as const).filter((g) => catalog.some((p) => p.gender === g));
+}
 
 export interface CollectionGroup {
   category: Category;
@@ -58,14 +77,14 @@ export interface CollectionGroup {
 
 /** The catalog grouped by category in tab order, for the shop page. */
 export function groupByCategory(catalog: Catalog, gender: Gender): CollectionGroup[] {
-  return [
-    ...shopCategories,
-    ...categorySchema.options.filter((c) => !shopCategories.includes(c)),
-  ].map((category) => ({
-    category,
-    label: categoryLabels[category],
-    items: byCategory(catalog, gender, category),
-  }));
+  const order = CATEGORIES[gender];
+  return [...order, ...categorySchema.options.filter((c) => !order.includes(c))].map(
+    (category) => ({
+      category,
+      label: categoryLabel(category, gender),
+      items: byCategory(catalog, gender, category),
+    }),
+  );
 }
 
 /**
