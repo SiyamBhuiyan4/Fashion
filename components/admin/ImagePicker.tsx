@@ -31,8 +31,13 @@ async function shrink(file: File): Promise<Blob> {
 
 export async function uploadPhoto(file: File): Promise<string> {
   const blob = await shrink(file);
+  return uploadBlob(blob, blob.type === "image/webp" ? "photo.webp" : "photo.jpg");
+}
+
+/** Uploads an already prepared image (a shrunk photo, or a video's cover frame). */
+export async function uploadBlob(blob: Blob, name: string): Promise<string> {
   const form = new FormData();
-  form.append("file", blob, blob.type === "image/webp" ? "photo.webp" : "photo.jpg");
+  form.append("file", blob, name);
   const res = await fetch("/api/admin/upload", { method: "POST", body: form });
   const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
   if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed.");

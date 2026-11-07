@@ -7,7 +7,16 @@
  * Swapping Telegram for another database only means changing this file.
  */
 import "server-only";
-import { productSchema, videoRowSchema, type Product, type VideoRow } from "@/lib/schemas";
+import {
+  productSchema,
+  videoFileRowSchema,
+  videoRowSchema,
+  type Product,
+  type VideoFileRow,
+  type VideoRow,
+} from "@/lib/schemas";
+
+export type AnyVideoRow = VideoRow | VideoFileRow;
 import type { Catalog } from "@/lib/catalog";
 import { findById } from "@/lib/catalog";
 import { isConfigured, loadSnapshot } from "@/lib/db/telegramStore";
@@ -20,24 +29,42 @@ export const PRODUCTS_TABLE = "products";
 /** Product videos live in their own table so re-seeding the products never drops them. */
 export const VIDEOS_TABLE = "videos";
 
-function parseVideos(rows: unknown): Map<string, VideoRow> {
-  const byProduct = new Map<string, VideoRow>();
+export function parseVideos(rows: unknown): Map<string, AnyVideoRow> {
+  const byProduct = new Map<string, AnyVideoRow>();
   if (!Array.isArray(rows)) return byProduct;
   for (const row of rows) {
+    const file = videoFileRowSchema.safeParse(row);
+    if (file.success) {
+      byProduct.set(file.data.productId, file.data);
+      continue;
+    }
     const parsed = videoRowSchema.safeParse(row);
     if (parsed.success) byProduct.set(parsed.data.productId, parsed.data);
   }
   return byProduct;
 }
 
+/** Where the player finds a product's video: HLS playlists, or the uploaded file. */
+export function videoUrl(productId: string, row: AnyVideoRow): string {
+  if ("kind" in row && row.kind === "file") {
+    // A new upload changes the address, so a cached copy of the old video is never shown.
+    const version =
+      Date.parse(row.updatedAt)
+        .toString(36)
+        .replace(/[^a-z0-9]/g, "") || "1";
+    return `/api/video/${productId}/file?v=${version}`;
+  }
+  return `/api/video/${productId}/master.m3u8`;
+}
+
 /** Attaches each product's video from the "videos" table. Bad rows are skipped, not fatal. */
-function withVideos(products: Product[], videos: Map<string, VideoRow>): Product[] {
+function withVideos(products: Product[], videos: Map<string, AnyVideoRow>): Product[] {
   if (videos.size === 0) return products;
   return products.map((product) => {
     const row = videos.get(product.id);
     if (!row) return product;
     const video = {
-      url: `/api/video/${product.id}/master.m3u8`,
+      url: videoUrl(product.id, row),
       poster: row.poster,
       width: row.width,
       height: row.height,
@@ -56,7 +83,7 @@ const TTL_MS = 5_000;
 interface Loaded {
   catalog: Catalog;
   source: CatalogSource;
-  videos: Map<string, VideoRow>;
+  videos: Map<string, AnyVideoRow>;
   settings: Settings;
   categories: CategoryRow[];
   sections: SectionRow[];
@@ -69,7 +96,7 @@ let inFlight: Promise<Loaded> | null = null;
 export type CatalogSource = "telegram" | "empty";
 
 const emptyCatalog: Catalog = Object.freeze([]);
-const noVideos = new Map<string, VideoRow>();
+const noVideos = new Map<string, AnyVideoRow>();
 const nothing = (): Loaded => ({
   catalog: emptyCatalog,
   source: "empty",
@@ -162,7 +189,7 @@ export async function getSettings(): Promise<Settings> {
 }
 
 /** The stored pieces of a product's video, for the HLS playlists in /api/video. */
-export async function getVideoRow(productId: string): Promise<VideoRow | undefined> {
+export async function getVideoRow(productId: string): Promise<AnyVideoRow | undefined> {
   return (await load()).videos.get(productId);
 }
 

@@ -3,18 +3,14 @@ import { adminProductSchema } from "@/lib/adminProduct";
 import { adminGet, adminPost } from "@/lib/server/admin";
 import { loadAdmin, saveProduct } from "@/lib/server/adminStore";
 import { json } from "@/lib/server/http";
-import { VIDEOS_TABLE } from "@/lib/products.server";
+import { parseVideos, VIDEOS_TABLE, videoUrl } from "@/lib/products.server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = adminGet(async () => {
   const { db, products, snapshot } = await loadAdmin();
-  const videos = new Set(
-    ((snapshot.tables[VIDEOS_TABLE] ?? []) as Array<{ productId?: string }>).map(
-      (v) => v.productId,
-    ),
-  );
+  const videos = parseVideos(snapshot.tables[VIDEOS_TABLE]);
   return json({
     products: products
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
@@ -28,7 +24,20 @@ export const GET = adminGet(async () => {
               : (p.stock[size] ?? 0),
           ]),
         );
-        return { ...p, stock, hasVideo: videos.has(p.id) };
+        const row = videos.get(p.id);
+        return {
+          ...p,
+          stock,
+          hasVideo: Boolean(row),
+          videoInfo: row
+            ? {
+                url: videoUrl(p.id, row),
+                poster: row.poster,
+                size: "size" in row ? row.size : row.bytes,
+                duration: row.duration,
+              }
+            : null,
+        };
       }),
   });
 });

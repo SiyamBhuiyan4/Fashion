@@ -12,6 +12,7 @@ import {
   productColorSchema,
   productIdSchema,
   sizeSchema,
+  videoFileRowSchema,
   type Category,
   type Fabric,
   type GarmentKind,
@@ -41,6 +42,19 @@ export const adminProductSchema = z.object({
   fabric: fabricSchema,
   tags: z.array(z.string().trim().min(1).max(24)).max(6),
   hidden: z.boolean(),
+  /** A newly uploaded video, null to remove the video, or left out to keep it as it is. */
+  video: videoFileRowSchema
+    .pick({
+      type: true,
+      size: true,
+      parts: true,
+      poster: true,
+      width: true,
+      height: true,
+      duration: true,
+    })
+    .nullable()
+    .optional(),
 });
 export type AdminProductInput = z.infer<typeof adminProductSchema>;
 

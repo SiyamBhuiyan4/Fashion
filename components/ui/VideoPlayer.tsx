@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Plays an HLS product video (/api/video/<id>/master.m3u8). Safari and iOS play HLS natively;
+ * Plays a product video: an uploaded file (/api/video/<id>/file) directly, or HLS
+ * (/api/video/<id>/master.m3u8). Safari and iOS play HLS natively;
  * everywhere else hls.js is loaded on demand and feeds the pieces to the <video> element.
  *
  * The player picks the quality the connection can carry, starting from the best. `preview`
@@ -40,6 +41,15 @@ export function VideoPlayer({
         video.load();
       };
     };
+
+    // A video uploaded in the admin panel is a plain file: the browser plays it directly.
+    if (!src.includes(".m3u8")) {
+      native();
+      return () => {
+        destroyed = true;
+        cleanup();
+      };
+    }
 
     // hls.js first wherever Media Source works (it handles quality switching best); the
     // browser's own HLS (Safari, older iPhones) otherwise.

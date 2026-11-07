@@ -20,7 +20,10 @@ import {
   useToast,
 } from "@/components/admin/ui";
 
-export type AdminProduct = Product & { hasVideo: boolean };
+export type AdminProduct = Product & {
+  hasVideo: boolean;
+  videoInfo: { url: string; poster?: string; size: number; duration: number } | null;
+};
 
 export function ProductsList() {
   const { data, error, reload } = useAdminData<{ products: AdminProduct[] }>("/api/admin/products");

@@ -8,7 +8,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { loadSnapshot, withWriteLock, type Snapshot } from "@/lib/db/telegramStore";
 import type { AdminProductInput } from "@/lib/adminProduct";
-import { productSchema, type Product } from "@/lib/schemas";
+import { productSchema, videoFileRowSchema, type Product } from "@/lib/schemas";
 import { parseSettings, settingsSchema, type Settings } from "@/lib/settings";
 import {
   categoryListSchema,
@@ -148,6 +148,30 @@ export async function saveProduct(input: AdminProductInput): Promise<Product> {
         units: input.stock[size] ?? 0,
       })),
     ];
+    // The video lives in its own table (one row per product).
+    if (input.video !== undefined) {
+      const videos = Array.isArray(snapshot.tables[VIDEOS_TABLE])
+        ? (snapshot.tables[VIDEOS_TABLE] as Array<{ productId?: string }>)
+        : [];
+      const others = videos.filter((v) => v.productId !== id);
+      if (input.video === null) {
+        snapshot.tables[VIDEOS_TABLE] = others;
+      } else {
+        const total = input.video.parts.reduce((n, p) => n + p.s, 0);
+        if (total !== input.video.size) {
+          throw new UserError("The video did not upload completely — please add it again.");
+        }
+        snapshot.tables[VIDEOS_TABLE] = [
+          ...others,
+          videoFileRowSchema.parse({
+            productId: id,
+            kind: "file",
+            ...input.video,
+            updatedAt: nowIso(),
+          }),
+        ];
+      }
+    }
     afterCatalogChange(snapshot, outbox);
     saved = product;
     return true;

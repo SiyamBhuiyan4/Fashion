@@ -17,6 +17,7 @@ import type { Category, Fabric, GarmentKind, Gender } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { CategoryQuickAdd, SectionPicker } from "@/components/admin/SectionPicker";
+import { VideoPicker, type UploadedVideo } from "@/components/admin/VideoPicker";
 import type { AdminProduct } from "@/components/admin/ProductsList";
 import {
   adminPost,
@@ -90,6 +91,9 @@ export function ProductForm({ productId }: { productId?: string }) {
   const [fabric, setFabric] = useState<Fabric>(garmentDefaults("women", "saree").fabric);
   const [tags, setTags] = useState("");
   const [hidden, setHidden] = useState(false);
+  const [videoPending, setVideoPending] = useState<UploadedVideo | null>(null);
+  const [videoRemoved, setVideoRemoved] = useState(false);
+  const [videoBusy, setVideoBusy] = useState(false);
   const [customSize, setCustomSize] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,6 +207,7 @@ export function ProductForm({ productId }: { productId?: string }) {
         .filter(Boolean)
         .slice(0, 6),
       hidden,
+      video: videoPending ?? (videoRemoved ? null : undefined),
     };
     if (colors.some((c) => !c.name.trim())) {
       setError("Give every colour a name (e.g. Black, Maroon).");
@@ -436,6 +441,23 @@ export function ProductForm({ productId }: { productId?: string }) {
               ) : null}
             </div>
           </Card>
+
+          <Card title="Video">
+            <VideoPicker
+              current={existing?.videoInfo ?? null}
+              pending={videoPending}
+              removed={videoRemoved}
+              onBusy={setVideoBusy}
+              onUploaded={(video) => {
+                setVideoPending(video);
+                setVideoRemoved(false);
+              }}
+              onRemove={() => {
+                setVideoPending(null);
+                setVideoRemoved(true);
+              }}
+            />
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -611,10 +633,16 @@ export function ProductForm({ productId }: { productId?: string }) {
         <div className={cn("flex flex-wrap items-center gap-2", error && "mt-3")}>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || videoBusy}
             className={cn(button.primary, "flex-1 sm:flex-none")}
           >
-            {saving ? "Saving…" : existing ? "Save changes" : "Add to shop"}
+            {videoBusy
+              ? "Wait — video uploading…"
+              : saving
+                ? "Saving…"
+                : existing
+                  ? "Save changes"
+                  : "Add to shop"}
           </button>
           <Link href="/admin/products" className={button.secondary}>
             Cancel

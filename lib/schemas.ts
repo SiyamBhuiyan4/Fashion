@@ -128,7 +128,9 @@ const telegramFileIdSchema = z.string().regex(/^[A-Za-z0-9_-]{10,200}$/);
  * "videos" table; the pieces themselves are files in the Telegram channel.
  */
 export const productVideoSchema = z.object({
-  url: z.string().regex(/^\/api\/video\/[a-z0-9-]{3,64}\/master\.m3u8$/),
+  url: z
+    .string()
+    .regex(/^\/api\/video\/[a-z0-9-]{3,64}\/(?:master\.m3u8|file(?:\?v=[a-z0-9]{1,20})?)$/),
   poster: z
     .string()
     .regex(/^\/api\/tg\/[A-Za-z0-9_-]{10,200}\.jpg$/)
@@ -169,6 +171,33 @@ export const videoRowSchema = z.object({
   updatedAt: z.string().max(40),
 });
 export type VideoRow = z.infer<typeof videoRowSchema>;
+
+/** Most bytes in one stored piece of an uploaded video (each request to Vercel stays < 4.5 MB). */
+export const VIDEO_PART_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Row of the "videos" table for a video uploaded from the admin panel: the original file, cut
+ * into pieces in the browser and stored in the Telegram channel. /api/video/<id>/file joins
+ * them back together on the fly (with byte ranges, so the player can seek).
+ */
+export const videoFileRowSchema = z.object({
+  productId: productIdSchema,
+  kind: z.literal("file"),
+  type: z.enum(["video/mp4", "video/webm", "video/quicktime"]),
+  size: z.number().int().positive().max(2_000_000_000),
+  parts: z
+    .array(
+      z.object({ f: telegramFileIdSchema, s: z.number().int().positive().max(VIDEO_PART_BYTES) }),
+    )
+    .min(1)
+    .max(500),
+  poster: productVideoSchema.shape.poster,
+  width: productVideoSchema.shape.width,
+  height: productVideoSchema.shape.height,
+  duration: productVideoSchema.shape.duration,
+  updatedAt: z.string().max(40),
+});
+export type VideoFileRow = z.infer<typeof videoFileRowSchema>;
 
 export const productColorSchema = z.object({
   name: colorNameSchema,
