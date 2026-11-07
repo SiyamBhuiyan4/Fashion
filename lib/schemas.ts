@@ -184,13 +184,13 @@ export const videoFileRowSchema = z.object({
   productId: productIdSchema,
   kind: z.literal("file"),
   type: z.enum(["video/mp4", "video/webm", "video/quicktime"]),
-  size: z.number().int().positive().max(2_000_000_000),
+  size: z.number().int().positive().max(8_000_000_000),
   parts: z
     .array(
       z.object({ f: telegramFileIdSchema, s: z.number().int().positive().max(VIDEO_PART_BYTES) }),
     )
     .min(1)
-    .max(500),
+    .max(2000),
   poster: productVideoSchema.shape.poster,
   width: productVideoSchema.shape.width,
   height: productVideoSchema.shape.height,

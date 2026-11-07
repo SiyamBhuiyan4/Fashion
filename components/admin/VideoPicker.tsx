@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { VIDEO_PART_BYTES } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { uploadBlob } from "@/components/admin/ImagePicker";
@@ -17,7 +17,7 @@ export interface UploadedVideo {
   duration: number;
 }
 
-const MAX_BYTES = 1500 * 1024 * 1024;
+const MAX_BYTES = 5 * 1024 * 1024 * 1024;
 const PARALLEL = 2;
 
 const mb = (bytes: number) =>
@@ -78,9 +78,11 @@ async function inspect(file: File): Promise<{
   }
 }
 
+const ATTEMPTS = 8;
+
 async function uploadPart(blob: Blob, index: number): Promise<{ f: string; s: number }> {
   let lastError = "Upload failed.";
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     try {
       const res = await fetch("/api/admin/video-part", {
         method: "POST",
@@ -99,10 +101,86 @@ async function uploadPart(blob: Blob, index: number): Promise<{ f: string; s: nu
       lastError = (e as Error).message;
       if (lastError.startsWith("Signed out")) throw e;
     }
-    await new Promise((r) => window.setTimeout(r, 3000 * (attempt + 1)));
+    // Waits grow (3 s, 6 s, 12 s … up to 60 s): enough for Telegram's slow-down or a dropped
+    // connection to pass.
+    await new Promise((r) => window.setTimeout(r, Math.min(60_000, 3000 * 2 ** attempt)));
   }
   throw new Error(lastError);
 }
+
+// ------------------------------------------------------------------ resuming an upload
+
+/** Pieces already uploaded for a file, kept on this device so an interrupted upload resumes. */
+type Saved = { parts: Array<{ f: string; s: number } | null>; at: number };
+const RESUME_DAYS = 7;
+/**
+ * Which file this is, from its name, size and a fingerprint of its first and last 256 KB — not
+ * its "modified" time, which some phones change every time a file is picked.
+ */
+async function resumeKey(file: File): Promise<string> {
+  const edge = 256 * 1024;
+  const head = await file.slice(0, edge).arrayBuffer();
+  const tail = await file.slice(Math.max(0, file.size - edge)).arrayBuffer();
+  const joined = new Uint8Array(head.byteLength + tail.byteLength);
+  joined.set(new Uint8Array(head), 0);
+  joined.set(new Uint8Array(tail), head.byteLength);
+  let print = "";
+  try {
+    const digest = await crypto.subtle.digest("SHA-256", joined);
+    print = Array.from(new Uint8Array(digest).slice(0, 12), (x) =>
+      x.toString(16).padStart(2, "0"),
+    ).join("");
+  } catch {
+    /* no crypto.subtle (plain http): name and size only */
+  }
+  return `aurevya.upload.${file.name}.${file.size}.${print}`;
+}
+
+function loadResume(key: string, count: number): Saved["parts"] {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return new Array(count).fill(null);
+    const saved = JSON.parse(raw) as Saved;
+    if (Date.now() - saved.at > RESUME_DAYS * 86_400_000 || saved.parts.length !== count) {
+      return new Array(count).fill(null);
+    }
+    return saved.parts;
+  } catch {
+    return new Array(count).fill(null);
+  }
+}
+
+function saveResume(key: string, parts: Saved["parts"]) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify({ parts, at: Date.now() }));
+  } catch {
+    /* storage full or private mode: the upload still works, it just cannot resume */
+  }
+}
+
+function clearResume(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Keeps a phone's screen on while a long upload runs (where the browser allows it). */
+async function keepAwake(): Promise<() => void> {
+  try {
+    const nav = navigator as Navigator & {
+      wakeLock?: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> };
+    };
+    const lock = await nav.wakeLock?.request("screen");
+    return () => void lock?.release().catch(() => undefined);
+  } catch {
+    return () => undefined;
+  }
+}
+
+const minutesLeft = (seconds: number) =>
+  seconds < 90 ? "less than 2 minutes left" : `about ${Math.round(seconds / 60)} minutes left`;
 
 /**
  * The product's video. Any size: the file is cut into 4 MB pieces in the browser and uploaded
@@ -124,9 +202,25 @@ export function VideoPicker({
   onBusy: (busy: boolean) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState<{ done: number; total: number; step: string } | null>(
-    null,
-  );
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+    step: string;
+    bytes?: number;
+    size?: number;
+    eta?: string;
+  } | null>(null);
+  const uploading = progress !== null;
+
+  // Leaving the page while uploading (or before saving a new video) asks first.
+  useEffect(() => {
+    if (!uploading && !pending) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [uploading, pending]);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -144,6 +238,7 @@ export function VideoPicker({
     }
     setError(null);
     onBusy(true);
+    const release = await keepAwake();
     try {
       setProgress({ done: 0, total: 1, step: "Reading the video…" });
       const info = await inspect(file);
@@ -155,25 +250,52 @@ export function VideoPicker({
       }
 
       const count = Math.ceil(file.size / VIDEO_PART_BYTES);
-      const parts: Array<{ f: string; s: number }> = new Array(count);
-      let done = 0;
-      let next = 0;
-      setProgress({ done: 0, total: count, step: "Uploading" });
+      // Pieces uploaded before an interruption are kept; only the rest are sent.
+      const key = await resumeKey(file);
+      const parts = loadResume(key, count);
+      const todo = parts.flatMap((part, i) => (part ? [] : [i]));
+      let done = count - todo.length;
+      const startedAt = Date.now();
+      const doneAtStart = done;
+      const report = () => {
+        const sent = done - doneAtStart;
+        const perPart = sent > 0 ? (Date.now() - startedAt) / sent : 0;
+        setProgress({
+          done,
+          total: count,
+          step: "Uploading",
+          bytes: Math.min(file.size, done * VIDEO_PART_BYTES),
+          size: file.size,
+          eta: sent > 1 ? minutesLeft(((count - done) * perPart) / 1000) : undefined,
+        });
+      };
+      report();
+      let cursor = 0;
       const worker = async () => {
-        while (next < count) {
-          const index = next++;
+        while (cursor < todo.length) {
+          const index = todo[cursor++]!;
           const blob = file.slice(index * VIDEO_PART_BYTES, (index + 1) * VIDEO_PART_BYTES);
           parts[index] = await uploadPart(blob, index);
           done++;
-          setProgress({ done, total: count, step: "Uploading" });
+          saveResume(key, parts);
+          report();
         }
       };
-      await Promise.all(Array.from({ length: Math.min(PARALLEL, count) }, worker));
+      try {
+        await Promise.all(Array.from({ length: Math.min(PARALLEL, todo.length) }, worker));
+      } catch (e) {
+        const percent = Math.round((done / count) * 100);
+        throw new Error(
+          `The upload stopped at ${percent}% (${(e as Error).message}). Choose the same video again to continue from there —`,
+        );
+      }
+      if (parts.some((p) => !p)) throw new Error("Some pieces are missing.");
+      clearResume(key);
 
       onUploaded({
         type,
         size: file.size,
-        parts,
+        parts: parts as Array<{ f: string; s: number }>,
         poster,
         width: info.width,
         height: info.height,
@@ -183,6 +305,7 @@ export function VideoPicker({
     } catch (e) {
       setError(`${(e as Error).message} Please try again.`);
     }
+    release();
     setProgress(null);
     onBusy(false);
   };
@@ -198,6 +321,12 @@ export function VideoPicker({
               ? `Uploading video… ${Math.round((progress.done / progress.total) * 100)}%`
               : progress.step}
           </p>
+          {progress.size ? (
+            <p className="mt-0.5 text-xs text-ink-soft">
+              {mb(progress.bytes ?? 0)} of {mb(progress.size)}
+              {progress.eta ? ` · ${progress.eta}` : ""}
+            </p>
+          ) : null}
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
             <div
               className="h-full rounded-full bg-accent transition-[width] duration-500"
@@ -205,7 +334,8 @@ export function VideoPicker({
             />
           </div>
           <p className="mt-2 text-xs text-ink-faint">
-            Keep this page open until it finishes. Big videos take a few minutes.
+            Keep this page open until it finishes. If the internet drops, choose the same video
+            again — it continues where it stopped.
           </p>
         </div>
       ) : shownUrl ? (
@@ -256,8 +386,9 @@ export function VideoPicker({
       )}
       {error ? <p className="mt-2 text-xs text-red-700">{error}</p> : null}
       <p className="mt-2 text-xs text-ink-faint">
-        Full quality, no size limit. MP4 plays on every phone and browser; iPhone videos (MOV) play
-        best when recorded as &ldquo;Most Compatible&rdquo; (Settings → Camera → Formats).
+        Full quality, up to 5 GB (about 1 GB in 13 minutes). MP4 plays on every phone and browser;
+        iPhone videos (MOV) play best when recorded as &ldquo;Most Compatible&rdquo; (Settings →
+        Camera → Formats).
       </p>
       <input
         ref={fileRef}
