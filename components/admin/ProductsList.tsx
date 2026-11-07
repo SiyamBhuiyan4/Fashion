@@ -30,6 +30,10 @@ export function ProductsList() {
   }>("/api/admin/categories");
   const categories = catData?.categories ?? [];
   const sections = catData?.sections ?? [];
+  const { data: featuredData, reload: reloadFeatured } = useAdminData<{ featured: string[] }>(
+    "/api/admin/featured",
+  );
+  const featured = featuredData?.featured ?? [];
   const [query, setQuery] = useState("");
   /** "all" | "live" | "hidden" | "out" | "section:<id>" */
   const [filter, setFilter] = useState<string>("all");
@@ -50,6 +54,19 @@ export function ProductsList() {
 
   if (error) return <ErrorNote message={error} />;
   if (!data) return <Loading />;
+
+  const toggleTop = async (p: AdminProduct) => {
+    const on = !featured.includes(p.id);
+    setBusy(p.id);
+    try {
+      await adminPost("/api/admin/featured", { id: p.id, on });
+      show(on ? "Shown on top of the home page" : "Taken off the top");
+      reloadFeatured();
+    } catch (e) {
+      show((e as Error).message);
+    }
+    setBusy(null);
+  };
 
   const toggle = async (p: AdminProduct) => {
     setBusy(p.id);
@@ -176,7 +193,7 @@ export function ProductsList() {
                       ? "Sold out"
                       : p.sizes.map((s) => `${sizeLabel(s)} ${p.stock[s] ?? 0}`).join(" · ")}
                   </p>
-                  <div className="mt-auto flex gap-2 pt-2">
+                  <div className="mt-auto flex flex-wrap gap-2 pt-2">
                     <Link
                       href={`/admin/products/${p.id}`}
                       className={cn(button.secondary, "h-9 px-3 text-xs")}
@@ -191,6 +208,20 @@ export function ProductsList() {
                     >
                       {p.hidden ? "Show in shop" : "Hide"}
                     </button>
+                    {!p.hidden ? (
+                      <button
+                        type="button"
+                        disabled={busy === p.id}
+                        onClick={() => toggleTop(p)}
+                        title="Show at the top of the home page"
+                        className={cn(
+                          featured.includes(p.id) ? button.gold : button.secondary,
+                          "h-9 px-3 text-xs",
+                        )}
+                      >
+                        {featured.includes(p.id) ? "★ On top" : "☆ Show on top"}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </li>

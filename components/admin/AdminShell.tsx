@@ -18,6 +18,11 @@ const NAV = [
     icon: "M8 4 4 7l2 3 2-1v11h8V9l2 1 2-3-4-3c0 1.7-1.8 3-4 3S8 5.7 8 4Z",
   },
   {
+    href: "/admin/featured",
+    label: "Show on top",
+    icon: "m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z",
+  },
+  {
     href: "/admin/categories",
     label: "Sections",
     icon: "M4 6h16M4 12h16M4 18h10",
@@ -132,7 +137,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}

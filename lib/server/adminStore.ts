@@ -20,6 +20,7 @@ import { parseSections, sectionListSchema, sectionName, type SectionRow } from "
 import { Db, TABLE_NAMES, UserError, nowIso, tablesOf, type InventoryRow } from "@/lib/server/db";
 import { sendEmail } from "@/lib/server/email";
 import { resetCatalogCache, VIDEOS_TABLE } from "@/lib/products.server";
+import { parseFeatured, withFeatured } from "@/lib/featured";
 
 /** Every product row that passes the schema, hidden ones included. */
 export function productsOf(snapshot: Snapshot): Product[] {
@@ -40,6 +41,7 @@ export async function loadAdmin() {
     settings: parseSettings(snapshot.tables.settings),
     categories: parseCategories(snapshot.tables.categories),
     sections: parseSections(snapshot.tables.sections),
+    featured: parseFeatured(snapshot.tables.featured),
     db: new Db(
       tablesOf(snapshot),
       productsOf(snapshot).filter((p) => !p.hidden),
@@ -175,6 +177,7 @@ export async function deleteProduct(id: string) {
     const rows = (snapshot.tables.products ?? []) as Array<{ id?: string }>;
     if (!rows.some((r) => r.id === id)) throw new UserError("This product no longer exists.", 404);
     snapshot.tables.products = rows.filter((r) => r.id !== id);
+    snapshot.tables.featured = withFeatured(parseFeatured(snapshot.tables.featured), id, false);
     for (const table of ["inventory", "waitlist", VIDEOS_TABLE]) {
       const list = snapshot.tables[table];
       if (Array.isArray(list)) {
@@ -259,4 +262,19 @@ export async function saveStructure(
   });
   refreshShop();
   return { sections, categories: list };
+}
+
+/** Puts a product in (or takes it out of) the two "Show on top" slots of the home page. */
+export async function setFeatured(id: string, on: boolean): Promise<string[]> {
+  let next: string[] = [];
+  await withWriteLock((snapshot) => {
+    if (on && !productsOf(snapshot).some((p) => p.id === id)) {
+      throw new UserError("This product no longer exists.", 404);
+    }
+    next = withFeatured(parseFeatured(snapshot.tables.featured), id, on);
+    snapshot.tables.featured = next;
+    return true;
+  });
+  refreshShop();
+  return next;
 }

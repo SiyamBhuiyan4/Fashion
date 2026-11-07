@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getCatalog } from "@/lib/products.server";
+import { getCatalog, getFeatured } from "@/lib/products.server";
 import { site } from "@/lib/site";
 import { Shop } from "@/components/ui/Shop";
 
@@ -11,5 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  return <Shop products={[...(await getCatalog())]} />;
+  const [catalog, featured] = await Promise.all([getCatalog(), getFeatured()]);
+  return <Shop products={[...catalog]} featured={featured} />;
 }

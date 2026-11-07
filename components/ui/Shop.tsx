@@ -13,7 +13,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { Price } from "@/components/ui/Price";
 
-export function Shop({ products }: { products: Product[] }) {
+export function Shop({ products, featured = [] }: { products: Product[]; featured?: string[] }) {
   const settings = useCatalogStore((s) => s.settings);
 
   const ticker = useMemo(() => {
@@ -33,7 +33,17 @@ export function Shop({ products }: { products: Product[] }) {
 
   const withVideo = products.filter((product) => product.video);
   const heroVideo = withVideo[0];
-  const framed = products.filter((p) => p.colors[0]?.image).slice(0, 2);
+  // The owner's "Show on top" picks first (oldest first), topped up with the newest pieces.
+  const withPhoto = products.filter((p) => p.colors[0]?.image);
+  const picked = featured
+    .map((id) => withPhoto.find((p) => p.id === id))
+    .filter((p): p is Product => Boolean(p));
+  const framed = [
+    ...picked,
+    ...[...withPhoto]
+      .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+      .filter((p) => !picked.includes(p)),
+  ].slice(0, 2);
   // Newest first: the admin panel stamps every product when it is added.
   const sorted = useMemo(
     () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
@@ -84,14 +94,27 @@ export function Shop({ products }: { products: Product[] }) {
           {/* Two framed pieces (computers only); the brand photo until products exist. */}
           <div className="relative mr-[8%] hidden h-[31rem] lg:block">
             {framed.length === 0 ? (
-              <div className="absolute inset-0 m-auto aspect-square h-full overflow-hidden rounded-full border border-accent/40 shadow-2xl shadow-ink/15">
-                <Image
-                  src="/brand/aurevya-cover.jpg"
-                  alt={`${site.name} ${site.subtitle}`}
-                  fill
-                  priority
-                  sizes="31rem"
-                  className="object-cover"
+              <div className="absolute inset-0 m-auto aspect-square h-full">
+                <div className="absolute inset-0 overflow-hidden rounded-full border border-accent/40 shadow-2xl shadow-ink/15">
+                  <Image
+                    src="/brand/aurevya-cover.jpg"
+                    alt={`${site.name} ${site.subtitle}`}
+                    fill
+                    priority
+                    sizes="31rem"
+                    className="object-cover"
+                  />
+                </div>
+                {/* Where the two blue butterflies rest until products are added (butterflies.ts). */}
+                <span
+                  aria-hidden
+                  data-butterfly-perch={0}
+                  className="absolute left-[8%] top-[10%] h-px w-[18%]"
+                />
+                <span
+                  aria-hidden
+                  data-butterfly-perch={1}
+                  className="absolute bottom-[14%] right-[4%] h-px w-px"
                 />
               </div>
             ) : (

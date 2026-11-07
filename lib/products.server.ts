@@ -14,6 +14,7 @@ import { isConfigured, loadSnapshot } from "@/lib/db/telegramStore";
 import { defaultSettings, parseSettings, type Settings } from "@/lib/settings";
 import { DEFAULT_CATEGORIES, parseCategories, type CategoryRow } from "@/lib/categories";
 import { DEFAULT_SECTIONS, parseSections, type SectionRow } from "@/lib/sections";
+import { parseFeatured } from "@/lib/featured";
 
 export const PRODUCTS_TABLE = "products";
 /** Product videos live in their own table so re-seeding the products never drops them. */
@@ -59,6 +60,7 @@ interface Loaded {
   settings: Settings;
   categories: CategoryRow[];
   sections: SectionRow[];
+  featured: string[];
 }
 
 let cached: (Loaded & { at: number }) | null = null;
@@ -75,6 +77,7 @@ const nothing = (): Loaded => ({
   settings: defaultSettings,
   categories: DEFAULT_CATEGORIES,
   sections: DEFAULT_SECTIONS,
+  featured: [],
 });
 
 /** Valid products only: one bad row is skipped instead of hiding the whole shop. */
@@ -110,6 +113,7 @@ async function fetchCatalog(): Promise<Loaded> {
       settings,
       categories: parseCategories(snapshot.tables.categories),
       sections: parseSections(snapshot.tables.sections),
+      featured: parseFeatured(snapshot.tables.featured),
     };
   } catch (error) {
     console.error("[catalog] Telegram database unavailable:", error);
@@ -138,6 +142,11 @@ async function load(): Promise<Loaded> {
 export async function getCatalogWithSource(): Promise<{ catalog: Catalog; source: CatalogSource }> {
   const { catalog, source } = await load();
   return { catalog, source };
+}
+
+/** The ids of the "Show on top" products, oldest first. */
+export async function getFeatured(): Promise<string[]> {
+  return (await load()).featured;
 }
 
 export async function getSections(): Promise<SectionRow[]> {
