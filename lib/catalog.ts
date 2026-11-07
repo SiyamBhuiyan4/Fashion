@@ -2,13 +2,8 @@
  * Pure catalog helpers. No I/O, so the same code runs on the server (where the catalog comes
  * from the Telegram database) and in the browser (where it arrives as props).
  */
-import {
-  categorySchema,
-  productIdSchema,
-  type Category,
-  type Gender,
-  type Product,
-} from "@/lib/schemas";
+import { categoriesFor, categoryName, type CategoryRow } from "@/lib/categories";
+import { productIdSchema, type Category, type Gender, type Product } from "@/lib/schemas";
 
 export type Catalog = readonly Product[];
 
@@ -28,42 +23,6 @@ export function byCategory(catalog: Catalog, gender: Gender, category: Category)
 
 export const GENDER_LABELS: Record<Gender, string> = { women: "Women", men: "Men" };
 
-/** Category names as each section calls them. */
-const LABELS: Record<Gender, Record<Category, string>> = {
-  women: {
-    panjabi: "Panjabi",
-    saree: "Saree",
-    "three-piece": "Three-piece",
-    kurti: "Kurti & Co-ords",
-    modest: "Abaya & Hijab",
-    outerwear: "Shawl & Outerwear",
-    tops: "Tops & Dresses",
-    bottoms: "Pants & Palazzo",
-    shoes: "Footwear",
-  },
-  men: {
-    panjabi: "Panjabi & Kabli",
-    saree: "Saree",
-    "three-piece": "Three-piece",
-    kurti: "Kurta",
-    modest: "Modest wear",
-    outerwear: "Koti & Sherwani",
-    tops: "Shirts & T-shirts",
-    bottoms: "Pants & Jeans",
-    shoes: "Footwear",
-  },
-};
-
-export function categoryLabel(category: Category, gender: Gender): string {
-  return LABELS[gender][category];
-}
-
-/** The categories each section offers, in the order the shop and the admin panel list them. */
-export const CATEGORIES: Record<Gender, Category[]> = {
-  women: ["saree", "three-piece", "kurti", "modest", "tops", "bottoms", "outerwear", "shoes"],
-  men: ["panjabi", "tops", "bottoms", "outerwear", "shoes"],
-};
-
 /** Sections that have at least one product, women first. */
 export function gendersIn(catalog: Catalog): Gender[] {
   return (["women", "men"] as const).filter((g) => catalog.some((p) => p.gender === g));
@@ -75,16 +34,27 @@ export interface CollectionGroup {
   items: Product[];
 }
 
-/** The catalog grouped by category in tab order, for the shop page. */
-export function groupByCategory(catalog: Catalog, gender: Gender): CollectionGroup[] {
-  const order = CATEGORIES[gender];
-  return [...order, ...categorySchema.options.filter((c) => !order.includes(c))].map(
-    (category) => ({
-      category,
-      label: categoryLabel(category, gender),
-      items: byCategory(catalog, gender, category),
-    }),
-  );
+/**
+ * The catalog grouped by the owner's categories, in their order, for the shop page. Products
+ * whose category was deleted are grouped at the end under a readable form of the old id.
+ */
+export function groupByCategory(
+  catalog: Catalog,
+  gender: Gender,
+  categories: readonly CategoryRow[],
+): CollectionGroup[] {
+  const own = categoriesFor(categories, gender);
+  const known = new Set(own.map((c) => c.id));
+  const orphans = [
+    ...new Set(
+      catalog.filter((p) => p.gender === gender && !known.has(p.category)).map((p) => p.category),
+    ),
+  ];
+  return [...own.map((c) => c.id), ...orphans].map((category) => ({
+    category,
+    label: categoryName(categories, category, gender),
+    items: byCategory(catalog, gender, category),
+  }));
 }
 
 /**

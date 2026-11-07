@@ -10,24 +10,30 @@ import type { Catalog } from "@/lib/catalog";
 import { findById } from "@/lib/catalog";
 import type { Product } from "@/lib/schemas";
 import { defaultSettings, type Settings } from "@/lib/settings";
+import { DEFAULT_CATEGORIES, type CategoryRow } from "@/lib/categories";
 
 interface CatalogState {
   catalog: Catalog;
   settings: Settings;
+  categories: CategoryRow[];
   hydrated: boolean;
-  hydrate: (catalog: Catalog, settings: Settings) => void;
+  hydrate: (catalog: Catalog, settings: Settings, categories: CategoryRow[]) => void;
   get: (id: string) => Product | undefined;
 }
 
 export const useCatalogStore = create<CatalogState>((set, get) => ({
   catalog: [],
   settings: defaultSettings,
+  categories: DEFAULT_CATEGORIES,
   hydrated: false,
-  hydrate: (catalog, settings) =>
+  hydrate: (catalog, settings, categories) =>
     set((state) =>
-      state.hydrated && state.catalog === catalog && state.settings === settings
+      state.hydrated &&
+      state.catalog === catalog &&
+      state.settings === settings &&
+      state.categories === categories
         ? state
-        : { catalog, settings, hydrated: true },
+        : { catalog, settings, categories, hydrated: true },
     ),
   get: (id) => findById(get().catalog, id),
 }));

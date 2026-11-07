@@ -264,7 +264,8 @@ function Collection({
   title: string | null;
 }) {
   const [tab, setTab] = useState<Category | "all">("all");
-  const groups = groupByCategory(products, gender).filter((g) => g.items.length > 0);
+  const categories = useCatalogStore((s) => s.categories);
+  const groups = groupByCategory(products, gender, categories).filter((g) => g.items.length > 0);
   const visible = tab === "all" ? products : (groups.find((g) => g.category === tab)?.items ?? []);
 
   return (

@@ -57,10 +57,7 @@ export function sizeLabel(size: string): string {
 }
 
 /** What a new product in each category is, until the owner says otherwise. */
-export const CATEGORY_DEFAULTS: Record<
-  Gender,
-  Record<Category, { kind: GarmentKind; fabric: Fabric }>
-> = {
+const CATEGORY_DEFAULTS: Record<Gender, Record<string, { kind: GarmentKind; fabric: Fabric }>> = {
   women: {
     saree: { kind: "saree", fabric: "cotton" },
     "three-piece": { kind: "kameez", fabric: "lawn" },
@@ -84,6 +81,16 @@ export const CATEGORY_DEFAULTS: Record<
     modest: { kind: "panjabi", fabric: "cotton" },
   },
 };
+
+/** Type and fabric to start a new product with; the owner can change both. */
+export function garmentDefaults(gender: Gender, category: Category) {
+  return (
+    CATEGORY_DEFAULTS[gender][category] ??
+    (gender === "men"
+      ? { kind: "shirt" as GarmentKind, fabric: "cotton" as Fabric }
+      : { kind: "dress" as GarmentKind, fabric: "cotton" as Fabric })
+  );
+}
 
 export const KIND_LABELS: Partial<Record<GarmentKind, string>> = {
   saree: "Saree",

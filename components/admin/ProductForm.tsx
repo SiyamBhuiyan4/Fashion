@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   adminProductSchema,
-  CATEGORY_DEFAULTS,
+  garmentDefaults,
   FABRIC_LABELS,
   KIND_LABELS,
   SIZE_PRESETS,
   sizeLabel,
 } from "@/lib/adminProduct";
-import { CATEGORIES, categoryLabel, GENDER_LABELS } from "@/lib/catalog";
+import { GENDER_LABELS } from "@/lib/catalog";
+import { categoriesFor, categoryName, type CategoryRow } from "@/lib/categories";
 import type { Category, Fabric, GarmentKind, Gender } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { ImagePicker } from "@/components/admin/ImagePicker";
@@ -66,6 +67,8 @@ export function ProductForm({ productId }: { productId?: string }) {
     productId ? "/api/admin/products" : null,
   );
   const existing = productId ? data?.products.find((p) => p.id === productId) : undefined;
+  const { data: catData } = useAdminData<{ categories: CategoryRow[] }>("/api/admin/categories");
+  const categories = catData?.categories ?? [];
 
   const [loaded, setLoaded] = useState(!productId);
   const [name, setName] = useState("");
@@ -77,8 +80,8 @@ export function ProductForm({ productId }: { productId?: string }) {
   const [sizes, setSizes] = useState<string[]>(["FREE"]);
   const [stock, setStock] = useState<Record<string, string>>({ FREE: "1" });
   const [extras, setExtras] = useState<string[]>([]);
-  const [kind, setKind] = useState<GarmentKind>(CATEGORY_DEFAULTS.women.saree.kind);
-  const [fabric, setFabric] = useState<Fabric>(CATEGORY_DEFAULTS.women.saree.fabric);
+  const [kind, setKind] = useState<GarmentKind>(garmentDefaults("women", "saree").kind);
+  const [fabric, setFabric] = useState<Fabric>(garmentDefaults("women", "saree").fabric);
   const [tags, setTags] = useState("");
   const [hidden, setHidden] = useState(false);
   const [customSize, setCustomSize] = useState("");
@@ -146,15 +149,16 @@ export function ProductForm({ productId }: { productId?: string }) {
   const pickCategory = (next: Category, forGender: Gender = gender) => {
     setCategory(next);
     if (!existing) {
-      setKind(CATEGORY_DEFAULTS[forGender][next].kind);
-      setFabric(CATEGORY_DEFAULTS[forGender][next].fabric);
+      setKind(garmentDefaults(forGender, next).kind);
+      setFabric(garmentDefaults(forGender, next).fabric);
     }
   };
 
   const pickGender = (next: Gender) => {
     setGender(next);
     // Keep the category if the other section has it too, otherwise take that section's first.
-    if (!CATEGORIES[next].includes(category)) pickCategory(CATEGORIES[next][0]!, next);
+    const own = categoriesFor(categories, next);
+    if (!own.some((c) => c.id === category) && own[0]) pickCategory(own[0].id, next);
   };
 
   const save = async () => {
@@ -183,6 +187,12 @@ export function ProductForm({ productId }: { productId?: string }) {
     };
     if (colors.some((c) => !c.name.trim())) {
       setError("Give every colour a name (e.g. Black, Maroon).");
+      return;
+    }
+    if (!existing && !categoriesFor(categories, gender).some((c) => c.id === category)) {
+      setError(
+        `Choose a category. (Make one first under Categories if ${GENDER_LABELS[gender]} has none.)`,
+      );
       return;
     }
     if (!colors.some((c) => c.image) && extras.length === 0) {
@@ -282,12 +292,23 @@ export function ProductForm({ productId }: { productId?: string }) {
                     onChange={(e) => pickCategory(e.target.value as Category)}
                     className={input}
                   >
-                    {CATEGORIES[gender].map((c) => (
-                      <option key={c} value={c}>
-                        {categoryLabel(c, gender)}
+                    {categoriesFor(categories, gender).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
                       </option>
                     ))}
+                    {!categoriesFor(categories, gender).some((c) => c.id === category) ? (
+                      <option value={category}>
+                        {existing ? categoryName(categories, category, gender) : "Choose…"}
+                      </option>
+                    ) : null}
                   </select>
+                  <Link
+                    href="/admin/categories"
+                    className="mt-1 block text-xs font-normal text-ink-soft underline"
+                  >
+                    Add or edit categories
+                  </Link>
                 </label>
                 <label className={label}>
                   Price (৳)

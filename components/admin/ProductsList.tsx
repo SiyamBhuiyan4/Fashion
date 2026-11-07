@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { categoryLabel, GENDER_LABELS } from "@/lib/catalog";
+import { GENDER_LABELS } from "@/lib/catalog";
+import { categoryName, type CategoryRow } from "@/lib/categories";
 import { sizeLabel } from "@/lib/adminProduct";
 import type { Product } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,8 @@ export type AdminProduct = Product & { hasVideo: boolean };
 
 export function ProductsList() {
   const { data, error, reload } = useAdminData<{ products: AdminProduct[] }>("/api/admin/products");
+  const { data: catData } = useAdminData<{ categories: CategoryRow[] }>("/api/admin/categories");
+  const categories = catData?.categories ?? [];
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "women" | "men" | "live" | "hidden" | "out">("all");
   const [busy, setBusy] = useState<string | null>(null);
@@ -150,7 +153,7 @@ export function ProductsList() {
                     {p.name}
                   </Link>
                   <p className="text-xs text-ink-faint">
-                    {GENDER_LABELS[p.gender]} · {categoryLabel(p.category, p.gender)}
+                    {GENDER_LABELS[p.gender]} · {categoryName(categories, p.category, p.gender)}
                     {p.hasVideo ? " · 🎬 video" : ""}
                   </p>
                   <p className="mt-1 font-medium tabular-nums">{taka(p.price)}</p>

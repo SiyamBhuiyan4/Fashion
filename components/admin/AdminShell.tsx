@@ -18,6 +18,11 @@ const NAV = [
     icon: "M8 4 4 7l2 3 2-1v11h8V9l2 1 2-3-4-3c0 1.7-1.8 3-4 3S8 5.7 8 4Z",
   },
   {
+    href: "/admin/categories",
+    label: "Categories",
+    icon: "M4 6h16M4 12h16M4 18h10",
+  },
+  {
     href: "/admin/settings",
     label: "Settings",
     icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-2.2-1.3L14.4 3h-4l-.4 2.4a7.5 7.5 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 2.2 1.3l.4 2.4h4l.4-2.4a7.5 7.5 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.3Z",
@@ -127,7 +132,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}

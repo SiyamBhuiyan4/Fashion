@@ -3,19 +3,13 @@ import { z } from "zod";
 export const genderSchema = z.enum(["men", "women"]);
 export type Gender = z.infer<typeof genderSchema>;
 
-/** Shop categories, in tab order. Bangladeshi wear first, then everyday basics. */
-export const categorySchema = z.enum([
-  "panjabi",
-  "saree",
-  "three-piece",
-  "kurti",
-  "modest",
-  "outerwear",
-  "tops",
-  "bottoms",
-  "shoes",
-]);
-export type Category = z.infer<typeof categorySchema>;
+/** A category's id. The categories themselves are made by the owner (lib/categories.ts). */
+export const categorySchema = z
+  .string()
+  .min(1)
+  .max(40)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid category");
+export type Category = string;
 
 export const productIdSchema = z
   .string()

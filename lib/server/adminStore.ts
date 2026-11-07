@@ -10,6 +10,12 @@ import { loadSnapshot, withWriteLock, type Snapshot } from "@/lib/db/telegramSto
 import type { AdminProductInput } from "@/lib/adminProduct";
 import { productSchema, type Product } from "@/lib/schemas";
 import { parseSettings, settingsSchema, type Settings } from "@/lib/settings";
+import {
+  categoryListSchema,
+  categoryName,
+  parseCategories,
+  type CategoryRow,
+} from "@/lib/categories";
 import { Db, TABLE_NAMES, UserError, nowIso, tablesOf, type InventoryRow } from "@/lib/server/db";
 import { sendEmail } from "@/lib/server/email";
 import { resetCatalogCache, VIDEOS_TABLE } from "@/lib/products.server";
@@ -31,6 +37,7 @@ export async function loadAdmin() {
     version,
     products: productsOf(snapshot),
     settings: parseSettings(snapshot.tables.settings),
+    categories: parseCategories(snapshot.tables.categories),
     db: new Db(
       tablesOf(snapshot),
       productsOf(snapshot).filter((p) => !p.hidden),
@@ -185,4 +192,40 @@ export async function saveSettings(input: Settings): Promise<Settings> {
   });
   refreshShop();
   return settings;
+}
+
+/**
+ * Saves the owner's category list (names, sections and order). A category that still has
+ * products cannot be removed: the owner moves those products first, so nothing disappears.
+ */
+export async function saveCategories(input: CategoryRow[]): Promise<CategoryRow[]> {
+  const list = categoryListSchema.parse(input).map((c) => ({ ...c, name: c.name.trim() }));
+  const keys = new Set<string>();
+  const names = new Set<string>();
+  for (const c of list) {
+    const key = `${c.gender}|${c.id}`;
+    const name = `${c.gender}|${c.name.toLowerCase()}`;
+    if (keys.has(key)) throw new UserError("Two categories have the same id.");
+    if (names.has(name)) throw new UserError(`"${c.name}" is listed twice in the same section.`);
+    keys.add(key);
+    names.add(name);
+  }
+  await withWriteLock((snapshot) => {
+    const before = parseCategories(snapshot.tables.categories);
+    for (const product of productsOf(snapshot)) {
+      if (!keys.has(`${product.gender}|${product.category}`)) {
+        const count = productsOf(snapshot).filter(
+          (p) => p.gender === product.gender && p.category === product.category,
+        ).length;
+        throw new UserError(
+          `"${categoryName(before, product.category, product.gender)}" still has ${count} product${count === 1 ? "" : "s"} (e.g. ${product.name}). Move them to another category first.`,
+          409,
+        );
+      }
+    }
+    snapshot.tables.categories = list;
+    return true;
+  });
+  refreshShop();
+  return list;
 }

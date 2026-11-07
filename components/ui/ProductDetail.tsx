@@ -5,7 +5,8 @@ import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Fabric, Product } from "@/lib/types";
-import { categoryLabel, defaultSize, GENDER_LABELS, isInStock, stockLabel } from "@/lib/catalog";
+import { defaultSize, GENDER_LABELS, isInStock, stockLabel } from "@/lib/catalog";
+import { categoryName } from "@/lib/categories";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
@@ -45,6 +46,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const add = useCartStore((state) => state.add);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const settings = useCatalogStore((state) => state.settings);
+  const categories = useCatalogStore((state) => state.categories);
 
   const color = product.colors.find((option) => option.name === colorName) ?? product.colors[0]!;
   // Live stock (orders and checkout holds included); the catalogue's numbers until it loads.
@@ -314,7 +316,7 @@ export function ProductDetail({ product }: { product: Product }) {
               {GENDER_LABELS[product.gender]}
             </Link>
             <span aria-hidden>/</span>
-            <span>{categoryLabel(product.category, product.gender)}</span>
+            <span>{categoryName(categories, product.category, product.gender)}</span>
           </nav>
 
           <h1 className="display mt-4 text-5xl leading-[0.95] sm:text-6xl">{product.name}</h1>
