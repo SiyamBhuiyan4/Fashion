@@ -9,7 +9,7 @@ const schema = z.object({ password: z.string().min(1).max(200) });
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return json({ error: "Bad origin" }, 403);
   if (!adminConfigured()) {
-    return json({ error: "The admin password is not set up yet (ADMIN_PASSWORD)." }, 503);
+    return json({ error: "The admin password is not set up yet (ADMIN_PASSWORD_HASH)." }, 503);
   }
   if (!rateLimit(`admin:${clientIp(request)}`, 8, 15 * 60_000)) {
     return json({ error: "Too many tries. Please wait 15 minutes." }, 429);

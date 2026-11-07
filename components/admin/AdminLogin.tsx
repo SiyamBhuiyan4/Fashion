@@ -72,8 +72,8 @@ export function AdminLogin({ configured }: { configured: boolean }) {
           </>
         ) : (
           <p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            The admin password is not set up yet. Add <code>ADMIN_PASSWORD</code> (8+ characters) to
-            the site&apos;s environment settings, then reload this page.
+            The admin password is not set up yet. Add <code>ADMIN_PASSWORD_HASH</code> to the
+            site&apos;s environment settings, then reload this page.
           </p>
         )}
       </form>
