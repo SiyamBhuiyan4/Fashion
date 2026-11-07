@@ -2,8 +2,9 @@
  * Puts product videos on the site, at full quality and any length.
  *
  *   1. Drop each video into the `videos/` folder, named after the product id, e.g.
- *        videos/m-tee-essential.mp4      videos/w-slip-dress.mov
- *      (any of .mp4 .mov .m4v .webm .mkv). Product ids are listed by `npm run db:dump`.
+ *        videos/w-katan-saree-x7k2.mp4
+ *      (any of .mp4 .mov .m4v .webm .mkv). Each product's id is shown on its edit page in the
+ *      admin panel (/admin/products), and by `npm run db:dump`.
  *   2. npm run videos:upload
  *
  *   npm run videos:upload -- --dry           cut them into scripts/.preview, upload nothing
@@ -32,7 +33,6 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { products as seedProducts } from "../data/products.ts";
 import { productIdSchema, videoRowSchema, type VideoRow } from "../lib/schemas.ts";
 import { loadSnapshot, uploadMedia, withWriteLock } from "../lib/db/telegramStore.ts";
 import { mb, PIECE_LIMIT, posterFrame, toHls } from "./video-hls.ts";
@@ -99,7 +99,7 @@ async function main(): Promise<void> {
   const { snapshot } = await loadSnapshot();
   const products = Array.isArray(snapshot.tables.products)
     ? (snapshot.tables.products as Array<{ id: string }>)
-    : seedProducts;
+    : [];
   const knownIds = new Set(products.map((p) => p.id));
   const rows = new Map<string, VideoRow>();
   for (const row of (snapshot.tables[TABLE] as unknown[] | undefined) ?? []) {

@@ -97,7 +97,7 @@ export const useCartStore = create<CartState>()(
       closeDrawer: () => set({ drawerOpen: false }),
     }),
     {
-      name: "maison.cart.v1",
+      name: "aurevya.cart.v1",
       version: 1,
       // Rehydrated by <CatalogProvider> once the catalogue is in place; see merge() below.
       skipHydration: true,

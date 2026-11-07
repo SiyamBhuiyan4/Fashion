@@ -27,16 +27,28 @@ export function byCategory(catalog: Catalog, gender: Gender, category: Category)
 }
 
 export const categoryLabels: Record<Category, string> = {
-  panjabi: "Panjabi & Kabli",
+  panjabi: "Panjabi",
   saree: "Saree",
   "three-piece": "Three-piece",
   kurti: "Kurti & Co-ords",
   modest: "Abaya & Hijab",
-  outerwear: "Koti & Sherwani",
-  tops: "Shirts & Polos",
-  bottoms: "Pants & Jeans",
+  outerwear: "Shawl & Outerwear",
+  tops: "Tops & Dresses",
+  bottoms: "Pants & Palazzo",
   shoes: "Footwear",
 };
+
+/** The categories of a ladies' collection, in the order the shop and the admin panel list them. */
+export const shopCategories: Category[] = [
+  "saree",
+  "three-piece",
+  "kurti",
+  "modest",
+  "tops",
+  "bottoms",
+  "outerwear",
+  "shoes",
+];
 
 export interface CollectionGroup {
   category: Category;
@@ -46,7 +58,10 @@ export interface CollectionGroup {
 
 /** The catalog grouped by category in tab order, for the shop page. */
 export function groupByCategory(catalog: Catalog, gender: Gender): CollectionGroup[] {
-  return categorySchema.options.map((category) => ({
+  return [
+    ...shopCategories,
+    ...categorySchema.options.filter((c) => !shopCategories.includes(c)),
+  ].map((category) => ({
     category,
     label: categoryLabels[category],
     items: byCategory(catalog, gender, category),

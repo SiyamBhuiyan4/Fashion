@@ -19,6 +19,7 @@ import { getCatalog } from "@/lib/products.server";
 import type { Product } from "@/lib/schemas";
 import { WAREHOUSES, splitStock, type WarehouseId } from "@/lib/warehouses";
 import { sendEmail } from "@/lib/server/email";
+import { defaultSettings, parseSettings, type Settings } from "@/lib/settings";
 
 // ------------------------------------------------------------------------------- types
 
@@ -126,15 +127,26 @@ export interface Order {
   pricing: Pricing;
   payment: {
     method: PaymentMethod;
-    status: "unpaid" | "paid" | "failed" | "cod";
+    /** "submitted" = the customer sent a bKash / Nagad transaction id; the owner checks it. */
+    status: "unpaid" | "submitted" | "paid" | "failed" | "cod";
     attempts: number;
     retryToken?: string;
+    /** The number the customer sent money from, and the transaction id they entered. */
+    sender?: string;
+    trxId?: string;
+    submittedAt?: string;
+    /** Why the owner rejected the last transaction id, shown to the customer. */
+    rejectedReason?: string;
   };
   status: OrderStatus;
   confirmedAt?: string;
   reservationId?: string;
-  /** Events from a real courier webhook; until one arrives the demo courier is shown. */
+  /** Delivery updates, set by the owner in the admin panel (or a courier webhook). */
   courierEvents?: TrackingEvent[];
+  cancelledAt?: string;
+  cancelReason?: string;
+  /** Private note from the owner, never shown to the customer. */
+  adminNote?: string;
 }
 
 export interface Case {
@@ -211,7 +223,7 @@ export interface Tables {
   wallet: WalletTx[];
 }
 
-const TABLE_NAMES: Array<keyof Tables> = [
+export const TABLE_NAMES: Array<keyof Tables> = [
   "users",
   "inventory",
   "reservations",
@@ -235,6 +247,7 @@ export class Db {
   constructor(
     public t: Tables,
     public catalog: readonly Product[],
+    public settings: Settings = defaultSettings,
   ) {}
 
   product(productId: string) {
@@ -410,7 +423,7 @@ export class Db {
   }
 }
 
-function tablesOf(snapshot: Snapshot): Tables {
+export function tablesOf(snapshot: Snapshot): Tables {
   const t = {} as Tables;
   for (const name of TABLE_NAMES) {
     const rows = snapshot.tables[name];
@@ -419,10 +432,31 @@ function tablesOf(snapshot: Snapshot): Tables {
   return t;
 }
 
+/**
+ * Keeps each product's stock count (shown on the shop's cards) equal to its stock rows, so a
+ * piece that sells out shows "Sold out" without the owner editing it.
+ */
+export function syncProductStock(snapshot: Snapshot, inventory: InventoryRow[]) {
+  const products = snapshot.tables.products;
+  if (!Array.isArray(products)) return;
+  const units = new Map<string, number>();
+  for (const row of inventory) {
+    const key = `${row.productId}|${row.size}`;
+    units.set(key, (units.get(key) ?? 0) + row.units);
+  }
+  const tracked = new Set(inventory.map((r) => r.productId));
+  for (const product of products as Array<{ id?: string; sizes?: string[]; stock?: unknown }>) {
+    if (!product.id || !tracked.has(product.id) || !Array.isArray(product.sizes)) continue;
+    product.stock = Object.fromEntries(
+      product.sizes.map((size) => [size, units.get(`${product.id}|${size}`) ?? 0]),
+    );
+  }
+}
+
 /** The newest saved data, read-only. */
 export async function read(): Promise<Db> {
   const [{ snapshot }, catalog] = await Promise.all([loadSnapshot(), getCatalog()]);
-  return new Db(tablesOf(snapshot), catalog);
+  return new Db(tablesOf(snapshot), catalog, parseSettings(snapshot.tables.settings));
 }
 
 export class UserError extends Error {
@@ -443,11 +477,12 @@ export async function transact<T>(change: (db: Db) => T | Promise<T>): Promise<T
   let result: T;
   let outbox: Db["outbox"] = [];
   await withWriteLock(async (snapshot) => {
-    const db = new Db(tablesOf(snapshot), catalog);
+    const db = new Db(tablesOf(snapshot), catalog, parseSettings(snapshot.tables.settings));
     db.expireHolds();
     result = await change(db);
     db.processWaitlist();
     for (const name of TABLE_NAMES) snapshot.tables[name] = db.t[name];
+    syncProductStock(snapshot, db.t.inventory);
     outbox = db.outbox;
     return true;
   });

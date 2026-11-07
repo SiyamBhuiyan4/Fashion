@@ -8,6 +8,6 @@ export const useSectionStore = create<{
   active: Gender;
   setActive: (gender: Gender) => void;
 }>((set) => ({
-  active: "men",
+  active: "women",
   setActive: (active) => set((state) => (state.active === active ? state : { active })),
 }));

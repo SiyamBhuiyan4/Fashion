@@ -3,120 +3,114 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Category, Gender, Product } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 import { groupByCategory } from "@/lib/catalog";
 import { site } from "@/lib/site";
-import { useSectionStore } from "@/store/sectionStore";
+import { useCatalogStore } from "@/store/catalogStore";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { Reveal } from "@/components/ui/Reveal";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { Price } from "@/components/ui/Price";
 
-const TICKER = [
-  "Eid collection 2026",
-  "Handloom jamdani from Rupganj",
-  "Cash on delivery · all 64 districts",
-  "Prices in Taka (৳)",
-  "Pohela Boishakh edit",
-  "A demo store — no payment is ever taken",
-];
+export function Shop({ products }: { products: Product[] }) {
+  const settings = useCatalogStore((s) => s.settings);
+  const [tab, setTab] = useState<Category | "all">("all");
 
-const GENDERS: Array<{ gender: Gender; label: string; blurb: string }> = [
-  {
-    gender: "women",
-    label: "Women",
-    blurb: "Jamdani and katan sarees, three-pieces, kurtis and modest wear.",
-  },
-  { gender: "men", label: "Men", blurb: "Panjabi, kabli, koti and everyday basics." },
-];
+  const ticker = useMemo(() => {
+    const own = settings.announcement
+      .split("|")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (own.length > 0) return own;
+    return [
+      site.tagline,
+      "Order on WhatsApp",
+      "Delivery all over Bangladesh",
+      settings.address,
+      "Prices in Taka (৳)",
+    ].filter(Boolean);
+  }, [settings]);
 
-/** Picks a photo for an editorial slot: the named product if it exists, else the first one. */
-function photoOf(products: Product[], preferred: string) {
-  const product = products.find((p) => p.id === preferred) ?? products[0];
-  const image = product?.colors[0]?.image;
-  return product && image ? { product, image } : null;
-}
-
-export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
-  const productsByGender = useMemo<Record<Gender, Product[]>>(() => ({ men, women }), [men, women]);
-  const [tab, setTab] = useState<Record<Gender, Category | "all">>({ men: "all", women: "all" });
-  const setActive = useSectionStore((state) => state.setActive);
-  const sections = useRef<Partial<Record<Gender, HTMLElement | null>>>({});
-
-  // The header underlines whichever collection fills the middle of the screen.
-  useEffect(() => {
-    const elements = Object.values(sections.current).filter(Boolean) as HTMLElement[];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const gender = entry.target.getAttribute("data-gender") as Gender | null;
-          if (gender && entry.isIntersecting) setActive(gender);
-        }
-      },
-      { rootMargin: "-45% 0px -45% 0px" },
-    );
-    for (const element of elements) observer.observe(element);
-    return () => observer.disconnect();
-  }, [setActive]);
-
-  const all = useMemo(() => [...women, ...men], [women, men]);
-  const withVideo = all.filter((product) => product.video);
-  const heroVideo = withVideo.find((p) => p.id === "w-jamdani") ?? withVideo[0];
-  const heroLeft = photoOf(women, "w-jamdani");
-  const heroRight = photoOf(men, "m-silk-panjabi");
-  const tileWomen = photoOf(women, "w-katan");
-  const tileMen = photoOf(men, "m-embroidered-panjabi");
+  const withVideo = products.filter((product) => product.video);
+  const heroVideo = withVideo[0];
+  const framed = products.filter((p) => p.colors[0]?.image).slice(0, 2);
+  // Newest first: the admin panel stamps every product when it is added.
+  const sorted = useMemo(
+    () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
+    [products],
+  );
+  const groups = groupByCategory(sorted, "women")
+    .concat(groupByCategory(sorted, "men"))
+    .filter((g) => g.items.length > 0);
+  const merged = new Map<Category, { category: Category; label: string; items: Product[] }>();
+  for (const g of groups) {
+    const existing = merged.get(g.category);
+    merged.set(g.category, existing ? { ...g, items: [...existing.items, ...g.items] } : g);
+  }
+  const categories = [...merged.values()];
+  const visible = tab === "all" ? sorted : (merged.get(tab)?.items ?? []);
 
   return (
     <div>
       {/* ------------------------------------------------------------------ hero */}
-      {/* The cherry tree and its petals (SakuraBackground) play behind this section. */}
-      <section data-butterfly-zone className="relative min-h-[100svh] w-full overflow-hidden">
-        <div className="relative mx-auto grid min-h-[100svh] max-w-[90rem] items-end gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-10">
-          <div>
-            <p className="eyebrow animate-fade-up [animation-delay:200ms]">
-              {site.name} · Eid & Boishakh edit
+      <section className="relative w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--color-paper),var(--color-bone)_70%)]">
+        <div className="relative mx-auto grid min-h-[92svh] max-w-[90rem] items-center gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pb-10">
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+            <Image
+              src="/brand/logo-dark.png"
+              alt={`${site.name} ${site.subtitle} — ${site.tagline}`}
+              width={390}
+              height={382}
+              priority
+              className="h-auto w-[min(72vw,20rem)] animate-fade-up [animation-delay:150ms]"
+            />
+            <p className="mt-8 max-w-md animate-fade-up text-[0.9375rem] leading-relaxed text-ink-soft [animation-delay:320ms]">
+              Sarees, three-pieces, kurtis and modest wear, chosen with care in Kamrangir Char and
+              delivered to your door anywhere in Bangladesh.
             </p>
-            <h1 className="display mt-5 animate-fade-up text-[clamp(3.2rem,8.4vw,8rem)] [animation-delay:320ms]">
-              Woven in Bangladesh,
-              <br />
-              worn <em className="italic text-accent">your</em> way.
-            </h1>
-            <p className="mt-6 max-w-md animate-fade-up text-[0.9375rem] leading-relaxed text-ink-soft [animation-delay:420ms]">
-              Dhakai jamdani from the looms of Rupganj, Eid panjabis, everyday three-pieces and
-              kurtis — every piece shown in its real colour
-              {withVideo.length > 0 ? ", many on video" : ""}.
-            </p>
-            <div className="mt-9 flex animate-fade-up flex-wrap gap-3 [animation-delay:520ms]">
+            <div className="mt-9 flex animate-fade-up flex-wrap justify-center gap-3 [animation-delay:440ms] lg:justify-start">
               <Link
-                href="#women"
+                href="#shop"
                 className="rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-bone transition-transform duration-300 ease-out-soft hover:scale-[1.03]"
               >
-                Shop women
+                Shop the collection
               </Link>
-              <Link
-                href="#men"
-                className="rounded-full border border-ink/25 bg-white/50 px-7 py-3.5 text-sm font-medium backdrop-blur transition-colors duration-300 hover:bg-ink hover:text-bone"
-              >
-                Shop men
-              </Link>
+              {settings.facebook ? (
+                <a
+                  href={settings.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-accent/50 px-7 py-3.5 text-sm font-medium transition-colors duration-300 hover:bg-ink hover:text-bone"
+                >
+                  Facebook page
+                </a>
+              ) : null}
             </div>
           </div>
 
-          {/* Two framed pieces float in front of the blossom (computers only). */}
-          <div className="relative mr-[10%] hidden h-[31rem] lg:block">
-            {[heroLeft, heroRight].map((slot, i) =>
-              slot ? (
+          {/* Two framed pieces (computers only); the brand photo until products exist. */}
+          <div className="relative mr-[8%] hidden h-[31rem] lg:block">
+            {framed.length === 0 ? (
+              <div className="absolute inset-0 m-auto aspect-square h-full overflow-hidden rounded-full border border-accent/40 shadow-2xl shadow-ink/15">
+                <Image
+                  src="/brand/aurevya-cover.jpg"
+                  alt={`${site.name} ${site.subtitle}`}
+                  fill
+                  priority
+                  sizes="31rem"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              framed.map((product, i) => (
                 <Link
-                  key={slot.product.id}
-                  href={`/product/${slot.product.id}`}
-                  // A blue butterfly rests on this card's top-right corner (butterflies.ts).
-                  data-butterfly-perch={i}
+                  key={product.id}
+                  href={`/product/${product.id}`}
                   className={
                     i === 0
-                      ? "group absolute left-0 top-0 w-[52%] -rotate-2 animate-fade-up shadow-2xl shadow-ink/20 [animation-delay:450ms]"
-                      : "group absolute bottom-0 right-0 w-[46%] rotate-3 animate-fade-up shadow-2xl shadow-ink/20 [animation-delay:650ms]"
+                      ? "group absolute left-0 top-0 w-[52%] -rotate-2 animate-fade-up border border-accent/30 shadow-2xl shadow-ink/20 [animation-delay:450ms]"
+                      : "group absolute bottom-0 right-0 w-[46%] rotate-3 animate-fade-up border border-accent/30 shadow-2xl shadow-ink/20 [animation-delay:650ms]"
                   }
                 >
                   <div className="relative aspect-[3/4] overflow-hidden bg-bone-dark">
@@ -129,8 +123,8 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                       />
                     ) : (
                       <Image
-                        src={slot.image}
-                        alt={slot.product.name}
+                        src={product.colors[0]!.image!}
+                        alt={product.name}
                         fill
                         priority
                         unoptimized
@@ -140,190 +134,114 @@ export function Shop({ men, women }: { men: Product[]; women: Product[] }) {
                     )}
                   </div>
                   <div className="flex items-center justify-between bg-paper px-3 py-2.5 text-xs">
-                    <span>{i === 0 && heroVideo ? heroVideo.name : slot.product.name}</span>
+                    <span>{i === 0 && heroVideo ? heroVideo.name : product.name}</span>
                     <Price
-                      amount={i === 0 && heroVideo ? heroVideo.price : slot.product.price}
+                      amount={i === 0 && heroVideo ? heroVideo.price : product.price}
                       className="tabular-nums text-ink-faint"
                     />
                   </div>
                 </Link>
-              ) : null,
+              ))
             )}
           </div>
         </div>
-
-        <a
-          href="#ticker"
-          aria-label="Scroll down"
-          className="absolute bottom-6 left-1/2 hidden h-12 w-12 -translate-x-1/2 place-items-center rounded-full border border-ink/20 bg-white/40 backdrop-blur transition-colors hover:bg-ink hover:text-bone sm:grid"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4 animate-bounce"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-          >
-            <path d="M12 5v14M6 13l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </a>
       </section>
 
-      {/* Below the hero a light veil keeps the blossom visible while text stays legible. */}
-      <div className="bg-bone/50">
-        {/* ---------------------------------------------------------------- ticker */}
-        <div
-          id="ticker"
-          className="overflow-hidden border-y border-line bg-paper/70 py-3.5 backdrop-blur-md"
+      {/* ---------------------------------------------------------------- ticker */}
+      <div
+        id="ticker"
+        className="overflow-hidden border-y border-accent/25 bg-ink py-3.5 text-bone"
+      >
+        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-bone/80">
+          {[...ticker, ...ticker, ...ticker, ...ticker].map((item, i) => (
+            <span key={i} className="flex items-center gap-12">
+              {item}
+              <span aria-hidden className="h-1 w-1 rotate-45 bg-accent-soft" />
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------- in motion */}
+      {withVideo.length > 0 ? (
+        <section
+          id="in-motion"
+          className="scroll-mt-16 border-b border-line bg-paper/60 py-14 sm:py-20"
         >
-          <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-ink-soft">
-            {[...TICKER, ...TICKER].map((item, i) => (
-              <span key={i} className="flex items-center gap-12">
-                {item}
-                <span aria-hidden className="h-1 w-1 rounded-full bg-accent" />
-              </span>
+          <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
+            <Reveal>
+              <p className="eyebrow">See it move</p>
+              <h2 className="display mt-3 text-5xl sm:text-6xl">
+                On <em className="italic">video</em>
+              </h2>
+            </Reveal>
+            <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
+              See how it falls, folds and moves before it arrives.
+            </p>
+          </div>
+          <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
+            {withVideo.map((product) => (
+              <MotionCard key={product.id} product={product} />
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {/* ------------------------------------------------------------ collection */}
+      <section id="shop" className="scroll-mt-16">
+        <div className="mx-auto max-w-[90rem] px-4 pt-16 text-center sm:px-8 sm:pt-24">
+          <Reveal>
+            <p className="eyebrow">{site.subtitle}</p>
+            <h2 className="display mt-3 text-6xl sm:text-7xl">
+              The <em className="italic">collection</em>
+              {products.length > 0 ? (
+                <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
+                  {products.length}
+                </sup>
+              ) : null}
+            </h2>
+            <p className="gold-rule mx-auto mt-5 max-w-xs text-xs uppercase tracking-[0.2em]">
+              {site.tagline}
+            </p>
+          </Reveal>
         </div>
 
-        {/* -------------------------------------------------------- category tiles */}
-        <section className="mx-auto grid max-w-[90rem] gap-3 px-4 py-14 sm:grid-cols-2 sm:px-8 sm:py-20">
-          {[
-            { slot: tileWomen, href: "#women", label: "Women", count: women.length },
-            { slot: tileMen, href: "#men", label: "Men", count: men.length },
-          ].map(({ slot, href, label, count }, i) =>
-            slot ? (
-              <Reveal key={label} delay={i * 120}>
-                <Link
-                  href={href}
-                  className="group relative block aspect-[4/5] overflow-hidden bg-bone-dark sm:aspect-auto sm:h-[78vh] sm:max-h-[54rem]"
-                >
-                  <Image
-                    src={slot.image}
-                    alt={`${label}'s collection`}
-                    fill
-                    unoptimized
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-[1600ms] ease-out-soft group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 text-white sm:p-8">
-                    <div>
-                      <p className="eyebrow text-white/70">{count} pieces</p>
-                      <h2 className="display mt-2 text-5xl sm:text-6xl">{label}</h2>
-                    </div>
-                    <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-ink transition-transform duration-500 ease-out-soft group-hover:translate-x-1 group-hover:-rotate-45">
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      >
-                        <path
-                          d="M5 12h14M13 6l6 6-6 6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              </Reveal>
-            ) : null,
-          )}
-        </section>
-
-        {/* ------------------------------------------------------------- in motion */}
-        {withVideo.length > 0 ? (
-          <section
-            id="in-motion"
-            className="scroll-mt-16 border-y border-line/60 bg-paper/35 py-14 sm:py-20"
-          >
-            <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
-              <Reveal>
-                <p className="eyebrow">Filmed on real people</p>
-                <h2 className="display mt-3 text-5xl sm:text-6xl">
-                  In <em className="italic">motion</em>
-                </h2>
-              </Reveal>
-              <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
-                See how it falls, folds and moves before it arrives.
-              </p>
-            </div>
-            <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
-              {withVideo.map((product) => (
-                <MotionCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ----------------------------------------------------------- collections */}
-        {GENDERS.map(({ gender, label, blurb }, sectionIndex) => {
-          const products = productsByGender[gender];
-          const groups = groupByCategory(products, gender).filter((g) => g.items.length > 0);
-          const current = tab[gender];
-          const visible =
-            current === "all"
-              ? products
-              : (groups.find((g) => g.category === current)?.items ?? []);
-
-          return (
-            <section
-              key={gender}
-              id={gender}
-              data-gender={gender}
-              ref={(element) => {
-                sections.current[gender] = element;
-              }}
-              className="scroll-mt-16"
-            >
-              <div className="mx-auto max-w-[90rem] px-4 pt-16 sm:px-8 sm:pt-24">
-                <Reveal className="flex flex-wrap items-end justify-between gap-4">
-                  <div>
-                    <p className="eyebrow">
-                      Collection {String(sectionIndex + 1).padStart(2, "0")}
-                    </p>
-                    <h2 className="display mt-3 text-6xl sm:text-7xl">
-                      {label}
-                      <sup className="ml-2 align-top font-sans text-sm tracking-normal text-ink-faint">
-                        {products.length}
-                      </sup>
-                    </h2>
-                    <p className="mt-3 text-sm text-ink-soft">{blurb}</p>
-                  </div>
-                </Reveal>
-              </div>
-
-              {/* Category filter sticks under the header while the collection scrolls by. */}
-              <div className="sticky top-16 z-20 mt-6 border-y border-line bg-bone/85 backdrop-blur-xl">
+        {products.length === 0 ? (
+          <div className="mx-auto max-w-md px-4 py-20 text-center">
+            <p className="display text-3xl">New pieces are on their way.</p>
+            <p className="mt-3 text-sm text-ink-soft">
+              Our collection is being photographed right now.
+              {settings.facebook ? " Follow us on Facebook to see them first." : ""}
+            </p>
+          </div>
+        ) : (
+          <>
+            {categories.length > 1 ? (
+              <div className="sticky top-16 z-20 mt-8 border-y border-line bg-bone/85 backdrop-blur-xl">
                 <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-8">
                   <CategoryTabs
-                    categories={groups.map((group) => ({
+                    categories={categories.map((group) => ({
                       category: group.category,
                       label: group.label,
                       count: group.items.length,
                     }))}
-                    active={current}
-                    onSelect={(category) => setTab((state) => ({ ...state, [gender]: category }))}
+                    active={tab}
+                    onSelect={setTab}
                   />
                 </div>
               </div>
+            ) : null}
 
-              <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
-                {visible.map((product, i) => (
-                  <Reveal key={`${current}-${product.id}`} delay={(i % 4) * 70} className="h-full">
-                    <ProductCard product={product} />
-                  </Reveal>
-                ))}
-              </div>
-
-              {sectionIndex === 0 ? <Editorial /> : null}
-            </section>
-          );
-        })}
-      </div>
+            <div className="mx-auto grid max-w-[90rem] grid-cols-2 gap-x-3 gap-y-10 px-4 py-10 sm:gap-x-5 sm:px-8 md:grid-cols-3 xl:grid-cols-4">
+              {visible.map((product, i) => (
+                <Reveal key={`${tab}-${product.id}`} delay={(i % 4) * 70} className="h-full">
+                  <ProductCard product={product} />
+                </Reveal>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }
@@ -368,26 +286,5 @@ function MotionCard({ product }: { product: Product }) {
         <Price amount={product.price} className="text-sm tabular-nums text-white/80" />
       </div>
     </Link>
-  );
-}
-
-/** A quiet editorial pause between the two collections. */
-function Editorial() {
-  return (
-    <div className="border-y border-line bg-ink text-bone">
-      <Reveal className="mx-auto flex max-w-[90rem] flex-col items-center px-4 py-20 text-center sm:px-8 sm:py-28">
-        <p className="eyebrow text-bone/50">The idea</p>
-        <p className="display mt-6 max-w-4xl text-4xl leading-[1.08] sm:text-6xl">
-          From the <em className="italic">looms</em> of Rupganj to your Eid morning. Pieces marked
-          video are filmed on a real person, so you know how they drape before they arrive.
-        </p>
-        <Link
-          href="#men"
-          className="mt-10 rounded-full border border-bone/40 px-7 py-3.5 text-sm transition-colors duration-300 hover:bg-bone hover:text-ink"
-        >
-          Continue to men
-        </Link>
-      </Reveal>
-    </div>
   );
 }

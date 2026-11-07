@@ -9,20 +9,25 @@ import { create } from "zustand";
 import type { Catalog } from "@/lib/catalog";
 import { findById } from "@/lib/catalog";
 import type { Product } from "@/lib/schemas";
+import { defaultSettings, type Settings } from "@/lib/settings";
 
 interface CatalogState {
   catalog: Catalog;
+  settings: Settings;
   hydrated: boolean;
-  hydrate: (catalog: Catalog) => void;
+  hydrate: (catalog: Catalog, settings: Settings) => void;
   get: (id: string) => Product | undefined;
 }
 
 export const useCatalogStore = create<CatalogState>((set, get) => ({
   catalog: [],
+  settings: defaultSettings,
   hydrated: false,
-  hydrate: (catalog) =>
+  hydrate: (catalog, settings) =>
     set((state) =>
-      state.hydrated && state.catalog === catalog ? state : { catalog, hydrated: true },
+      state.hydrated && state.catalog === catalog && state.settings === settings
+        ? state
+        : { catalog, settings, hydrated: true },
     ),
   get: (id) => findById(get().catalog, id),
 }));

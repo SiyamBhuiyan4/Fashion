@@ -1,10 +1,6 @@
-/** Small helpers shared by the customer API routes. */
+/** Small helpers shared by the API routes. */
 import "server-only";
 import { NextResponse } from "next/server";
-import type { z } from "zod";
-import { UserError } from "@/lib/server/db";
-import { currentUserId } from "@/lib/server/auth";
-import { ConflictError } from "@/lib/db/telegramStore";
 
 export const json = (data: unknown, status = 200) =>
   NextResponse.json(data, { status, headers: { "Cache-Control": "no-store" } });
@@ -40,40 +36,4 @@ export function rateLimit(key: string, max: number, windowMs: number): boolean {
 
 export function clientIp(request: Request): string {
   return (request.headers.get("x-forwarded-for") ?? "").split(",")[0]!.trim() || "local";
-}
-
-/**
- * Wraps a POST handler: checks the origin, parses and validates the JSON body, optionally
- * requires a signed-in customer, and turns errors into clean JSON responses.
- */
-export function handler<S extends z.ZodType>(
-  schema: S,
-  run: (input: z.infer<S>, ctx: { request: Request; userId: string | null }) => Promise<Response>,
-  options: { auth?: boolean } = {},
-) {
-  return async (request: Request): Promise<Response> => {
-    if (!sameOrigin(request)) return json({ error: "Bad origin" }, 403);
-    const userId = await currentUserId();
-    if (options.auth && !userId) return json({ error: "Please sign in first." }, 401);
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: "Invalid request." }, 400);
-    }
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) {
-      return json({ error: parsed.error.issues[0]?.message ?? "Invalid request." }, 400);
-    }
-    try {
-      return await run(parsed.data, { request, userId });
-    } catch (error) {
-      if (error instanceof UserError) return json({ error: error.message }, error.status);
-      if (error instanceof ConflictError) {
-        return json({ error: "The shop is busy — please try again in a moment." }, 503);
-      }
-      console.error("[api]", error);
-      return json({ error: "Something went wrong. Please try again." }, 500);
-    }
-  };
 }

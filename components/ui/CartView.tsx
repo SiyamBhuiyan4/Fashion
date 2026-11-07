@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import { useHydrated } from "@/lib/useHydrated";
-import { BagOffer } from "@/components/ui/BagOffer";
+import { BagOrder } from "@/components/ui/BagOrder";
 
 export function CartView() {
   const items = useCartStore((state) => state.items);
@@ -33,16 +34,10 @@ export function CartView() {
           <p className="text-ink-soft">Nothing in here yet.</p>
           <div className="mt-5 flex justify-center gap-3">
             <Link
-              href="/#men"
+              href="/#shop"
               className="rounded-full bg-ink px-5 py-2.5 text-sm text-bone hover:opacity-90"
             >
-              Shop men
-            </Link>
-            <Link
-              href="/#women"
-              className="rounded-full border border-line px-5 py-2.5 text-sm hover:border-ink"
-            >
-              Shop women
+              Shop the collection
             </Link>
           </div>
         </div>
@@ -81,7 +76,7 @@ export function CartView() {
                           {product.name}
                         </Link>
                         <p className="mt-1 text-sm text-ink-faint">
-                          {color.name} · Size {item.size}
+                          {color.name} · Size {sizeLabel(item.size)}
                         </p>
                       </div>
                       <span className="shrink-0 text-sm">
@@ -121,18 +116,8 @@ export function CartView() {
           <aside className="h-fit border border-line bg-paper p-5 lg:sticky lg:top-24">
             <h2 className="display text-lg">Summary</h2>
             <div className="mt-4">
-              <BagOffer />
+              <BagOrder />
             </div>
-            <Link
-              href="/checkout"
-              className="mt-5 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
-            >
-              <span>Checkout</span>
-              <span aria-hidden>→</span>
-            </Link>
-            <p className="mt-2 text-center text-xs text-ink-faint">
-              Your bag is saved on this device for 7 days.
-            </p>
             <button
               type="button"
               onClick={clear}

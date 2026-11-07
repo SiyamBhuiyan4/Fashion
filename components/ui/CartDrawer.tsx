@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { sizeLabel } from "@/lib/adminProduct";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import { Price } from "@/components/ui/Price";
-import { BagOffer } from "@/components/ui/BagOffer";
+import { BagOrder } from "@/components/ui/BagOrder";
 
 export function CartDrawer() {
   const open = useCartStore((state) => state.drawerOpen);
@@ -86,7 +87,7 @@ export function CartDrawer() {
             <p className="display text-3xl">Nothing here yet.</p>
             <p className="text-sm text-ink-soft">Your bag is waiting for its first piece.</p>
             <Link
-              href="/#women"
+              href="/#shop"
               onClick={close}
               className="mt-2 rounded-full bg-ink px-6 py-3 text-sm text-bone transition-opacity hover:opacity-90"
             >
@@ -126,7 +127,7 @@ export function CartDrawer() {
                       {product.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-ink-faint">
-                      {color.name} · Size {item.size}
+                      {color.name} · Size {sizeLabel(item.size)}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <label className="sr-only" htmlFor={`qty-${index}`}>
@@ -161,17 +162,7 @@ export function CartDrawer() {
         )}
 
         <div className="border-t border-line px-5 py-4">
-          <BagOffer />
-          {items.length > 0 ? (
-            <Link
-              href="/checkout"
-              onClick={close}
-              className="mt-4 flex h-13 items-center justify-between bg-ink px-5 text-sm font-medium text-bone transition-colors hover:bg-black"
-            >
-              <span>Checkout</span>
-              <span aria-hidden>→</span>
-            </Link>
-          ) : null}
+          <BagOrder />
           <Link
             href="/cart"
             onClick={close}

@@ -1,47 +1,24 @@
 /**
- * Stock is kept in three warehouses. An order ships from the nearest one that has everything
- * in stock; if no single one does, each piece ships from the nearest that has it.
+ * Everything ships from the shop in Kamrangir Char, Dhaka. The delivery charge and time depend
+ * only on whether the customer is inside Dhaka or outside, and both are set by the owner in the
+ * admin panel (lib/settings.ts).
  *
- * Fee and delivery time depend on how far the warehouse is from the customer's district:
- * same district, same division, or elsewhere in Bangladesh.
+ * The "warehouse" vocabulary is kept so that stock rows and orders keep their shape; there is
+ * a single one.
  */
-export type WarehouseId = "dhaka" | "chattogram" | "sylhet";
+import { defaultSettings, type Settings } from "@/lib/settings";
+
+export type WarehouseId = "dhaka";
 export type Division =
   "Dhaka" | "Chattogram" | "Sylhet" | "Rajshahi" | "Khulna" | "Barishal" | "Rangpur" | "Mymensingh";
 
-export const WAREHOUSES: Array<{
-  id: WarehouseId;
-  name: string;
-  district: string;
-  division: Division;
-  share: number;
-}> = [
-  { id: "dhaka", name: "Dhaka (Tejgaon)", district: "Dhaka", division: "Dhaka", share: 0.6 },
-  {
-    id: "chattogram",
-    name: "Chattogram (Agrabad)",
-    district: "Chattogram",
-    division: "Chattogram",
-    share: 0.25,
-  },
-  {
-    id: "sylhet",
-    name: "Sylhet (Zindabazar)",
-    district: "Sylhet",
-    division: "Sylhet",
-    share: 0.15,
-  },
+export const WAREHOUSES: Array<{ id: WarehouseId; name: string; district: string }> = [
+  { id: "dhaka", name: "Aurevya, Kamrangir Char", district: "Dhaka" },
 ];
 
-/** Splits a catalogue stock count across the warehouses by their share. */
+/** All stock sits in the one shop. */
 export function splitStock(units: number): Array<[WarehouseId, number]> {
-  const dhaka = Math.ceil(units * 0.6);
-  const ctg = Math.floor((units - dhaka) * (0.25 / 0.4));
-  return [
-    ["dhaka", dhaka],
-    ["chattogram", ctg],
-    ["sylhet", Math.max(0, units - dhaka - ctg)],
-  ];
+  return [["dhaka", units]];
 }
 
 export const DISTRICTS: Record<string, Division> = {
@@ -121,28 +98,27 @@ export const DISTRICTS: Record<string, Division> = {
 
 export const DISTRICT_NAMES = Object.keys(DISTRICTS).sort();
 
-/** Neighbouring divisions ship a day faster than the far side of the country. */
-const NEAR: Partial<Record<Division, Division[]>> = {
-  Dhaka: ["Mymensingh", "Chattogram", "Khulna", "Rajshahi", "Barishal"],
-  Chattogram: ["Dhaka", "Sylhet"],
-  Sylhet: ["Chattogram", "Dhaka", "Mymensingh"],
-};
+export type DeliveryFees = Pick<
+  Settings,
+  "deliveryInsideDhaka" | "deliveryOutsideDhaka" | "daysInsideDhaka" | "daysOutsideDhaka"
+>;
 
-export function deliveryQuote(warehouse: WarehouseId, district: string) {
-  const w = WAREHOUSES.find((x) => x.id === warehouse)!;
-  const division = DISTRICTS[district];
-  if (district === w.district) return { fee: 70, days: 1, rank: 0 };
-  if (division === w.division) return { fee: 100, days: 2, rank: 1 };
-  if (division && NEAR[w.division]?.includes(division)) return { fee: 130, days: 3, rank: 2 };
-  return { fee: 150, days: 4, rank: 3 };
+export function isInsideDhaka(district: string): boolean {
+  return district === "Dhaka";
 }
 
-/** Warehouses ordered nearest first for a district. */
-export function nearestWarehouses(district: string): WarehouseId[] {
-  return [...WAREHOUSES]
-    .map((w) => ({ id: w.id, ...deliveryQuote(w.id, district) }))
-    .sort((a, b) => a.rank - b.rank || a.fee - b.fee)
-    .map((w) => w.id);
+export function deliveryQuote(
+  _warehouse: WarehouseId,
+  district: string,
+  fees: DeliveryFees = defaultSettings,
+) {
+  return isInsideDhaka(district)
+    ? { fee: fees.deliveryInsideDhaka, days: fees.daysInsideDhaka, rank: 0 }
+    : { fee: fees.deliveryOutsideDhaka, days: fees.daysOutsideDhaka, rank: 1 };
+}
+
+export function nearestWarehouses(): WarehouseId[] {
+  return ["dhaka"];
 }
 
 export function etaDate(days: number, from = new Date()): string {

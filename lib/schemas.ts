@@ -100,7 +100,7 @@ export const fabricSchema = z.enum([
 ]);
 export type Fabric = z.infer<typeof fabricSchema>;
 
-/** What the garment is, used to draw its flat-lay artwork (scripts/product-art.ts). */
+/** What the garment is: used for "similar pieces", care notes and size advice. */
 export const garmentSpecSchema = z.object({
   kind: garmentKindSchema,
   fabric: fabricSchema,
@@ -174,7 +174,7 @@ export type VideoRow = z.infer<typeof videoRowSchema>;
 export const productColorSchema = z.object({
   name: colorNameSchema,
   hex: hexColorSchema,
-  /** Flat-lay artwork for this colourway, generated and uploaded by scripts/seed-db.ts. */
+  /** Photo of this colourway, uploaded from the admin panel. */
   image: mediaUrlSchema.optional(),
 });
 export type ProductColor = z.infer<typeof productColorSchema>;
@@ -196,8 +196,12 @@ export const productSchema = z
     /** Product video, merged in from the "videos" table (lib/products.server.ts). */
     video: productVideoSchema.optional(),
     /** Optional real product photos under /images/products (webp). */
-    images: z.array(mediaUrlSchema).max(8).optional(),
+    images: z.array(mediaUrlSchema).max(12).optional(),
     tags: z.array(z.string().max(24)).max(6).optional(),
+    /** Kept in the admin panel but not shown in the shop. */
+    hidden: z.boolean().optional(),
+    createdAt: z.string().max(40).optional(),
+    updatedAt: z.string().max(40).optional(),
   })
   .superRefine((p, ctx) => {
     for (const size of p.sizes) {

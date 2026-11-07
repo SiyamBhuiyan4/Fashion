@@ -1,20 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Fabric, Product } from "@/lib/types";
 import { categoryLabels, defaultSize, isInStock, stockLabel } from "@/lib/catalog";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
+import { useCatalogStore } from "@/store/catalogStore";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
-import {
-  DeliveryEstimate,
-  SizeAdvisor,
-  StockAlerts,
-  useLiveStock,
-  useReviews,
-} from "@/components/ui/ProductExtras";
+import { DeliveryEstimate, useLiveStock } from "@/components/ui/ProductExtras";
+import { WhatsAppIcon, WhatsAppOrderButton } from "@/components/ui/WhatsAppOrder";
+import { whatsappOrderUrl } from "@/lib/whatsapp";
 
 const CARE: Record<Fabric, string> = {
   khadi: "Handwoven khadi cotton. Hand wash cold, dry in the shade; it softens with every wash.",
@@ -46,6 +44,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const [open, setOpen] = useState<string | null>("details");
   const add = useCartStore((state) => state.add);
   const openDrawer = useCartStore((state) => state.openDrawer);
+  const settings = useCatalogStore((state) => state.settings);
 
   const color = product.colors.find((option) => option.name === colorName) ?? product.colors[0]!;
   // Live stock (orders and checkout holds included); the catalogue's numbers until it loads.
@@ -62,7 +61,6 @@ export function ProductDetail({ product }: { product: Product }) {
           ? { text: `Only ${liveTotal} left`, tone: "low" as const }
           : { text: "In stock", tone: "in" as const };
   const sizeInStock = inStock(size);
-  const fitLean = useReviews(product.id, "")?.fit.lean ?? 0;
   const video = product.video;
 
   // The video first, then one photo per colourway, in a fixed order so the arrows and the
@@ -76,7 +74,18 @@ export function ProductDetail({ product }: { product: Product }) {
         alt: `${product.name} in ${c.name}`,
         color: c.name,
       }));
-    return video ? [{ kind: "video" }, ...photos] : photos;
+    // Extra photos added in the admin panel (back, detail, worn) follow the colour photos.
+    const shown = new Set(photos.map((p) => p.image));
+    const extras = (product.images ?? [])
+      .filter((image) => !shown.has(image))
+      .map((image, i) => ({
+        kind: "photo" as const,
+        image,
+        alt: `${product.name}, photo ${photos.length + i + 1}`,
+        color: "",
+      }));
+    const all = [...photos, ...extras];
+    return video ? [{ kind: "video" }, ...all] : all;
   }, [product, video]);
 
   const gallery = useRef<HTMLDivElement>(null);
@@ -115,7 +124,8 @@ export function ProductDetail({ product }: { product: Product }) {
   const [synced, setSynced] = useState(0);
   if (synced !== settled) {
     setSynced(settled);
-    if (resting?.kind === "photo" && resting.color !== colorName) setColorName(resting.color);
+    if (resting?.kind === "photo" && resting.color && resting.color !== colorName)
+      setColorName(resting.color);
   }
 
   const addToCart = () => {
@@ -134,7 +144,7 @@ export function ProductDetail({ product }: { product: Product }) {
     {
       id: "delivery",
       title: "Delivery & returns",
-      body: "This is a demo store: nothing is shipped and no payment is ever taken. In a live store, delivery times and the returns window would be listed here.",
+      body: `Delivered all over Bangladesh: ${formatPrice(settings.deliveryInsideDhaka)} inside Dhaka (about ${settings.daysInsideDhaka} days), ${formatPrice(settings.deliveryOutsideDhaka)} outside Dhaka (about ${settings.daysOutsideDhaka} days).${settings.phone ? ` Questions? Call ${settings.phone}.` : ""}`,
     },
   ];
 
@@ -300,8 +310,8 @@ export function ProductDetail({ product }: { product: Product }) {
       <div className="bg-bone/90 px-4 pt-8 sm:px-8 lg:bg-transparent lg:px-0 lg:pt-2">
         <div className="lg:sticky lg:top-24 lg:bg-bone/90 lg:p-7 lg:shadow-sm">
           <nav className="eyebrow flex items-center gap-2" aria-label="Breadcrumb">
-            <Link href={`/#${product.gender}`} className="link-line hover:text-ink">
-              {product.gender === "men" ? "Men" : "Women"}
+            <Link href="/#shop" className="link-line hover:text-ink">
+              Shop
             </Link>
             <span aria-hidden>/</span>
             <span>{categoryLabels[product.category]}</span>
@@ -390,13 +400,11 @@ export function ProductDetail({ product }: { product: Product }) {
                       !available && active && "bg-ink/60 line-through",
                     )}
                   >
-                    {option}
+                    {sizeLabel(option)}
                   </button>
                 );
               })}
             </div>
-            <SizeAdvisor product={product} fitLean={fitLean} onPick={setSize} current={size} />
-            <StockAlerts product={product} size={size} soldOut={!sizeInStock} />
           </div>
 
           <button
@@ -406,12 +414,24 @@ export function ProductDetail({ product }: { product: Product }) {
             className="group mt-8 hidden h-14 w-full items-center justify-between bg-ink px-6 text-sm font-medium text-bone transition-colors duration-300 hover:bg-black disabled:opacity-40 lg:flex"
           >
             <span>
-              {added ? "Added to bag" : sizeInStock ? `Add to bag — ${size}` : "Sold out"}
+              {added
+                ? "Added to bag"
+                : sizeInStock
+                  ? `Add to bag — ${sizeLabel(size)}`
+                  : "Sold out"}
             </span>
             <span className="transition-transform duration-500 ease-out-soft group-hover:translate-x-1">
               {added ? "✓" : "→"}
             </span>
           </button>
+
+          {sizeInStock ? (
+            <WhatsAppOrderButton
+              lines={[{ product, colorName, size, quantity: 1 }]}
+              label="Order now on WhatsApp"
+              className="mt-3 hidden h-14 lg:flex"
+            />
+          ) : null}
 
           <DeliveryEstimate live={live} size={size} />
 
@@ -455,20 +475,45 @@ export function ProductDetail({ product }: { product: Product }) {
       </div>
 
       {/* Phones: the price and the button stay within thumb's reach. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bone/90 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-line bg-bone/90 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
         <button
           type="button"
           onClick={addToCart}
           disabled={!sizeInStock}
-          className="flex h-13 w-full items-center justify-between bg-ink px-5 text-sm font-medium text-bone disabled:opacity-40"
+          className="flex h-13 min-w-0 flex-1 items-center justify-between gap-2 bg-ink px-4 text-sm font-medium text-bone disabled:opacity-40"
         >
           <span>
-            {added ? "Added to bag ✓" : sizeInStock ? `Add to bag — ${size}` : "Sold out"}
+            {added
+              ? "Added to bag ✓"
+              : sizeInStock
+                ? `Add to bag — ${sizeLabel(size)}`
+                : "Sold out"}
           </span>
           <span className="tabular-nums" suppressHydrationWarning>
             {formatPrice(product.price)}
           </span>
         </button>
+        {sizeInStock && settings.whatsapp ? (
+          <button
+            type="button"
+            aria-label="Order now on WhatsApp"
+            onClick={() =>
+              window.open(
+                whatsappOrderUrl(
+                  settings.whatsapp,
+                  [{ product, colorName, size, quantity: 1 }],
+                  window.location.origin,
+                ),
+                "_blank",
+                "noopener,noreferrer",
+              )
+            }
+            className="flex h-13 shrink-0 items-center gap-2 bg-[#1f9d55] px-4 text-sm font-medium text-white"
+          >
+            <WhatsAppIcon />
+            Order
+          </button>
+        ) : null}
       </div>
     </div>
   );

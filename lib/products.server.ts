@@ -1,15 +1,14 @@
 /**
  * Server-side catalog access. The products live in the Telegram-backed database
- * (lib/db/telegramStore.ts, table "products"); data/products.ts is the seed the database was
- * filled from and the fallback when the database is unreachable or not yet seeded, so a build
- * never fails because Telegram is down.
+ * (lib/db/telegramStore.ts, table "products") and are added and edited by the owner in the
+ * admin panel (/admin/products). When the database is unreachable the catalogue is empty for
+ * that request, so a build never fails because Telegram is down.
  *
  * Swapping Telegram for another database only means changing this file.
  */
 import "server-only";
-import { products as seedProducts } from "@/data/products";
 import {
-  catalogSchema,
+  productSchema,
   videoRowSchema,
   type Gender,
   type Product,
@@ -18,6 +17,7 @@ import {
 import type { Catalog } from "@/lib/catalog";
 import { findById, groupByCategory } from "@/lib/catalog";
 import { isConfigured, loadSnapshot } from "@/lib/db/telegramStore";
+import { defaultSettings, parseSettings, type Settings } from "@/lib/settings";
 
 export const PRODUCTS_TABLE = "products";
 /** Product videos live in their own table so re-seeding the products never drops them. */
@@ -50,48 +50,74 @@ function withVideos(products: Product[], videos: Map<string, VideoRow>): Product
   });
 }
 
-/** How long a fetched catalog is reused within one server process. */
-const TTL_MS = 60_000;
+/**
+ * How long a fetched catalog is reused within one server process. Short, so a change made in the
+ * admin panel shows up on the next page render.
+ */
+const TTL_MS = 5_000;
 
 interface Loaded {
   catalog: Catalog;
   source: CatalogSource;
   videos: Map<string, VideoRow>;
+  settings: Settings;
 }
 
 let cached: (Loaded & { at: number }) | null = null;
 let inFlight: Promise<Loaded> | null = null;
 
-export type CatalogSource = "telegram" | "seed";
+export type CatalogSource = "telegram" | "empty";
 
-const seedCatalog: Catalog = Object.freeze(catalogSchema.parse(seedProducts));
-
+const emptyCatalog: Catalog = Object.freeze([]);
 const noVideos = new Map<string, VideoRow>();
+const nothing = (): Loaded => ({
+  catalog: emptyCatalog,
+  source: "empty",
+  videos: noVideos,
+  settings: defaultSettings,
+});
+
+/** Valid products only: one bad row is skipped instead of hiding the whole shop. */
+function parseProducts(rows: unknown): Product[] {
+  if (!Array.isArray(rows)) return [];
+  const out: Product[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const parsed = productSchema.safeParse(row);
+    if (!parsed.success) {
+      console.error("[catalog] product skipped:", parsed.error.issues.slice(0, 2));
+      continue;
+    }
+    if (seen.has(parsed.data.id)) continue;
+    seen.add(parsed.data.id);
+    out.push(parsed.data);
+  }
+  return out;
+}
 
 async function fetchCatalog(): Promise<Loaded> {
-  if (!isConfigured()) return { catalog: seedCatalog, source: "seed", videos: noVideos };
+  if (!isConfigured()) return nothing();
   try {
     const { snapshot } = await loadSnapshot();
-    const rows = snapshot.tables[PRODUCTS_TABLE];
-    if (!Array.isArray(rows) || rows.length === 0) {
-      return { catalog: seedCatalog, source: "seed", videos: noVideos };
-    }
+    const settings = parseSettings(snapshot.tables.settings);
     // Snapshot rows are validated: the channel is shared, so its contents are not trusted.
-    const parsed = catalogSchema.safeParse(rows);
-    if (!parsed.success) {
-      console.error("[catalog] snapshot rejected by schema:", parsed.error.issues.slice(0, 3));
-      return { catalog: seedCatalog, source: "seed", videos: noVideos };
-    }
+    const products = parseProducts(snapshot.tables[PRODUCTS_TABLE]).filter((p) => !p.hidden);
     const videos = parseVideos(snapshot.tables[VIDEOS_TABLE]);
     return {
-      catalog: Object.freeze(withVideos(parsed.data, videos)),
+      catalog: Object.freeze(withVideos(products, videos)),
       source: "telegram",
       videos,
+      settings,
     };
   } catch (error) {
-    console.error("[catalog] Telegram database unavailable, using seed data:", error);
-    return { catalog: seedCatalog, source: "seed", videos: noVideos };
+    console.error("[catalog] Telegram database unavailable:", error);
+    return nothing();
   }
+}
+
+/** Forgets the cached catalogue, after the admin panel changed it. */
+export function resetCatalogCache() {
+  cached = null;
 }
 
 async function load(): Promise<Loaded> {
@@ -110,6 +136,10 @@ async function load(): Promise<Loaded> {
 export async function getCatalogWithSource(): Promise<{ catalog: Catalog; source: CatalogSource }> {
   const { catalog, source } = await load();
   return { catalog, source };
+}
+
+export async function getSettings(): Promise<Settings> {
+  return (await load()).settings;
 }
 
 /** The stored pieces of a product's video, for the HLS playlists in /api/video. */
@@ -135,9 +165,4 @@ export async function getGenderCatalog(gender: Gender): Promise<Product[]> {
 
 export async function getCollection(gender: Gender) {
   return groupByCategory(await getCatalog(), gender);
-}
-
-/** The seed catalog, for scripts that fill the database. */
-export function getSeedCatalog(): Catalog {
-  return seedCatalog;
 }

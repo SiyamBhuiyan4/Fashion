@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import type { Product } from "@/lib/types";
@@ -219,7 +220,7 @@ export function ProductCard({
                           "cursor-not-allowed text-ink-faint line-through hover:bg-transparent hover:text-ink-faint",
                       )}
                     >
-                      {size}
+                      {sizeLabel(size)}
                     </button>
                   );
                 })}

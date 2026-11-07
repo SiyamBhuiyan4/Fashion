@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. A quiet, editorial palette: warm paper, near-black ink, one rust accent used
- * sparingly (badges, the cart count, focus). Instrument Serif for display, Inter for text.
+ * Design tokens, taken from the Aurevya logo: warm ivory, near-black ink and an antique gold
+ * accent used sparingly (badges, the cart count, focus). Cormorant Garamond for display, Cinzel
+ * for the wordmark, Inter for text.
  */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-serif), "Times New Roman", Georgia, serif;
+  --font-brand: var(--font-brand), "Times New Roman", Georgia, serif;
 
-  --color-bone: #f5f3ef;
-  --color-bone-dark: #ebe7e0;
-  --color-paper: #fbfaf8;
-  --color-ink: #141414;
-  --color-ink-soft: #55524d;
-  --color-ink-faint: #8f8a83;
-  --color-line: #e2ddd5;
-  --color-accent: #b4532a;
-  --color-accent-soft: #d98a63;
+  --color-bone: #f7f1e7;
+  --color-bone-dark: #ece3d4;
+  --color-paper: #fffcf6;
+  --color-ink: #121110;
+  --color-ink-soft: #57524a;
+  --color-ink-faint: #8e877b;
+  --color-line: #e6dccb;
+  --color-accent: #a8803f;
+  --color-accent-soft: #d6bb84;
   --color-success: #3f6b4a;
   --color-warn: #96652a;
   --color-danger: #9b3328;
@@ -27,7 +29,6 @@
   --animate-marquee: marquee 38s linear infinite;
   --animate-fade-up: fade-up 0.9s var(--ease-out-soft) both;
   --animate-bump: bump 0.45s var(--ease-out-soft);
-  --animate-sakura: sakura-drift 120s ease-in-out infinite;
 
   @keyframes marquee {
     from {
@@ -45,16 +46,6 @@
     to {
       opacity: 1;
       transform: none;
-    }
-  }
-  /* The background photo's slow zoom and pan; one full cycle every 120 s, back to the start. */
-  @keyframes sakura-drift {
-    0%,
-    100% {
-      transform: scale(1) translate(0, 0);
-    }
-    50% {
-      transform: scale(1.08) translate(-1.5%, 1%);
     }
   }
   @keyframes bump {
@@ -80,12 +71,12 @@
     scroll-behavior: smooth;
   }
 
-  /* Shown for a moment before the blossom photo (components/ui/SakuraBackground.tsx) loads. */
   html {
-    background: #f8eef0;
+    background: var(--color-bone);
   }
 
   body {
+    background: var(--color-bone);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -131,9 +122,34 @@
 
 @utility display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   line-height: 1;
+}
+
+/* The AUREVYA wordmark: engraved capitals, widely spaced. */
+@utility wordmark {
+  font-family: var(--font-brand);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* A thin gold rule with a diamond, as on the logo. */
+@utility gold-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-accent);
+  &::before,
+  &::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: currentColor;
+    opacity: 0.6;
+  }
 }
 
 @utility eyebrow {

@@ -34,11 +34,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // The collections used to be two pages; now they are two sections of one.
+  // Old collection links land on the one ladies collection.
   async redirects() {
     return [
-      { source: "/men", destination: "/#men", permanent: false },
-      { source: "/women", destination: "/#women", permanent: false },
+      { source: "/men", destination: "/#shop", permanent: false },
+      { source: "/women", destination: "/#shop", permanent: false },
     ];
   },
   async headers() {

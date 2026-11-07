@@ -6,12 +6,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { searchProducts, SEARCH_SUGGESTIONS } from "@/lib/search";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCatalogStore } from "@/store/catalogStore";
-import { useSessionStore } from "@/store/sessionStore";
 
 /** Full-screen search: instant results, typo- and Banglish-tolerant, stock-aware ranking. */
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const catalog = useCatalogStore((s) => s.catalog);
-  const size = useSessionStore((s) => s.me?.user?.profile.defaultSize ?? null);
+  const size: string | null = null;
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
 

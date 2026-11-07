@@ -1,11 +1,13 @@
 /**
- * Brand configuration. Rename the store by editing this one file.
+ * Brand configuration. Contact details, payment numbers and delivery charges are edited by the
+ * owner in the admin panel (lib/settings.ts); this file holds only what never changes.
  */
 export const site = {
-  name: "MAISON",
-  tagline: "Bangladeshi wear, made to be worn.",
+  name: "Aurevya",
+  subtitle: "Ladies Collection",
+  tagline: "Dress Up in Elegance",
   description:
-    "Jamdani and katan sarees, panjabis, three-pieces and everyday wear from Bangladesh — real photos of every colour, many on video.",
+    "Aurevya Ladies Collection, Kamrangir Char — sarees, three-pieces, kurtis and modest wear, delivered all over Bangladesh.",
   currency: "BDT",
   currencySymbol: "৳",
   locale: "en-BD",
