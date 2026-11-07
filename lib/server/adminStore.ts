@@ -16,6 +16,7 @@ import {
   parseCategories,
   type CategoryRow,
 } from "@/lib/categories";
+import { parseSections, sectionListSchema, sectionName, type SectionRow } from "@/lib/sections";
 import { Db, TABLE_NAMES, UserError, nowIso, tablesOf, type InventoryRow } from "@/lib/server/db";
 import { sendEmail } from "@/lib/server/email";
 import { resetCatalogCache, VIDEOS_TABLE } from "@/lib/products.server";
@@ -38,6 +39,7 @@ export async function loadAdmin() {
     products: productsOf(snapshot),
     settings: parseSettings(snapshot.tables.settings),
     categories: parseCategories(snapshot.tables.categories),
+    sections: parseSections(snapshot.tables.sections),
     db: new Db(
       tablesOf(snapshot),
       productsOf(snapshot).filter((p) => !p.hidden),
@@ -61,11 +63,11 @@ function slug(text: string): string {
     .replace(/-+$/g, "");
 }
 
-function newProductId(name: string, gender: "women" | "men", taken: Set<string>): string {
+function newProductId(name: string, section: string, taken: Set<string>): string {
   for (;;) {
     const suffix = randomBytes(3).toString("hex").slice(0, 4);
     const base = slug(name);
-    const prefix = gender === "men" ? "m" : "w";
+    const prefix = section.slice(0, 12).replace(/-+$/, "");
     const id = base ? `${prefix}-${base}-${suffix}` : `${prefix}-piece-${suffix}`;
     if (!taken.has(id)) return id;
   }
@@ -195,14 +197,33 @@ export async function saveSettings(input: Settings): Promise<Settings> {
 }
 
 /**
- * Saves the owner's category list (names, sections and order). A category that still has
- * products cannot be removed: the owner moves those products first, so nothing disappears.
+ * Saves the owner's sections (Women, Men, Kids…) and their categories, names and order. A
+ * section or category that still has products cannot be removed: the owner moves those products
+ * first, so nothing disappears from the shop.
  */
-export async function saveCategories(input: CategoryRow[]): Promise<CategoryRow[]> {
-  const list = categoryListSchema.parse(input).map((c) => ({ ...c, name: c.name.trim() }));
+export async function saveStructure(
+  sectionsInput: SectionRow[],
+  categoriesInput: CategoryRow[],
+): Promise<{ sections: SectionRow[]; categories: CategoryRow[] }> {
+  const sections = sectionListSchema
+    .parse(sectionsInput)
+    .map((x) => ({ ...x, name: x.name.trim() }));
+  const list = categoryListSchema
+    .parse(categoriesInput)
+    .map((c) => ({ ...c, name: c.name.trim() }));
+  if (sections.length === 0) throw new UserError("Keep at least one section.");
+  const sectionIds = new Set<string>();
+  const sectionNames = new Set<string>();
+  for (const x of sections) {
+    if (sectionIds.has(x.id)) throw new UserError("Two sections have the same id.");
+    if (sectionNames.has(x.name.toLowerCase())) throw new UserError(`"${x.name}" is listed twice.`);
+    sectionIds.add(x.id);
+    sectionNames.add(x.name.toLowerCase());
+  }
   const keys = new Set<string>();
   const names = new Set<string>();
   for (const c of list) {
+    if (!sectionIds.has(c.gender)) throw new UserError(`"${c.name}" belongs to a removed section.`);
     const key = `${c.gender}|${c.id}`;
     const name = `${c.gender}|${c.name.toLowerCase()}`;
     if (keys.has(key)) throw new UserError("Two categories have the same id.");
@@ -211,21 +232,31 @@ export async function saveCategories(input: CategoryRow[]): Promise<CategoryRow[
     names.add(name);
   }
   await withWriteLock((snapshot) => {
-    const before = parseCategories(snapshot.tables.categories);
-    for (const product of productsOf(snapshot)) {
+    const beforeSections = parseSections(snapshot.tables.sections);
+    const beforeCategories = parseCategories(snapshot.tables.categories);
+    const products = productsOf(snapshot);
+    for (const product of products) {
+      if (!sectionIds.has(product.gender)) {
+        const count = products.filter((p) => p.gender === product.gender).length;
+        throw new UserError(
+          `The section "${sectionName(beforeSections, product.gender)}" still has ${count} product${count === 1 ? "" : "s"} (e.g. ${product.name}). Move them to another section first.`,
+          409,
+        );
+      }
       if (!keys.has(`${product.gender}|${product.category}`)) {
-        const count = productsOf(snapshot).filter(
+        const count = products.filter(
           (p) => p.gender === product.gender && p.category === product.category,
         ).length;
         throw new UserError(
-          `"${categoryName(before, product.category, product.gender)}" still has ${count} product${count === 1 ? "" : "s"} (e.g. ${product.name}). Move them to another category first.`,
+          `"${categoryName(beforeCategories, product.category, product.gender)}" still has ${count} product${count === 1 ? "" : "s"} (e.g. ${product.name}). Move them to another category first.`,
           409,
         );
       }
     }
+    snapshot.tables.sections = sections;
     snapshot.tables.categories = list;
     return true;
   });
   refreshShop();
-  return list;
+  return { sections, categories: list };
 }

@@ -85,7 +85,7 @@ const CATEGORY_DEFAULTS: Record<Gender, Record<string, { kind: GarmentKind; fabr
 /** Type and fabric to start a new product with; the owner can change both. */
 export function garmentDefaults(gender: Gender, category: Category) {
   return (
-    CATEGORY_DEFAULTS[gender][category] ??
+    CATEGORY_DEFAULTS[gender]?.[category] ??
     (gender === "men"
       ? { kind: "shirt" as GarmentKind, fabric: "cotton" as Fabric }
       : { kind: "dress" as GarmentKind, fabric: "cotton" as Fabric })

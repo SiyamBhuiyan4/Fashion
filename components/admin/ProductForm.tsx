@@ -11,7 +11,7 @@ import {
   SIZE_PRESETS,
   sizeLabel,
 } from "@/lib/adminProduct";
-import { GENDER_LABELS } from "@/lib/catalog";
+import { sectionName, type SectionRow } from "@/lib/sections";
 import { categoriesFor, categoryName, type CategoryRow } from "@/lib/categories";
 import type { Category, Fabric, GarmentKind, Gender } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -67,12 +67,17 @@ export function ProductForm({ productId }: { productId?: string }) {
     productId ? "/api/admin/products" : null,
   );
   const existing = productId ? data?.products.find((p) => p.id === productId) : undefined;
-  const { data: catData } = useAdminData<{ categories: CategoryRow[] }>("/api/admin/categories");
+  const { data: catData } = useAdminData<{
+    categories: CategoryRow[];
+    sections: SectionRow[];
+  }>("/api/admin/categories");
   const categories = catData?.categories ?? [];
+  const sections = catData?.sections ?? [];
 
   const [loaded, setLoaded] = useState(!productId);
   const [name, setName] = useState("");
   const [gender, setGender] = useState<Gender>("women");
+  const [sectionChosen, setSectionChosen] = useState(false);
   const [category, setCategory] = useState<Category>("saree");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -154,6 +159,19 @@ export function ProductForm({ productId }: { productId?: string }) {
     }
   };
 
+  // A new product starts in the first section once the owner's sections have loaded.
+  if (
+    !existing &&
+    !sectionChosen &&
+    sections.length > 0 &&
+    !sections.some((x) => x.id === gender)
+  ) {
+    setSectionChosen(true);
+    setGender(sections[0]!.id);
+    const first = categoriesFor(categories, sections[0]!.id)[0];
+    if (first) setCategory(first.id);
+  }
+
   const pickGender = (next: Gender) => {
     setGender(next);
     // Keep the category if the other section has it too, otherwise take that section's first.
@@ -191,7 +209,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     }
     if (!existing && !categoriesFor(categories, gender).some((c) => c.id === category)) {
       setError(
-        `Choose a category. (Make one first under Categories if ${GENDER_LABELS[gender]} has none.)`,
+        `Choose a category. (Make one first under Categories if ${sectionName(sections, gender)} has none.)`,
       );
       return;
     }
@@ -252,8 +270,11 @@ export function ProductForm({ productId }: { productId?: string }) {
             <div className="space-y-4">
               <div>
                 <p className={label}>Section</p>
-                <div className="mt-1.5 grid grid-cols-2 gap-2">
-                  {(["women", "men"] as const).map((g) => (
+                <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {(sections.some((x) => x.id === gender)
+                    ? sections
+                    : [...sections, { id: gender, name: sectionName(sections, gender) }]
+                  ).map(({ id: g, name: sectionLabel }) => (
                     <button
                       key={g}
                       type="button"
@@ -266,13 +287,16 @@ export function ProductForm({ productId }: { productId?: string }) {
                           : "border-line bg-white hover:border-ink",
                       )}
                     >
-                      {GENDER_LABELS[g]}
+                      {sectionLabel}
                     </button>
                   ))}
                 </div>
-                <span className="mt-1 block text-xs text-ink-faint">
-                  The shop only shows a section once it has products.
-                </span>
+                <Link
+                  href="/admin/categories"
+                  className="mt-1 block text-xs text-ink-soft underline"
+                >
+                  Add or edit sections
+                </Link>
               </div>
               <label className={label}>
                 Product name

@@ -1,4 +1,4 @@
-import { getCatalog, getCategories, getSettings } from "@/lib/products.server";
+import { getCatalog, getCategories, getSections, getSettings } from "@/lib/products.server";
 import { CatalogProvider } from "@/components/ui/CatalogProvider";
 import { Header } from "@/components/ui/Header";
 import { Footer } from "@/components/ui/Footer";
@@ -8,14 +8,20 @@ import { SakuraBackground } from "@/components/ui/SakuraBackground";
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   // Fetched from the Telegram-backed database and handed to the client, so the cart and the
   // shop can resolve products (and the owner's settings) without another round trip.
-  const [catalog, settings, categories] = await Promise.all([
+  const [catalog, settings, categories, sections] = await Promise.all([
     getCatalog(),
     getSettings(),
     getCategories(),
+    getSections(),
   ]);
 
   return (
-    <CatalogProvider catalog={catalog} settings={settings} categories={categories}>
+    <CatalogProvider
+      catalog={catalog}
+      settings={settings}
+      categories={categories}
+      sections={sections}
+    >
       <SakuraBackground />
       <a
         href="#main"

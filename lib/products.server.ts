@@ -7,18 +7,13 @@
  * Swapping Telegram for another database only means changing this file.
  */
 import "server-only";
-import {
-  productSchema,
-  videoRowSchema,
-  type Gender,
-  type Product,
-  type VideoRow,
-} from "@/lib/schemas";
+import { productSchema, videoRowSchema, type Product, type VideoRow } from "@/lib/schemas";
 import type { Catalog } from "@/lib/catalog";
 import { findById } from "@/lib/catalog";
 import { isConfigured, loadSnapshot } from "@/lib/db/telegramStore";
 import { defaultSettings, parseSettings, type Settings } from "@/lib/settings";
 import { DEFAULT_CATEGORIES, parseCategories, type CategoryRow } from "@/lib/categories";
+import { DEFAULT_SECTIONS, parseSections, type SectionRow } from "@/lib/sections";
 
 export const PRODUCTS_TABLE = "products";
 /** Product videos live in their own table so re-seeding the products never drops them. */
@@ -63,6 +58,7 @@ interface Loaded {
   videos: Map<string, VideoRow>;
   settings: Settings;
   categories: CategoryRow[];
+  sections: SectionRow[];
 }
 
 let cached: (Loaded & { at: number }) | null = null;
@@ -78,6 +74,7 @@ const nothing = (): Loaded => ({
   videos: noVideos,
   settings: defaultSettings,
   categories: DEFAULT_CATEGORIES,
+  sections: DEFAULT_SECTIONS,
 });
 
 /** Valid products only: one bad row is skipped instead of hiding the whole shop. */
@@ -112,6 +109,7 @@ async function fetchCatalog(): Promise<Loaded> {
       videos,
       settings,
       categories: parseCategories(snapshot.tables.categories),
+      sections: parseSections(snapshot.tables.sections),
     };
   } catch (error) {
     console.error("[catalog] Telegram database unavailable:", error);
@@ -142,6 +140,10 @@ export async function getCatalogWithSource(): Promise<{ catalog: Catalog; source
   return { catalog, source };
 }
 
+export async function getSections(): Promise<SectionRow[]> {
+  return (await load()).sections;
+}
+
 export async function getCategories(): Promise<CategoryRow[]> {
   return (await load()).categories;
 }
@@ -165,8 +167,4 @@ export async function getProduct(id: unknown): Promise<Product | undefined> {
 
 export async function getProductIds(): Promise<string[]> {
   return (await getCatalog()).map((p) => p.id);
-}
-
-export async function getGenderCatalog(gender: Gender): Promise<Product[]> {
-  return (await getCatalog()).filter((p) => p.gender === gender);
 }

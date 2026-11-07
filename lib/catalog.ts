@@ -3,6 +3,7 @@
  * from the Telegram database) and in the browser (where it arrives as props).
  */
 import { categoriesFor, categoryName, type CategoryRow } from "@/lib/categories";
+import { sectionName, type SectionRow } from "@/lib/sections";
 import { productIdSchema, type Category, type Gender, type Product } from "@/lib/schemas";
 
 export type Catalog = readonly Product[];
@@ -21,11 +22,17 @@ export function byCategory(catalog: Catalog, gender: Gender, category: Category)
   return catalog.filter((p) => p.gender === gender && p.category === category);
 }
 
-export const GENDER_LABELS: Record<Gender, string> = { women: "Women", men: "Men" };
-
-/** Sections that have at least one product, women first. */
-export function gendersIn(catalog: Catalog): Gender[] {
-  return (["women", "men"] as const).filter((g) => catalog.some((p) => p.gender === g));
+/**
+ * Sections that have at least one product, in the owner's order. Products of a deleted section
+ * still show, after the others, under a readable form of the old id.
+ */
+export function sectionsIn(catalog: Catalog, sections: readonly SectionRow[]): SectionRow[] {
+  const used = new Set(catalog.map((p) => p.gender));
+  const known = sections.filter((s) => used.has(s.id));
+  const orphans = [...used]
+    .filter((id) => !sections.some((s) => s.id === id))
+    .map((id) => ({ id, name: sectionName(sections, id) }));
+  return [...known, ...orphans];
 }
 
 export interface CollectionGroup {

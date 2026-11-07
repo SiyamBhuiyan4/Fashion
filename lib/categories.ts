@@ -8,6 +8,7 @@
  */
 import { z } from "zod";
 import type { Gender } from "@/lib/schemas";
+import { sectionIdSchema } from "@/lib/sections";
 
 export const categoryIdSchema = z
   .string()
@@ -18,7 +19,8 @@ export const categoryIdSchema = z
 export const categoryRowSchema = z.object({
   id: categoryIdSchema,
   name: z.string().trim().min(1, "Write the category name.").max(40, "Keep the name short."),
-  gender: z.enum(["women", "men"]),
+  /** The section (lib/sections.ts) this category belongs to. */
+  gender: sectionIdSchema,
 });
 export type CategoryRow = z.infer<typeof categoryRowSchema>;
 

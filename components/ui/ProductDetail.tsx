@@ -5,7 +5,8 @@ import { sizeLabel } from "@/lib/adminProduct";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Fabric, Product } from "@/lib/types";
-import { defaultSize, GENDER_LABELS, isInStock, stockLabel } from "@/lib/catalog";
+import { defaultSize, isInStock, stockLabel } from "@/lib/catalog";
+import { sectionName } from "@/lib/sections";
 import { categoryName } from "@/lib/categories";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
@@ -47,6 +48,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const openDrawer = useCartStore((state) => state.openDrawer);
   const settings = useCatalogStore((state) => state.settings);
   const categories = useCatalogStore((state) => state.categories);
+  const sectionList = useCatalogStore((state) => state.sections);
 
   const color = product.colors.find((option) => option.name === colorName) ?? product.colors[0]!;
   // Live stock (orders and checkout holds included); the catalogue's numbers until it loads.
@@ -313,7 +315,7 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="lg:sticky lg:top-24 lg:bg-bone/90 lg:p-7 lg:shadow-sm">
           <nav className="eyebrow flex items-center gap-2" aria-label="Breadcrumb">
             <Link href={`/#${product.gender}`} className="link-line hover:text-ink">
-              {GENDER_LABELS[product.gender]}
+              {sectionName(sectionList, product.gender)}
             </Link>
             <span aria-hidden>/</span>
             <span>{categoryName(categories, product.category, product.gender)}</span>

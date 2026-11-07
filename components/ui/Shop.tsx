@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Category, Gender, Product } from "@/lib/types";
-import { GENDER_LABELS, gendersIn, groupByCategory } from "@/lib/catalog";
+import { groupByCategory, sectionsIn } from "@/lib/catalog";
 import { site } from "@/lib/site";
 import { useCatalogStore } from "@/store/catalogStore";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -39,7 +39,8 @@ export function Shop({ products }: { products: Product[] }) {
     () => [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
     [products],
   );
-  const genders = gendersIn(products);
+  const sectionList = useCatalogStore((s) => s.sections);
+  const genders = sectionsIn(products, sectionList);
 
   return (
     <div>
@@ -195,12 +196,12 @@ export function Shop({ products }: { products: Product[] }) {
             </p>
           </section>
         ) : (
-          genders.map((gender) => (
+          genders.map((section) => (
             <Collection
-              key={gender}
-              gender={gender}
-              products={sorted.filter((p) => p.gender === gender)}
-              title={genders.length > 1 ? GENDER_LABELS[gender] : null}
+              key={section.id}
+              gender={section.id}
+              products={sorted.filter((p) => p.gender === section.id)}
+              title={genders.length > 1 ? section.name : null}
             />
           ))
         )}
@@ -252,7 +253,7 @@ function MotionCard({ product }: { product: Product }) {
   );
 }
 
-/** One section (Women or Men) with its category tabs and products. */
+/** One section (Women, Men, Kids…) with its category tabs and products. */
 function Collection({
   gender,
   products,

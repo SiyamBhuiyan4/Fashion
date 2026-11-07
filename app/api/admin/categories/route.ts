@@ -1,23 +1,27 @@
-/** The owner's categories, with how many products each has, and saving the list. */
+/** The owner's sections and categories, with product counts, and saving them. */
 import { z } from "zod";
 import { categoryListSchema } from "@/lib/categories";
+import { sectionListSchema } from "@/lib/sections";
 import { adminGet, adminPost } from "@/lib/server/admin";
-import { loadAdmin, saveCategories } from "@/lib/server/adminStore";
+import { loadAdmin, saveStructure } from "@/lib/server/adminStore";
 import { json } from "@/lib/server/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const GET = adminGet(async () => {
-  const { categories, products } = await loadAdmin();
+  const { categories, sections, products } = await loadAdmin();
   const counts: Record<string, number> = {};
+  const sectionCounts: Record<string, number> = {};
   for (const p of products) {
     const key = `${p.gender}|${p.category}`;
     counts[key] = (counts[key] ?? 0) + 1;
+    sectionCounts[p.gender] = (sectionCounts[p.gender] ?? 0) + 1;
   }
-  return json({ categories, counts });
+  return json({ sections, categories, counts, sectionCounts });
 });
 
-export const POST = adminPost(z.object({ categories: categoryListSchema }), async (input) =>
-  json({ categories: await saveCategories(input.categories) }),
+export const POST = adminPost(
+  z.object({ sections: sectionListSchema, categories: categoryListSchema }),
+  async (input) => json(await saveStructure(input.sections, input.categories)),
 );

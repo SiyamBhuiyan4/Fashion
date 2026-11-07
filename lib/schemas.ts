@@ -1,7 +1,12 @@
 import { z } from "zod";
 
-export const genderSchema = z.enum(["men", "women"]);
-export type Gender = z.infer<typeof genderSchema>;
+/** The section a product belongs to (Women, Men, Kids…), made by the owner (lib/sections.ts). */
+export const genderSchema = z
+  .string()
+  .min(1)
+  .max(30)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid section");
+export type Gender = string;
 
 /** A category's id. The categories themselves are made by the owner (lib/categories.ts). */
 export const categorySchema = z

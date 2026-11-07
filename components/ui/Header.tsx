@@ -9,14 +9,17 @@ import { cn } from "@/lib/utils";
 import { useHydrated } from "@/lib/useHydrated";
 import { useCartStore } from "@/store/cartStore";
 import { useCatalogStore } from "@/store/catalogStore";
-import { GENDER_LABELS, gendersIn } from "@/lib/catalog";
+import { sectionsIn } from "@/lib/catalog";
 import { SearchOverlay } from "@/components/ui/SearchOverlay";
 
-/** "Women" / "Men" when both sections have products, otherwise one "Shop" link. */
+/** One link per section with products (Women, Men, Kids…), or one "Shop" link. */
 function useSectionLinks(): Array<{ href: string; label: string }> {
   const catalog = useCatalogStore((s) => s.catalog);
-  const genders = gendersIn(catalog);
-  if (genders.length > 1) return genders.map((g) => ({ href: `/#${g}`, label: GENDER_LABELS[g] }));
+  const sections = sectionsIn(
+    catalog,
+    useCatalogStore((s) => s.sections),
+  );
+  if (sections.length > 1) return sections.map((s) => ({ href: `/#${s.id}`, label: s.name }));
   return [{ href: "/#shop", label: "Shop" }];
 }
 

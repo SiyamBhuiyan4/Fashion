@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GENDER_LABELS } from "@/lib/catalog";
+import { sectionName, type SectionRow } from "@/lib/sections";
 import { categoryName, type CategoryRow } from "@/lib/categories";
 import { sizeLabel } from "@/lib/adminProduct";
 import type { Product } from "@/lib/schemas";
@@ -24,10 +24,15 @@ export type AdminProduct = Product & { hasVideo: boolean };
 
 export function ProductsList() {
   const { data, error, reload } = useAdminData<{ products: AdminProduct[] }>("/api/admin/products");
-  const { data: catData } = useAdminData<{ categories: CategoryRow[] }>("/api/admin/categories");
+  const { data: catData } = useAdminData<{
+    categories: CategoryRow[];
+    sections: SectionRow[];
+  }>("/api/admin/categories");
   const categories = catData?.categories ?? [];
+  const sections = catData?.sections ?? [];
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "women" | "men" | "live" | "hidden" | "out">("all");
+  /** "all" | "live" | "hidden" | "out" | "section:<id>" */
+  const [filter, setFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
   const { toast, show } = useToast();
 
@@ -35,7 +40,7 @@ export function ProductsList() {
     const q = query.trim().toLowerCase();
     return (data?.products ?? []).filter((p) => {
       const total = Object.values(p.stock).reduce((a, b) => a + b, 0);
-      if ((filter === "women" || filter === "men") && p.gender !== filter) return false;
+      if (filter.startsWith("section:") && p.gender !== filter.slice(8)) return false;
       if (filter === "live" && p.hidden) return false;
       if (filter === "hidden" && !p.hidden) return false;
       if (filter === "out" && total > 0) return false;
@@ -82,12 +87,11 @@ export function ProductsList() {
           {(
             [
               ["all", "All"],
-              ["women", "Women"],
-              ["men", "Men"],
+              ...sections.map((x) => [`section:${x.id}`, x.name]),
               ["live", "In shop"],
               ["hidden", "Hidden"],
               ["out", "Sold out"],
-            ] as const
+            ] as Array<[string, string]>
           ).map(([key, label]) => (
             <button
               key={key}
@@ -153,7 +157,8 @@ export function ProductsList() {
                     {p.name}
                   </Link>
                   <p className="text-xs text-ink-faint">
-                    {GENDER_LABELS[p.gender]} · {categoryName(categories, p.category, p.gender)}
+                    {sectionName(sections, p.gender)} ·{" "}
+                    {categoryName(categories, p.category, p.gender)}
                     {p.hasVideo ? " · 🎬 video" : ""}
                   </p>
                   <p className="mt-1 font-medium tabular-nums">{taka(p.price)}</p>

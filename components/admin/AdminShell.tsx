@@ -19,7 +19,7 @@ const NAV = [
   },
   {
     href: "/admin/categories",
-    label: "Categories",
+    label: "Sections",
     icon: "M4 6h16M4 12h16M4 18h10",
   },
   {
