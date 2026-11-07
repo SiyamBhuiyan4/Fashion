@@ -44,7 +44,8 @@ export function Shop({ products }: { products: Product[] }) {
   return (
     <div>
       {/* ------------------------------------------------------------------ hero */}
-      <section className="relative w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,var(--color-paper),var(--color-bone)_70%)]">
+      {/* The cherry tree and its petals (SakuraBackground) play behind this section. */}
+      <section data-butterfly-zone className="relative w-full overflow-hidden">
         <div className="relative mx-auto grid min-h-[92svh] max-w-[90rem] items-center gap-10 px-4 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pb-10">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
             <Image
@@ -97,6 +98,8 @@ export function Shop({ products }: { products: Product[] }) {
                 <Link
                   key={product.id}
                   href={`/product/${product.id}`}
+                  // A blue butterfly rests on this card's top-right corner (butterflies.ts).
+                  data-butterfly-perch={i}
                   className={
                     i === 0
                       ? "group absolute left-0 top-0 w-[52%] -rotate-2 animate-fade-up border border-accent/30 shadow-2xl shadow-ink/20 [animation-delay:450ms]"
@@ -137,68 +140,71 @@ export function Shop({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- ticker */}
-      <div
-        id="ticker"
-        className="overflow-hidden border-y border-accent/25 bg-ink py-3.5 text-bone"
-      >
-        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-bone/80">
-          {[...ticker, ...ticker, ...ticker, ...ticker].map((item, i) => (
-            <span key={i} className="flex items-center gap-12">
-              {item}
-              <span aria-hidden className="h-1 w-1 rotate-45 bg-accent-soft" />
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- in motion */}
-      {withVideo.length > 0 ? (
-        <section
-          id="in-motion"
-          className="scroll-mt-16 border-b border-line bg-paper/60 py-14 sm:py-20"
+      {/* Below the hero a light veil keeps the blossom visible while text stays legible. */}
+      <div className="bg-bone/50">
+        {/* ---------------------------------------------------------------- ticker */}
+        <div
+          id="ticker"
+          className="overflow-hidden border-y border-accent/25 bg-ink py-3.5 text-bone"
         >
-          <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
-            <Reveal>
-              <p className="eyebrow">See it move</p>
-              <h2 className="display mt-3 text-5xl sm:text-6xl">
-                On <em className="italic">video</em>
-              </h2>
-            </Reveal>
-            <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
-              See how it falls, folds and moves before it arrives.
-            </p>
-          </div>
-          <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
-            {withVideo.map((product) => (
-              <MotionCard key={product.id} product={product} />
+          <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-bone/80">
+            {[...ticker, ...ticker, ...ticker, ...ticker].map((item, i) => (
+              <span key={i} className="flex items-center gap-12">
+                {item}
+                <span aria-hidden className="h-1 w-1 rotate-45 bg-accent-soft" />
+              </span>
             ))}
           </div>
-        </section>
-      ) : null}
+        </div>
 
-      {/* ----------------------------------------------------------- collections */}
-      {/* An anchor for links to "the shop", whichever sections exist. */}
-      <div id="shop" className="scroll-mt-16" />
-      {genders.length === 0 ? (
-        <section className="mx-auto max-w-md px-4 py-24 text-center">
-          <p className="eyebrow">{site.subtitle}</p>
-          <p className="display mt-4 text-4xl">New pieces are on their way.</p>
-          <p className="mt-3 text-sm text-ink-soft">
-            Our collection is being photographed right now.
-            {settings.facebook ? " Follow us on Facebook to see them first." : ""}
-          </p>
-        </section>
-      ) : (
-        genders.map((gender) => (
-          <Collection
-            key={gender}
-            gender={gender}
-            products={sorted.filter((p) => p.gender === gender)}
-            title={genders.length > 1 ? GENDER_LABELS[gender] : null}
-          />
-        ))
-      )}
+        {/* ------------------------------------------------------------- in motion */}
+        {withVideo.length > 0 ? (
+          <section
+            id="in-motion"
+            className="scroll-mt-16 border-b border-line bg-paper/60 py-14 sm:py-20"
+          >
+            <div className="mx-auto flex max-w-[90rem] items-end justify-between px-4 sm:px-8">
+              <Reveal>
+                <p className="eyebrow">See it move</p>
+                <h2 className="display mt-3 text-5xl sm:text-6xl">
+                  On <em className="italic">video</em>
+                </h2>
+              </Reveal>
+              <p className="hidden max-w-xs text-sm text-ink-soft sm:block">
+                See how it falls, folds and moves before it arrives.
+              </p>
+            </div>
+            <div className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:px-8">
+              {withVideo.map((product) => (
+                <MotionCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* ----------------------------------------------------------- collections */}
+        {/* An anchor for links to "the shop", whichever sections exist. */}
+        <div id="shop" className="scroll-mt-16" />
+        {genders.length === 0 ? (
+          <section className="mx-auto max-w-md px-4 py-24 text-center">
+            <p className="eyebrow">{site.subtitle}</p>
+            <p className="display mt-4 text-4xl">New pieces are on their way.</p>
+            <p className="mt-3 text-sm text-ink-soft">
+              Our collection is being photographed right now.
+              {settings.facebook ? " Follow us on Facebook to see them first." : ""}
+            </p>
+          </section>
+        ) : (
+          genders.map((gender) => (
+            <Collection
+              key={gender}
+              gender={gender}
+              products={sorted.filter((p) => p.gender === gender)}
+              title={genders.length > 1 ? GENDER_LABELS[gender] : null}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }
